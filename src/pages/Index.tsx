@@ -8,9 +8,11 @@ import { ChatInput } from "@/components/ChatInput";
 import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { Sidebar } from "@/components/Sidebar";
 import { QuranSearch } from "@/components/QuranSearch";
+import { PrayerTimes } from "@/components/PrayerTimes";
+import { LoginPrompt } from "@/components/LoginPrompt";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
-import { Menu } from "lucide-react";
+import { Menu, Clock } from "lucide-react";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -19,7 +21,10 @@ const Index = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showQuranSearch, setShowQuranSearch] = useState(false);
+  const [showPrayerTimes, setShowPrayerTimes] = useState(false);
+  const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [guestContinued, setGuestContinued] = useState(false);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -30,8 +35,22 @@ const Index = () => {
     setMobileSidebarOpen(false);
   };
 
+  const handleSendMessage = (content: string) => {
+    // Show login prompt if user is not logged in and hasn't chosen to continue as guest
+    if (!user && !guestContinued) {
+      setShowLoginPrompt(true);
+      return;
+    }
+    sendMessage(content);
+  };
+
+  const handleContinueAsGuest = () => {
+    setGuestContinued(true);
+    setShowLoginPrompt(false);
+  };
+
   const handleInsertVerse = (verse: string) => {
-    sendMessage(`I'd like to learn more about this verse:\n\n${verse}`);
+    handleSendMessage(`I'd like to learn more about this verse:\n\n${verse}`);
   };
 
   return (
@@ -50,6 +69,7 @@ const Index = () => {
               onSelectConversation={(id) => { selectConversation(id); setMobileSidebarOpen(false); }}
               onNewChat={handleNewChat}
               onOpenQuranSearch={() => setShowQuranSearch(true)}
+              onOpenPrayerTimes={() => setShowPrayerTimes(true)}
               isCollapsed={sidebarCollapsed}
               onToggleCollapse={() => setSidebarCollapsed(!sidebarCollapsed)}
             />
@@ -66,6 +86,7 @@ const Index = () => {
                 onSelectConversation={(id) => { selectConversation(id); setMobileSidebarOpen(false); }}
                 onNewChat={handleNewChat}
                 onOpenQuranSearch={() => { setShowQuranSearch(true); setMobileSidebarOpen(false); }}
+                onOpenPrayerTimes={() => { setShowPrayerTimes(true); setMobileSidebarOpen(false); }}
                 isCollapsed={false}
                 onToggleCollapse={() => setMobileSidebarOpen(false)}
               />
@@ -85,17 +106,29 @@ const Index = () => {
                 )}
                 <ChatHeader onClear={handleNewChat} hasMessages={messages.length > 0} showActions={!user} />
               </div>
-              {!user && !authLoading && (
-                <Button onClick={() => navigate("/auth")} className="bg-gradient-emerald hover:opacity-90">
-                  Sign In
+              <div className="flex items-center gap-2">
+                {/* Prayer Times Button - visible for everyone */}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowPrayerTimes(true)}
+                  title="Prayer Times"
+                  className="text-primary"
+                >
+                  <Clock className="w-5 h-5" />
                 </Button>
-              )}
+                {!user && !authLoading && (
+                  <Button onClick={() => navigate("/auth")} className="bg-gradient-emerald hover:opacity-90">
+                    Sign In
+                  </Button>
+                )}
+              </div>
             </div>
           </header>
 
           <main className="flex-1 flex flex-col overflow-hidden">
             {messages.length === 0 ? (
-              <WelcomeScreen onSuggestionClick={sendMessage} />
+              <WelcomeScreen onSuggestionClick={handleSendMessage} />
             ) : (
               <div className="flex-1 overflow-y-auto scrollbar-thin">
                 <div className="max-w-4xl mx-auto px-4 py-6 space-y-6">
@@ -119,11 +152,17 @@ const Index = () => {
             )}
           </main>
 
-          <ChatInput onSend={sendMessage} isLoading={isLoading} />
+          <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
         </div>
       </div>
 
       <QuranSearch isOpen={showQuranSearch} onClose={() => setShowQuranSearch(false)} onInsertVerse={handleInsertVerse} />
+      <PrayerTimes isOpen={showPrayerTimes} onClose={() => setShowPrayerTimes(false)} />
+      <LoginPrompt 
+        isOpen={showLoginPrompt} 
+        onClose={() => setShowLoginPrompt(false)} 
+        onContinueAsGuest={handleContinueAsGuest}
+      />
     </>
   );
 };

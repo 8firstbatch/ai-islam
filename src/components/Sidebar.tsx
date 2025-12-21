@@ -12,6 +12,7 @@ import {
   Settings,
   LogOut,
   Book,
+  Clock,
   ChevronLeft,
   ChevronRight,
 } from "lucide-react";
@@ -43,6 +44,7 @@ interface SidebarProps {
   onSelectConversation: (id: string | null) => void;
   onNewChat: () => void;
   onOpenQuranSearch: () => void;
+  onOpenPrayerTimes: () => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
 }
@@ -52,6 +54,7 @@ export const Sidebar = ({
   onSelectConversation,
   onNewChat,
   onOpenQuranSearch,
+  onOpenPrayerTimes,
   isCollapsed,
   onToggleCollapse,
 }: SidebarProps) => {
@@ -163,6 +166,16 @@ export const Sidebar = ({
         >
           <Book className="w-4 h-4" />
           {!isCollapsed && <span className="ml-2">Quran Search</span>}
+        </Button>
+
+        <Button
+          variant="outline"
+          onClick={onOpenPrayerTimes}
+          className={`${isCollapsed ? "w-10 h-10 p-0" : "w-full"}`}
+          title="Prayer Times"
+        >
+          <Clock className="w-4 h-4" />
+          {!isCollapsed && <span className="ml-2">Prayer Times</span>}
         </Button>
       </div>
 
