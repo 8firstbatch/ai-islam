@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
-import { X, Search, Book, ExternalLink } from "lucide-react";
+import { X, Search, Book, ExternalLink, Volume2, VolumeX, Loader2 } from "lucide-react";
 
 interface QuranVerse {
   number: number;
@@ -14,6 +14,7 @@ interface QuranVerse {
     name: string;
     englishName: string;
   };
+  audioUrl?: string;
 }
 
 interface QuranSearchProps {
@@ -29,7 +30,74 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
   const [results, setResults] = useState<QuranVerse[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchMode, setSearchMode] = useState<"reference" | "keyword">("reference");
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+  const [loadingAudio, setLoadingAudio] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
+
+  const playArabicRecitation = async (verse: QuranVerse) => {
+    const verseKey = `${verse.surah.number}-${verse.number}`;
+    
+    // Stop if already playing this verse
+    if (playingAudio === verseKey) {
+      audioRef.current?.pause();
+      setPlayingAudio(null);
+      return;
+    }
+
+    // Stop any currently playing audio
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+
+    setLoadingAudio(verseKey);
+
+    try {
+      // Use Al-Afasy reciter from everyayah.com
+      const surahNum = String(verse.surah.number).padStart(3, "0");
+      const ayahNum = String(verse.number).padStart(3, "0");
+      const audioUrl = `https://everyayah.com/data/Alafasy_128kbps/${surahNum}${ayahNum}.mp3`;
+
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+
+      audio.onloadeddata = () => {
+        setLoadingAudio(null);
+        setPlayingAudio(verseKey);
+        audio.play();
+      };
+
+      audio.onended = () => {
+        setPlayingAudio(null);
+      };
+
+      audio.onerror = () => {
+        setLoadingAudio(null);
+        toast({
+          title: "Audio Error",
+          description: "Could not load the recitation. Please try again.",
+          variant: "destructive",
+        });
+      };
+
+      audio.load();
+    } catch {
+      setLoadingAudio(null);
+      toast({
+        title: "Error",
+        description: "Failed to play recitation.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopAudio = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+    }
+    setPlayingAudio(null);
+  };
 
   const searchByReference = async () => {
     if (!surahNumber) {
@@ -165,8 +233,14 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
   };
 
   const handleInsert = (verse: QuranVerse) => {
+    stopAudio();
     const formattedVerse = `📖 **${verse.surah.englishName} (${verse.surah.number}:${verse.number})**\n\n"${verse.text}"\n\n*Translation:* "${verse.translation}"`;
     onInsertVerse(formattedVerse);
+    onClose();
+  };
+
+  const handleClose = () => {
+    stopAudio();
     onClose();
   };
 
@@ -186,7 +260,7 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
               <p className="text-xs text-muted-foreground">Find verses by reference or keyword</p>
             </div>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose}>
+          <Button variant="ghost" size="icon" onClick={handleClose}>
             <X className="w-5 h-5" />
           </Button>
         </div>
@@ -291,15 +365,33 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
                         {verse.surah.englishName} ({verse.surah.number}:{verse.number})
                       </span>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => handleInsert(verse)}
-                      className="shrink-0"
-                    >
-                      <ExternalLink className="w-3 h-3 mr-1" />
-                      Use in Chat
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => playArabicRecitation(verse)}
+                        disabled={loadingAudio === `${verse.surah.number}-${verse.number}`}
+                        className="shrink-0"
+                        title="Play Arabic Recitation"
+                      >
+                        {loadingAudio === `${verse.surah.number}-${verse.number}` ? (
+                          <Loader2 className="w-3 h-3 animate-spin" />
+                        ) : playingAudio === `${verse.surah.number}-${verse.number}` ? (
+                          <VolumeX className="w-3 h-3" />
+                        ) : (
+                          <Volume2 className="w-3 h-3" />
+                        )}
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleInsert(verse)}
+                        className="shrink-0"
+                      >
+                        <ExternalLink className="w-3 h-3 mr-1" />
+                        Use in Chat
+                      </Button>
+                    </div>
                   </div>
                   
                   <p className="text-right font-display text-lg text-foreground mb-3 leading-loose">
