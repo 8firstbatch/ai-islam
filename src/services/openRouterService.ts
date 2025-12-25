@@ -1,0 +1,201 @@
+interface OpenRouterMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+interface OpenRouterResponse {
+  choices: Array<{
+    message: {
+      content: string;
+    };
+    delta?: {
+      content?: string;
+    };
+  }>;
+}
+
+export class OpenRouterService {
+  private apiKey: string;
+  private baseURL = 'https://openrouter.ai/api/v1';
+
+  constructor() {
+    this.apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+    if (!this.apiKey) {
+      console.warn('OpenRouter API key not found. Please set VITE_OPENROUTER_API_KEY in your .env file');
+    }
+  }
+
+  async sendMessage(
+    messages: OpenRouterMessage[],
+    options: {
+      model?: string;
+      stream?: boolean;
+      onChunk?: (chunk: string) => void;
+      signal?: AbortSignal;
+    } = {}
+  ): Promise<string> {
+    if (!this.apiKey) {
+      throw new Error('OpenRouter API key not configured. Please add VITE_OPENROUTER_API_KEY to your .env file');
+    }
+
+    const {
+      model = 'openai/gpt-4o-mini', // Default to a cost-effective model
+      stream = true,
+      onChunk,
+      signal
+    } = options;
+
+    // Check if user message contains language instruction
+    const lastUserMessage = messages[messages.length - 1];
+    const hasLanguageInstruction = lastUserMessage?.content.includes('[Please respond in') && lastUserMessage?.content.includes('language');
+    
+    // Extract language instruction if present
+    let languageInstruction = '';
+    if (hasLanguageInstruction) {
+      const match = lastUserMessage.content.match(/\[Please respond in ([^[\]]+) language[^\]]*\]/);
+      if (match) {
+        languageInstruction = `\n\nIMPORTANT: The user has selected content in ${match[1]} language. Please respond primarily in ${match[1]} language while maintaining your Islamic knowledge and guidance. You may include Arabic terms and verses as appropriate, but your main explanation should be in ${match[1]}.`;
+      }
+    }
+
+    // Add Islamic context to the system message
+    const systemMessage: OpenRouterMessage = {
+      role: 'system',
+      content: `You are an Islamic AI assistant with deep knowledge of Islam, Quran, Hadith, Islamic jurisprudence (Fiqh), and Islamic history. 
+
+Your responses should be:
+- Rooted in authentic Islamic teachings from Quran and Sunnah
+- Respectful and compassionate
+- Scholarly yet accessible
+- Include relevant Quranic verses or Hadith when appropriate
+- Acknowledge when you're uncertain and suggest consulting Islamic scholars
+- Avoid giving fatwa (religious rulings) on complex matters - instead guide users to qualified scholars
+
+When discussing Islamic topics:
+- Cite sources when possible (Quran chapter:verse, Hadith collections)
+- Present different scholarly opinions when they exist
+- Be sensitive to different schools of Islamic thought
+- Encourage seeking knowledge and spiritual growth
+
+For non-Islamic questions, provide helpful responses while maintaining Islamic values and ethics.${languageInstruction}`
+    };
+
+    const requestMessages = [systemMessage, ...messages];
+
+    try {
+      const response = await fetch(`${this.baseURL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': window.location.origin,
+          'X-Title': 'AI Islam - Islamic AI Assistant'
+        },
+        body: JSON.stringify({
+          model,
+          messages: requestMessages,
+          stream,
+          temperature: 0.7,
+          max_tokens: 2000
+        }),
+        signal
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      if (stream) {
+        return this.handleStreamResponse(response, onChunk);
+      } else {
+        const data: OpenRouterResponse = await response.json();
+        return data.choices[0]?.message?.content || '';
+      }
+    } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw error; // Re-throw abort errors
+      }
+      console.error('OpenRouter API error:', error);
+      throw new Error(error instanceof Error ? error.message : 'Failed to communicate with AI service');
+    }
+  }
+
+  private async handleStreamResponse(
+    response: Response,
+    onChunk?: (chunk: string) => void
+  ): Promise<string> {
+    if (!response.body) {
+      throw new Error('No response body received');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let fullContent = '';
+    let buffer = '';
+
+    try {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+
+        let newlineIndex: number;
+        while ((newlineIndex = buffer.indexOf('\n')) !== -1) {
+          let line = buffer.slice(0, newlineIndex);
+          buffer = buffer.slice(newlineIndex + 1);
+
+          // Clean up the line
+          if (line.endsWith('\r')) line = line.slice(0, -1);
+          if (line.startsWith(':') || line.trim() === '') continue;
+          if (!line.startsWith('data: ')) continue;
+
+          const jsonStr = line.slice(6).trim();
+          if (jsonStr === '[DONE]') break;
+
+          try {
+            const parsed = JSON.parse(jsonStr);
+            const contentChunk = parsed.choices?.[0]?.delta?.content;
+            
+            if (contentChunk) {
+              fullContent += contentChunk;
+              onChunk?.(contentChunk);
+            }
+          } catch (parseError) {
+            // If we can't parse this chunk, put it back in the buffer
+            buffer = line + '\n' + buffer;
+            break;
+          }
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+
+    return fullContent;
+  }
+
+  // Get available models (optional - for future use)
+  async getModels(): Promise<any[]> {
+    try {
+      const response = await fetch(`${this.baseURL}/models`, {
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch models: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      return data.data || [];
+    } catch (error) {
+      console.error('Error fetching models:', error);
+      return [];
+    }
+  }
+}
+
+export const openRouterService = new OpenRouterService();

@@ -2,7 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { getUserProfile, getEffectiveProfileImage, getEffectiveDisplayName } from "@/utils/profileUtils";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -11,10 +13,10 @@ import {
   Trash2,
   Settings,
   LogOut,
-  Book,
-  Clock,
   ChevronLeft,
   ChevronRight,
+  Edit3,
+  Trash,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -43,8 +45,6 @@ interface SidebarProps {
   currentConversationId: string | null;
   onSelectConversation: (id: string | null) => void;
   onNewChat: () => void;
-  onOpenQuranSearch: () => void;
-  onOpenPrayerTimes: () => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
 }
@@ -53,8 +53,6 @@ export const Sidebar = ({
   currentConversationId,
   onSelectConversation,
   onNewChat,
-  onOpenQuranSearch,
-  onOpenPrayerTimes,
   isCollapsed,
   onToggleCollapse,
 }: SidebarProps) => {
@@ -63,6 +61,8 @@ export const Sidebar = ({
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editingConversationId, setEditingConversationId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -88,13 +88,8 @@ export const Sidebar = ({
   const loadProfile = async () => {
     if (!user) return;
     
-    const { data } = await supabase
-      .from("profiles")
-      .select("display_name, avatar_url")
-      .eq("user_id", user.id)
-      .single();
-
-    setProfile(data);
+    const profileData = await getUserProfile(user.id);
+    setProfile(profileData);
   };
 
   const deleteConversation = async (id: string) => {
@@ -104,6 +99,41 @@ export const Sidebar = ({
     if (currentConversationId === id) {
       onSelectConversation(null);
     }
+  };
+
+  const deleteAllConversations = async () => {
+    if (!user) return;
+    await supabase.from("conversations").delete().eq("user_id", user.id);
+    setConversations([]);
+    onSelectConversation(null);
+  };
+
+  const renameConversation = async (id: string, newTitle: string) => {
+    if (!newTitle.trim()) return;
+    
+    await supabase
+      .from("conversations")
+      .update({ title: newTitle.trim() })
+      .eq("id", id);
+    
+    setConversations((prev) =>
+      prev.map((conv) =>
+        conv.id === id ? { ...conv, title: newTitle.trim() } : conv
+      )
+    );
+    
+    setEditingConversationId(null);
+    setEditingTitle("");
+  };
+
+  const startEditing = (id: string, currentTitle: string) => {
+    setEditingConversationId(id);
+    setEditingTitle(currentTitle);
+  };
+
+  const cancelEditing = () => {
+    setEditingConversationId(null);
+    setEditingTitle("");
   };
 
   const handleSignOut = async () => {
@@ -122,60 +152,91 @@ export const Sidebar = ({
     return date.toLocaleDateString();
   };
 
+  const truncateTitle = (title: string, maxLength: number = 20) => {
+    if (title.length <= maxLength) return title;
+    
+    // Try to truncate at word boundary
+    const truncated = title.substring(0, maxLength);
+    const lastSpace = truncated.lastIndexOf(' ');
+    
+    if (lastSpace > maxLength * 0.6) {
+      return truncated.substring(0, lastSpace) + '...';
+    }
+    
+    return truncated + '...';
+  };
+
   if (!user) return null;
 
   return (
     <aside
-      className={`h-screen bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-300 ${
+      className={`h-screen bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-500 ease-in-out overflow-hidden ${
         isCollapsed ? "w-16" : "w-72"
       }`}
     >
       {/* Header */}
-      <div className="p-4 border-b border-sidebar-border flex items-center justify-between">
-        {!isCollapsed && (
-          <h2 className="font-display text-lg text-sidebar-foreground">Chats</h2>
+      <div className="p-4 border-b border-sidebar-border animate-slide-in-left">
+        <div className="flex items-center justify-between mb-2">
+          {!isCollapsed && (
+            <h2 className="font-display text-lg text-sidebar-foreground animate-fade-in">Chats</h2>
+          )}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleCollapse}
+            className="text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-300 hover:scale-110"
+          >
+            {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+          </Button>
+        </div>
+        
+        {/* Delete All Conversations Button */}
+        {!isCollapsed && conversations.length > 0 && (
+          <div className="animate-scale-in">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full text-xs text-muted-foreground hover:text-destructive transition-all duration-300 hover:scale-105"
+                >
+                  <Trash className="w-3 h-3 mr-2" />
+                  Clear All Chats
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="animate-scale-in">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Delete All Conversations</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Are you sure you want to delete all conversations? This action cannot be undone and will permanently remove all your chat history.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={deleteAllConversations}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-300"
+                  >
+                    Delete All
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         )}
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggleCollapse}
-          className="text-sidebar-foreground hover:bg-sidebar-accent"
-        >
-          {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-        </Button>
       </div>
 
       {/* Actions */}
       <div className={`p-3 space-y-2 ${isCollapsed ? "px-2" : ""}`}>
         <Button
           onClick={onNewChat}
-          className={`bg-gradient-emerald hover:opacity-90 ${
+          className={`bg-gradient-emerald hover:opacity-90 transition-all duration-300 hover:scale-105 animate-glow-pulse ${
             isCollapsed ? "w-10 h-10 p-0" : "w-full"
           }`}
           title="New Chat"
         >
           <Plus className="w-4 h-4" />
           {!isCollapsed && <span className="ml-2">New Chat</span>}
-        </Button>
-
-        <Button
-          variant="outline"
-          onClick={onOpenQuranSearch}
-          className={`${isCollapsed ? "w-10 h-10 p-0" : "w-full"}`}
-          title="Quran Search"
-        >
-          <Book className="w-4 h-4" />
-          {!isCollapsed && <span className="ml-2">Quran Search</span>}
-        </Button>
-
-        <Button
-          variant="outline"
-          onClick={onOpenPrayerTimes}
-          className={`${isCollapsed ? "w-10 h-10 p-0" : "w-full"}`}
-          title="Prayer Times"
-        >
-          <Clock className="w-4 h-4" />
-          {!isCollapsed && <span className="ml-2">Prayer Times</span>}
         </Button>
       </div>
 
@@ -193,63 +254,121 @@ export const Sidebar = ({
           )
         ) : (
           <div className="space-y-1 py-2">
-            {conversations.map((conv) => (
+            {conversations.map((conv, index) => (
               <div
                 key={conv.id}
-                className={`group flex items-center gap-2 rounded-lg transition-colors ${
+                className={`group flex items-center gap-2 rounded-lg border transition-all duration-300 hover:scale-[1.02] animate-slide-in-left min-w-0 ${
                   currentConversationId === conv.id
-                    ? "bg-sidebar-accent"
-                    : "hover:bg-sidebar-accent/50"
+                    ? "bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 border-emerald-500/30 shadow-md"
+                    : "border-transparent hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/5 hover:border-primary/20"
                 }`}
+                style={{ animationDelay: `${index * 50}ms` }}
               >
-                <button
-                  onClick={() => onSelectConversation(conv.id)}
-                  className={`flex-1 flex items-center gap-3 p-3 text-left ${
-                    isCollapsed ? "justify-center" : ""
-                  }`}
-                  title={conv.title}
-                >
-                  <MessageSquare className="w-4 h-4 text-sidebar-foreground shrink-0" />
-                  {!isCollapsed && (
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm text-sidebar-foreground truncate">
-                        {conv.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatDate(conv.updated_at)}
-                      </p>
-                    </div>
-                  )}
-                </button>
-                {!isCollapsed && (
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className="opacity-0 group-hover:opacity-100 mr-2 h-8 w-8 text-muted-foreground hover:text-destructive"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Delete Conversation</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to delete this conversation? This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={() => deleteConversation(conv.id)}
-                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                {editingConversationId === conv.id ? (
+                  // Editing mode
+                  <div className="flex-1 flex items-center gap-2 p-2">
+                    <MessageSquare className="w-4 h-4 text-sidebar-foreground shrink-0" />
+                    <Input
+                      value={editingTitle}
+                      onChange={(e) => setEditingTitle(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          renameConversation(conv.id, editingTitle);
+                        } else if (e.key === 'Escape') {
+                          cancelEditing();
+                        }
+                      }}
+                      onBlur={() => renameConversation(conv.id, editingTitle)}
+                      className="flex-1 h-7 text-sm"
+                      autoFocus
+                    />
+                  </div>
+                ) : (
+                  // Normal mode
+                  <div className="flex items-center w-full min-w-0">
+                    <button
+                      onClick={() => onSelectConversation(conv.id)}
+                      className={`flex-1 flex items-center gap-2 p-2 text-left min-w-0 ${
+                        isCollapsed ? "justify-center" : ""
+                      }`}
+                      title={conv.title}
+                    >
+                      <MessageSquare className={`w-4 h-4 shrink-0 ${
+                        currentConversationId === conv.id 
+                          ? "text-emerald-600 dark:text-emerald-400" 
+                          : "text-sidebar-foreground"
+                      }`} />
+                      {!isCollapsed && (
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm truncate font-medium ${
+                            currentConversationId === conv.id 
+                              ? "text-emerald-700 dark:text-emerald-300" 
+                              : "text-sidebar-foreground"
+                          }`}>
+                            {truncateTitle(conv.title)}
+                          </p>
+                          <p className={`text-xs ${
+                            currentConversationId === conv.id 
+                              ? "text-emerald-600 dark:text-emerald-400" 
+                              : "text-muted-foreground"
+                          }`}>
+                            {formatDate(conv.updated_at)}
+                          </p>
+                        </div>
+                      )}
+                    </button>
+                    
+                    {/* Action Buttons - Show on Hover */}
+                    {!isCollapsed && (
+                      <div className="flex items-center gap-1 pr-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        {/* Rename Button */}
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            startEditing(conv.id, conv.title);
+                          }}
+                          className="h-6 w-6 text-slate-500 hover:text-emerald-600 hover:bg-emerald-500/10 transition-colors duration-200 flex-shrink-0"
+                          title="Rename conversation"
                         >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
+                          <Edit3 className="w-3 h-3" />
+                        </Button>
+                        
+                        {/* Delete Button */}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={(e) => e.stopPropagation()}
+                              className="h-6 w-6 text-slate-500 hover:text-red-600 hover:bg-red-500/10 transition-colors duration-200 flex-shrink-0"
+                              title="Delete conversation"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </Button>
+                          </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Delete Conversation</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to delete "{conv.title}"? This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => deleteConversation(conv.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            >
+                              Delete
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    </div>
+                    )}
+                  </div>
                 )}
               </div>
             ))}
@@ -277,16 +396,23 @@ export const Sidebar = ({
           }`}
         >
           <Avatar className="w-8 h-8">
-            <AvatarImage src={profile?.avatar_url || ""} />
+            <AvatarImage 
+              src={getEffectiveProfileImage(user, profile) || ""} 
+              alt={getEffectiveDisplayName(user, profile)}
+              referrerPolicy="no-referrer"
+            />
             <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-              {profile?.display_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
+              {getEffectiveDisplayName(user, profile)[0]?.toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
           {!isCollapsed && (
             <>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-sidebar-foreground truncate">
-                  {profile?.display_name || user?.email?.split("@")[0]}
+                  {getEffectiveDisplayName(user, profile)}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user?.email}
                 </p>
               </div>
               <Button

@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { getUserProfile, updateUserProfile, uploadProfileImage, getEffectiveProfileImage, getEffectiveDisplayName } from "@/utils/profileUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,8 +19,13 @@ import {
   Monitor,
   Camera,
   Save,
+  Image,
+  Compass,
+  RefreshCw,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { ImageGeneration } from "@/components/ImageGeneration";
+import { QiblaCompass } from "@/components/QiblaCompass";
 import {
   Select,
   SelectContent,
@@ -28,7 +34,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type SettingsTab = "profile" | "appearance" | "ai";
+type SettingsTab = "profile" | "appearance" | "ai" | "tools";
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -40,10 +46,13 @@ const Settings = () => {
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
   const [displayName, setDisplayName] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
+  const [profile, setProfile] = useState<any>(null);
   const [aiModel, setAiModel] = useState("google/gemini-2.5-flash");
   const [responseStyle, setResponseStyle] = useState("balanced");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [showImageGeneration, setShowImageGeneration] = useState(false);
+  const [showQiblaCompass, setShowQiblaCompass] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -60,15 +69,17 @@ const Settings = () => {
 
   const loadProfile = async () => {
     if (!user) return;
-    const { data } = await supabase
-      .from("profiles")
-      .select("display_name, avatar_url")
-      .eq("user_id", user.id)
-      .single();
-
-    if (data) {
-      setDisplayName(data.display_name || "");
-      setAvatarUrl(data.avatar_url || "");
+    
+    const profileData = await getUserProfile(user.id);
+    setProfile(profileData);
+    
+    if (profileData) {
+      setDisplayName(profileData.display_name || "");
+      setAvatarUrl(profileData.avatar_url || "");
+    } else {
+      // Use Google OAuth data as fallback
+      setDisplayName(getEffectiveDisplayName(user, null));
+      setAvatarUrl(getEffectiveProfileImage(user, null) || "");
     }
   };
 
@@ -90,50 +101,56 @@ const Settings = () => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      toast({
-        title: "Invalid file",
-        description: "Please upload an image file",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validate file size (max 2MB)
-    if (file.size > 2 * 1024 * 1024) {
-      toast({
-        title: "File too large",
-        description: "Please upload an image smaller than 2MB",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setUploading(true);
 
     try {
-      // Convert to base64 for simplicity (for production, use Supabase Storage)
-      const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64 = reader.result as string;
-        setAvatarUrl(base64);
-        
-        await supabase
-          .from("profiles")
-          .update({ avatar_url: base64 })
-          .eq("user_id", user.id);
+      const base64Image = await uploadProfileImage(user.id, file);
+      setAvatarUrl(base64Image);
+      
+      await updateUserProfile(user.id, {
+        avatar_url: base64Image,
+        display_name: displayName
+      });
 
-        toast({ title: "Avatar updated" });
-        setUploading(false);
-      };
-      reader.readAsDataURL(file);
-    } catch {
+      toast({ title: "Profile image updated successfully!" });
+    } catch (error) {
       toast({
         title: "Upload failed",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const syncGoogleImage = async () => {
+    if (!user) return;
+    
+    setUploading(true);
+    try {
+      const googleImage = getEffectiveProfileImage(user, null);
+      if (googleImage) {
+        setAvatarUrl(googleImage);
+        await updateUserProfile(user.id, {
+          avatar_url: googleImage,
+          display_name: displayName
+        });
+        toast({ title: "Google profile image synced!" });
+      } else {
+        toast({
+          title: "No Google image found",
+          description: "Your Google account doesn't have a profile image",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Sync failed",
         description: "Please try again",
         variant: "destructive",
       });
+    } finally {
       setUploading(false);
     }
   };
@@ -143,13 +160,14 @@ const Settings = () => {
     setSaving(true);
 
     try {
-      await supabase
-        .from("profiles")
-        .update({ display_name: displayName })
-        .eq("user_id", user.id);
+      await updateUserProfile(user.id, {
+        display_name: displayName,
+        avatar_url: avatarUrl
+      });
 
-      toast({ title: "Profile saved" });
-    } catch {
+      toast({ title: "Profile saved successfully!" });
+    } catch (error) {
+      console.error('Profile save error:', error);
       toast({
         title: "Failed to save",
         description: "Please try again",
@@ -165,16 +183,22 @@ const Settings = () => {
     setSaving(true);
 
     try {
-      await supabase
+      // Use upsert to create settings if they don't exist
+      const { error } = await supabase
         .from("user_settings")
-        .update({
+        .upsert({
+          user_id: user.id,
           ai_model: aiModel,
           ai_response_style: responseStyle,
-        })
-        .eq("user_id", user.id);
+        }, {
+          onConflict: 'user_id'
+        });
+
+      if (error) throw error;
 
       toast({ title: "AI settings saved" });
-    } catch {
+    } catch (error) {
+      console.error('AI settings save error:', error);
       toast({
         title: "Failed to save",
         description: "Please try again",
@@ -197,6 +221,7 @@ const Settings = () => {
     { id: "profile" as const, label: "Profile", icon: User },
     { id: "appearance" as const, label: "Appearance", icon: Palette },
     { id: "ai" as const, label: "AI Settings", icon: Bot },
+    { id: "tools" as const, label: "Tools", icon: Image },
   ];
 
   return (
@@ -258,7 +283,7 @@ const Settings = () => {
                     <div className="flex items-center gap-6">
                       <div className="relative">
                         <Avatar className="w-20 h-20">
-                          <AvatarImage src={avatarUrl} />
+                          <AvatarImage src={avatarUrl} referrerPolicy="no-referrer" />
                           <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
                             {displayName?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
                           </AvatarFallback>
@@ -282,11 +307,25 @@ const Settings = () => {
                           className="hidden"
                         />
                       </div>
-                      <div>
+                      <div className="flex-1">
                         <p className="font-medium text-foreground">Profile Photo</p>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-muted-foreground mb-3">
                           Click the camera icon to upload a new photo
                         </p>
+                        <Button
+                          onClick={syncGoogleImage}
+                          disabled={uploading}
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center gap-2"
+                        >
+                          {uploading ? (
+                            <div className="w-3 h-3 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                          ) : (
+                            <RefreshCw className="w-3 h-3" />
+                          )}
+                          Sync Google Image
+                        </Button>
                       </div>
                     </div>
 
@@ -298,13 +337,14 @@ const Settings = () => {
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
                         placeholder="Your name"
+                        className="rounded-2xl"
                       />
                     </div>
 
                     {/* Email (read-only) */}
                     <div className="space-y-2">
                       <Label>Email</Label>
-                      <Input value={user?.email || ""} disabled />
+                      <Input value={user?.email || ""} disabled className="rounded-2xl" />
                     </div>
 
                     <Button
@@ -387,9 +427,9 @@ const Settings = () => {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="google/gemini-2.5-flash">Gemini 2.5 Flash (Fast)</SelectItem>
-                            <SelectItem value="google/gemini-2.5-pro">Gemini 2.5 Pro (Advanced)</SelectItem>
-                            <SelectItem value="openai/gpt-5-mini">GPT-5 Mini (Balanced)</SelectItem>
+                            <SelectItem value="google/gemini-2.5-flash">Smart</SelectItem>
+                            <SelectItem value="google/gemini-2.5-pro">Thinking</SelectItem>
+                            <SelectItem value="openai/gpt-5-mini">Pro</SelectItem>
                           </SelectContent>
                         </Select>
                         <p className="text-xs text-muted-foreground">
@@ -434,10 +474,101 @@ const Settings = () => {
                     </Button>
                   </div>
                 )}
+
+                {/* Tools Tab */}
+                {activeTab === "tools" && (
+                  <div className="space-y-6">
+                    <div>
+                      <h2 className="font-display text-xl text-foreground mb-1">Islamic Tools</h2>
+                      <p className="text-sm text-muted-foreground">
+                        Access Islamic tools and features
+                      </p>
+                    </div>
+
+                    <div className="grid gap-4">
+                      {/* Image Generation Tool */}
+                      <div className="p-4 border border-border rounded-xl hover:border-primary/30 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
+                              <Image className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <h3 className="font-medium text-foreground">Islamic Image Generation</h3>
+                              <p className="text-sm text-muted-foreground">
+                                Generate beautiful Islamic-themed images with AI
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            onClick={() => setShowImageGeneration(true)}
+                            variant="outline"
+                            size="sm"
+                          >
+                            Open Tool
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Qibla Compass Tool */}
+                      <div className="p-4 border border-border rounded-xl hover:border-primary/30 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
+                              <Compass className="w-5 h-5 text-white" />
+                            </div>
+                            <div>
+                              <h3 className="font-medium text-foreground">Qibla Compass</h3>
+                              <p className="text-sm text-muted-foreground">
+                                Find the direction to Mecca for prayer
+                              </p>
+                            </div>
+                          </div>
+                          <Button
+                            onClick={() => setShowQiblaCompass(true)}
+                            variant="outline"
+                            size="sm"
+                          >
+                            Open Tool
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Future tools can be added here */}
+                      <div className="p-4 border border-dashed border-border rounded-xl opacity-50">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+                              <Bot className="w-5 h-5 text-muted-foreground" />
+                            </div>
+                            <div>
+                              <h3 className="font-medium text-muted-foreground">More Tools Coming Soon</h3>
+                              <p className="text-sm text-muted-foreground">
+                                Additional Islamic tools will be added in future updates
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
         </main>
+
+        {/* Image Generation Modal */}
+        <ImageGeneration 
+          isOpen={showImageGeneration} 
+          onClose={() => setShowImageGeneration(false)} 
+        />
+        
+        {/* Qibla Compass Modal */}
+        <QiblaCompass 
+          isOpen={showQiblaCompass} 
+          onClose={() => setShowQiblaCompass(false)} 
+        />
       </div>
     </>
   );

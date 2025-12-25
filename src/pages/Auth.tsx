@@ -8,6 +8,9 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Sparkles, Moon, Mail, Lock, User, ArrowRight } from "lucide-react";
 import { Helmet } from "react-helmet-async";
+import { Footer } from "@/components/Footer";
+import { SupabaseConfigWarning } from "@/components/SupabaseConfigWarning";
+import AuthDebug from "@/components/AuthDebug";
 import { z } from "zod";
 
 const emailSchema = z.string().email("Please enter a valid email address");
@@ -97,14 +100,34 @@ const Auth = () => {
   const handleGoogleAuth = async () => {
     setLoading(true);
     try {
+      // Use the correct callback URL for the current environment
+      const redirectTo = `${window.location.origin}/auth/callback`;
+      
+      console.log("Google OAuth redirect URL:", redirectTo); // Debug log
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: redirectTo,
+          scopes: 'openid email profile',
+          queryParams: {
+            access_type: 'offline',
+            prompt: 'consent',
+          },
         },
       });
-      if (error) throw error;
+      
+      if (error) {
+        console.error("Google OAuth error:", error);
+        throw error;
+      }
+      
+      toast({
+        title: "Redirecting to Google",
+        description: "Please complete authentication in the new window",
+      });
     } catch (error) {
+      console.error("Google authentication failed:", error);
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Google authentication failed",
@@ -141,6 +164,8 @@ const Auth = () => {
 
           {/* Auth Card */}
           <div className="bg-card border border-border rounded-2xl p-8 shadow-soft">
+            <SupabaseConfigWarning />
+            
             <h2 className="font-display text-2xl text-foreground text-center mb-6">
               {isLogin ? "Welcome Back" : "Create Account"}
             </h2>
@@ -195,7 +220,7 @@ const Auth = () => {
                       placeholder="Your name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      className="pl-10"
+                      className="pl-10 rounded-2xl"
                     />
                   </div>
                 </div>
@@ -214,7 +239,7 @@ const Auth = () => {
                       setEmail(e.target.value);
                       setErrors((prev) => ({ ...prev, email: undefined }));
                     }}
-                    className={`pl-10 ${errors.email ? "border-destructive" : ""}`}
+                    className={`pl-10 rounded-2xl ${errors.email ? "border-destructive" : ""}`}
                   />
                 </div>
                 {errors.email && (
@@ -235,7 +260,7 @@ const Auth = () => {
                       setPassword(e.target.value);
                       setErrors((prev) => ({ ...prev, password: undefined }));
                     }}
-                    className={`pl-10 ${errors.password ? "border-destructive" : ""}`}
+                    className={`pl-10 rounded-2xl ${errors.password ? "border-destructive" : ""}`}
                   />
                 </div>
                 {errors.password && (
@@ -276,6 +301,20 @@ const Auth = () => {
                 {isLogin ? "Sign up" : "Sign in"}
               </button>
             </p>
+
+            {/* Continue as Guest */}
+            <div className="mt-4 pt-4 border-t border-border">
+              <Button
+                variant="ghost"
+                className="w-full"
+                onClick={() => navigate("/")}
+              >
+                Continue as Guest
+              </Button>
+              <p className="text-xs text-muted-foreground text-center mt-2">
+                Use AI chat without creating an account
+              </p>
+            </div>
           </div>
 
           {/* Footer */}
@@ -283,6 +322,10 @@ const Auth = () => {
             بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
           </p>
         </div>
+
+        <AuthDebug />
+
+        <Footer />
       </div>
     </>
   );

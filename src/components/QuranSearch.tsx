@@ -1,9 +1,10 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { X, Search, Book, ExternalLink, Volume2, VolumeX, Loader2 } from "lucide-react";
+import { X, Search, Book, ExternalLink, Volume2, VolumeX, Loader2, ChevronUp, ChevronDown, ArrowLeft, ArrowRight, Globe, BookOpen, Hash } from "lucide-react";
 
 interface QuranVerse {
   number: number;
@@ -16,6 +17,44 @@ interface QuranVerse {
   };
   audioUrl?: string;
 }
+
+interface Translation {
+  identifier: string;
+  language: string;
+  name: string;
+  englishName: string;
+  type: string;
+}
+
+// Available translations in different languages
+const availableTranslations: Translation[] = [
+  { identifier: "en.sahih", language: "en", name: "Sahih International", englishName: "English", type: "translation" },
+  { identifier: "en.pickthall", language: "en", name: "Pickthall", englishName: "English (Pickthall)", type: "translation" },
+  { identifier: "en.yusufali", language: "en", name: "Yusuf Ali", englishName: "English (Yusuf Ali)", type: "translation" },
+  { identifier: "ar.muyassar", language: "ar", name: "التفسير الميسر", englishName: "Arabic (Tafsir)", type: "tafsir" },
+  { identifier: "ml.abdulhameed", language: "ml", name: "മലയാളം - അബ്ദുൽ ഹമീദ് & പറപ്പൂർ", englishName: "Malayalam", type: "translation" },
+  { identifier: "ur.jalandhry", language: "ur", name: "اردو - فتح محمد جالندھری", englishName: "Urdu (Jalandhry)", type: "translation" },
+  { identifier: "ur.kanzuliman", language: "ur", name: "اردو - کنز الایمان", englishName: "Urdu (Kanz ul Iman)", type: "translation" },
+  { identifier: "hi.hindi", language: "hi", name: "हिंदी - फारूक खान & अहमद", englishName: "Hindi", type: "translation" },
+  { identifier: "fr.hamidullah", language: "fr", name: "French - Hamidullah", englishName: "French", type: "translation" },
+  { identifier: "de.bubenheim", language: "de", name: "German - Bubenheim & Elyas", englishName: "German", type: "translation" },
+  { identifier: "es.cortes", language: "es", name: "Spanish - Cortes", englishName: "Spanish", type: "translation" },
+  { identifier: "ru.kuliev", language: "ru", name: "Russian - Kuliev", englishName: "Russian", type: "translation" },
+  { identifier: "tr.diyanet", language: "tr", name: "Turkish - Diyanet", englishName: "Turkish", type: "translation" },
+  { identifier: "id.indonesian", language: "id", name: "Indonesian - Bahasa Indonesia", englishName: "Indonesian", type: "translation" },
+  { identifier: "ms.basmeih", language: "ms", name: "Malay - Basmeih", englishName: "Malay", type: "translation" },
+  { identifier: "bn.bengali", language: "bn", name: "Bengali - Muhiuddin Khan", englishName: "Bengali", type: "translation" },
+  { identifier: "fa.makarem", language: "fa", name: "Persian - Makarem Shirazi", englishName: "Persian", type: "translation" },
+  { identifier: "nl.keyzer", language: "nl", name: "Dutch - Keyzer", englishName: "Dutch", type: "translation" },
+  { identifier: "it.piccardo", language: "it", name: "Italian - Piccardo", englishName: "Italian", type: "translation" },
+  { identifier: "pt.elhayek", language: "pt", name: "Portuguese - El Hayek", englishName: "Portuguese", type: "translation" },
+  { identifier: "sw.barwani", language: "sw", name: "Swahili - Al-Barwani", englishName: "Swahili", type: "translation" },
+  { identifier: "zh.jian", language: "zh", name: "Chinese - Ma Jian", englishName: "Chinese", type: "translation" },
+  { identifier: "ja.japanese", language: "ja", name: "Japanese", englishName: "Japanese", type: "translation" },
+  { identifier: "ko.korean", language: "ko", name: "Korean", englishName: "Korean", type: "translation" },
+  { identifier: "th.thai", language: "th", name: "Thai", englishName: "Thai", type: "translation" },
+  { identifier: "vi.vietnamese", language: "vi", name: "Vietnamese", englishName: "Vietnamese", type: "translation" }
+];
 
 interface QuranSearchProps {
   isOpen: boolean;
@@ -30,10 +69,67 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
   const [results, setResults] = useState<QuranVerse[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchMode, setSearchMode] = useState<"reference" | "keyword">("reference");
+  const [selectedTranslation, setSelectedTranslation] = useState("en.sahih");
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [loadingAudio, setLoadingAudio] = useState<string | null>(null);
+  const [selectedResultIndex, setSelectedResultIndex] = useState(0);
+  const [isSearching, setIsSearching] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
+
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isOpen) return;
+
+      switch (e.key) {
+        case 'ArrowLeft':
+          e.preventDefault();
+          setSearchMode('reference');
+          break;
+        case 'ArrowRight':
+          e.preventDefault();
+          setSearchMode('keyword');
+          break;
+        case 'ArrowUp':
+          e.preventDefault();
+          if (results.length > 0) {
+            setSelectedResultIndex(prev => 
+              prev > 0 ? prev - 1 : results.length - 1
+            );
+          }
+          break;
+        case 'ArrowDown':
+          e.preventDefault();
+          if (results.length > 0) {
+            setSelectedResultIndex(prev => 
+              prev < results.length - 1 ? prev + 1 : 0
+            );
+          }
+          break;
+        case 'Enter':
+          e.preventDefault();
+          if (results.length > 0 && selectedResultIndex >= 0) {
+            handleInsert(results[selectedResultIndex]);
+          } else {
+            handleSearch();
+          }
+          break;
+        case 'Escape':
+          e.preventDefault();
+          handleClose();
+          break;
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, results, selectedResultIndex, searchMode]);
+
+  // Reset selected index when results change
+  useEffect(() => {
+    setSelectedResultIndex(0);
+  }, [results]);
 
   const playArabicRecitation = async (verse: QuranVerse) => {
     const verseKey = `${verse.surah.number}-${verse.number}`;
@@ -110,10 +206,10 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
 
     setLoading(true);
     try {
-      let url = `https://api.alquran.cloud/v1/surah/${surahNumber}/editions/quran-uthmani,en.sahih`;
+      let url = `https://api.alquran.cloud/v1/surah/${surahNumber}/editions/quran-uthmani,${selectedTranslation}`;
       
       if (ayahNumber) {
-        url = `https://api.alquran.cloud/v1/ayah/${surahNumber}:${ayahNumber}/editions/quran-uthmani,en.sahih`;
+        url = `https://api.alquran.cloud/v1/ayah/${surahNumber}:${ayahNumber}/editions/quran-uthmani,${selectedTranslation}`;
       }
 
       const response = await fetch(url);
@@ -123,12 +219,12 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
         if (ayahNumber) {
           // Single verse
           const arabicData = data.data[0];
-          const englishData = data.data[1];
+          const translationData = data.data[1];
           setResults([
             {
               number: arabicData.numberInSurah,
               text: arabicData.text,
-              translation: englishData.text,
+              translation: translationData.text,
               surah: {
                 number: arabicData.surah.number,
                 name: arabicData.surah.name,
@@ -139,11 +235,11 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
         } else {
           // Whole surah
           const arabicData = data.data[0];
-          const englishData = data.data[1];
-          const verses: QuranVerse[] = arabicData.ayahs.map((ayah: any, index: number) => ({
+          const translationData = data.data[1];
+          const verses: QuranVerse[] = arabicData.ayahs.map((ayah: { numberInSurah: number; text: string }, index: number) => ({
             number: ayah.numberInSurah,
             text: ayah.text,
-            translation: englishData.ayahs[index].text,
+            translation: translationData.ayahs[index].text,
             surah: {
               number: arabicData.number,
               name: arabicData.name,
@@ -179,13 +275,17 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
     setLoading(true);
     try {
       const response = await fetch(
-        `https://api.alquran.cloud/v1/search/${encodeURIComponent(query)}/all/en.sahih`
+        `https://api.alquran.cloud/v1/search/${encodeURIComponent(query)}/all/${selectedTranslation}`
       );
       const data = await response.json();
 
       if (data.status === "OK" && data.data.matches) {
         const verses: QuranVerse[] = await Promise.all(
-          data.data.matches.slice(0, 10).map(async (match: any) => {
+          data.data.matches.slice(0, 10).map(async (match: { 
+            surah: { number: number; name: string; englishName: string }; 
+            numberInSurah: number; 
+            text: string 
+          }) => {
             // Fetch Arabic text
             const arabicRes = await fetch(
               `https://api.alquran.cloud/v1/ayah/${match.surah.number}:${match.numberInSurah}/quran-uthmani`
@@ -234,7 +334,45 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
 
   const handleInsert = (verse: QuranVerse) => {
     stopAudio();
-    const formattedVerse = `📖 **${verse.surah.englishName} (${verse.surah.number}:${verse.number})**\n\n"${verse.text}"\n\n*Translation:* "${verse.translation}"`;
+    
+    // Get the selected translation info
+    const selectedTranslationInfo = availableTranslations.find(t => t.identifier === selectedTranslation);
+    const translationLanguage = selectedTranslationInfo?.language || 'en';
+    const translationName = selectedTranslationInfo?.englishName || 'English';
+    
+    // Create language-specific instruction for the AI
+    let languageInstruction = '';
+    if (translationLanguage !== 'en') {
+      const languageNames: { [key: string]: string } = {
+        'ml': 'Malayalam',
+        'ar': 'Arabic',
+        'ur': 'Urdu',
+        'hi': 'Hindi',
+        'fr': 'French',
+        'de': 'German',
+        'es': 'Spanish',
+        'ru': 'Russian',
+        'tr': 'Turkish',
+        'id': 'Indonesian',
+        'ms': 'Malay',
+        'bn': 'Bengali',
+        'fa': 'Persian',
+        'nl': 'Dutch',
+        'it': 'Italian',
+        'pt': 'Portuguese',
+        'sw': 'Swahili',
+        'zh': 'Chinese',
+        'ja': 'Japanese',
+        'ko': 'Korean',
+        'th': 'Thai',
+        'vi': 'Vietnamese'
+      };
+      
+      const languageName = languageNames[translationLanguage] || translationName;
+      languageInstruction = `\n\n[Please respond in ${languageName} language since the user selected ${translationName} translation]`;
+    }
+    
+    const formattedVerse = `📖 **${verse.surah.englishName} (${verse.surah.number}:${verse.number})**\n\n"${verse.text}"\n\n*Translation (${translationName}):* "${verse.translation}"${languageInstruction}`;
     onInsertVerse(formattedVerse);
     onClose();
   };
@@ -265,47 +403,92 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
           </Button>
         </div>
 
-        {/* Search Mode Toggle */}
+        {/* Search Mode Toggle with Arrow Navigation */}
         <div className="p-4 border-b border-border">
-          <div className="flex gap-2 mb-4">
-            <Button
-              variant={searchMode === "reference" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSearchMode("reference")}
-              className={searchMode === "reference" ? "bg-gradient-emerald" : ""}
-            >
-              By Reference
-            </Button>
-            <Button
-              variant={searchMode === "keyword" ? "default" : "outline"}
-              size="sm"
-              onClick={() => setSearchMode("keyword")}
-              className={searchMode === "keyword" ? "bg-gradient-emerald" : ""}
-            >
-              By Keyword
-            </Button>
+          <div className="flex items-center gap-2 mb-4">
+            <div className="flex gap-2 flex-1">
+              <Button
+                variant={searchMode === "reference" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSearchMode("reference")}
+                className={`flex items-center gap-2 ${searchMode === "reference" ? "bg-gradient-emerald" : ""}`}
+              >
+                <ArrowLeft className="w-3 h-3" />
+                By Reference
+              </Button>
+              <Button
+                variant={searchMode === "keyword" ? "default" : "outline"}
+                size="sm"
+                onClick={() => setSearchMode("keyword")}
+                className={`flex items-center gap-2 ${searchMode === "keyword" ? "bg-gradient-emerald" : ""}`}
+              >
+                By Keyword
+                <ArrowRight className="w-3 h-3" />
+              </Button>
+            </div>
+            <div className="text-xs text-muted-foreground">
+              Use ← → arrows to switch modes
+            </div>
+          </div>
+
+          {/* Translation Language Selector */}
+          <div className="mb-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Globe className="w-4 h-4" />
+                <span>Translation:</span>
+              </div>
+              <Select value={selectedTranslation} onValueChange={setSelectedTranslation}>
+                <SelectTrigger className="w-64">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {availableTranslations.map((translation) => (
+                    <SelectItem key={translation.identifier} value={translation.identifier}>
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium">{translation.englishName}</span>
+                        {translation.type === 'tafsir' && (
+                          <span className="text-xs bg-muted px-1 rounded">Tafsir</span>
+                        )}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           {searchMode === "reference" ? (
             <div className="flex gap-3">
-              <div className="flex-1">
-                <Input
-                  placeholder="Surah # (1-114)"
-                  value={surahNumber}
-                  onChange={(e) => setSurahNumber(e.target.value)}
-                  type="number"
-                  min="1"
-                  max="114"
-                />
+              <div className="flex-1 relative">
+                <Select value={surahNumber} onValueChange={setSurahNumber}>
+                  <SelectTrigger className="rounded-2xl">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4 text-muted-foreground" />
+                      <SelectValue placeholder="Surah # (1-114)" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {Array.from({ length: 114 }, (_, i) => i + 1).map((num) => (
+                      <SelectItem key={num} value={num.toString()}>
+                        Surah {num}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className="flex-1">
-                <Input
-                  placeholder="Ayah # (optional)"
-                  value={ayahNumber}
-                  onChange={(e) => setAyahNumber(e.target.value)}
-                  type="number"
-                  min="1"
-                />
+              <div className="flex-1 relative">
+                <div className="relative">
+                  <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
+                  <Input
+                    placeholder="Ayah # (optional)"
+                    value={ayahNumber}
+                    onChange={(e) => setAyahNumber(e.target.value)}
+                    type="number"
+                    min="1"
+                    className="rounded-2xl pl-10 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none [-moz-appearance:textfield]"
+                  />
+                </div>
               </div>
               <Button
                 onClick={handleSearch}
@@ -321,13 +504,17 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
             </div>
           ) : (
             <div className="flex gap-3">
-              <Input
-                placeholder="Search for a word or phrase..."
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                className="flex-1"
-              />
+              <div className={`relative ${isSearching ? 'animate-spin-border' : ''}`}>
+                <Input
+                  placeholder="Search for a word or phrase..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSearch()}
+                  onFocus={() => setIsSearching(true)}
+                  onBlur={() => !loading && setIsSearching(false)}
+                  className="flex-1 rounded-2xl relative z-10"
+                />
+              </div>
               <Button
                 onClick={handleSearch}
                 disabled={loading}
@@ -343,20 +530,29 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
           )}
         </div>
 
-        {/* Results */}
+        {/* Results with Arrow Navigation */}
         <ScrollArea className="h-96">
           {results.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <Book className="w-12 h-12 mb-4 opacity-50" />
-              <p>Search for Quran verses above</p>
+              <p>Search for Quran verses in multiple languages</p>
               <p className="text-sm">e.g., Surah 1, Ayah 1 or search "mercy"</p>
+              <p className="text-xs mt-2">Available in 25+ languages including Arabic, English, Urdu, Hindi, French, German, and more</p>
+              <div className="mt-4 text-xs text-center space-y-1">
+                <p>Keyboard shortcuts:</p>
+                <p>← → Switch modes | ↑ ↓ Navigate results | Enter Select</p>
+              </div>
             </div>
           ) : (
             <div className="p-4 space-y-4">
               {results.map((verse, index) => (
                 <div
                   key={`${verse.surah.number}-${verse.number}-${index}`}
-                  className="p-4 bg-muted/50 rounded-xl border border-border hover:border-primary/30 transition-colors"
+                  className={`p-4 rounded-xl border transition-all duration-200 ${
+                    index === selectedResultIndex
+                      ? "bg-primary/10 border-primary shadow-md ring-2 ring-primary/20"
+                      : "bg-muted/50 border-border hover:border-primary/30"
+                  }`}
                 >
                   <div className="flex items-start justify-between gap-4 mb-3">
                     <div className="flex items-center gap-2 text-sm text-primary font-medium">
@@ -364,6 +560,12 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
                       <span>
                         {verse.surah.englishName} ({verse.surah.number}:{verse.number})
                       </span>
+                      {index === selectedResultIndex && (
+                        <div className="flex items-center gap-1 text-xs">
+                          <ChevronUp className="w-3 h-3" />
+                          <ChevronDown className="w-3 h-3" />
+                        </div>
+                      )}
                     </div>
                     <div className="flex items-center gap-2">
                       <Button
@@ -384,12 +586,12 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
                       </Button>
                       <Button
                         size="sm"
-                        variant="outline"
+                        variant={index === selectedResultIndex ? "default" : "outline"}
                         onClick={() => handleInsert(verse)}
                         className="shrink-0"
                       >
                         <ExternalLink className="w-3 h-3 mr-1" />
-                        Use in Chat
+                        {index === selectedResultIndex ? "Press Enter" : "Use in Chat"}
                       </Button>
                     </div>
                   </div>
@@ -403,6 +605,12 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
                   </p>
                 </div>
               ))}
+              
+              {results.length > 0 && (
+                <div className="text-center text-xs text-muted-foreground py-2">
+                  Use ↑ ↓ arrows to navigate • Press Enter to select • Esc to close
+                </div>
+              )}
             </div>
           )}
         </ScrollArea>

@@ -5,6 +5,21 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+// Debug logging
+console.log('Supabase Configuration:');
+console.log('- URL:', SUPABASE_URL);
+console.log('- Key exists:', !!SUPABASE_PUBLISHABLE_KEY);
+console.log('- Key format valid:', SUPABASE_PUBLISHABLE_KEY?.startsWith('eyJ'));
+
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  console.error('⚠️ Missing Supabase configuration. Please check your .env file.');
+}
+
+// Check for placeholder key
+if (SUPABASE_PUBLISHABLE_KEY === 'YOUR_ACTUAL_ANON_KEY_HERE' || SUPABASE_PUBLISHABLE_KEY?.includes('PLACEHOLDER')) {
+  console.error('🔧 Supabase key is still a placeholder. Please update your .env file with the real key from your Supabase dashboard.');
+}
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 

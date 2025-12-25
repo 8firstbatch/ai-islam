@@ -15,7 +15,7 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   const [theme, setThemeState] = useState<Theme>(() => {
     const stored = localStorage.getItem("theme") as Theme;
-    return stored || "light";
+    return stored || "system";
   });
   const { user } = useAuth();
 
@@ -28,6 +28,22 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
 
   const [effectiveTheme, setEffectiveTheme] = useState<"light" | "dark">(getEffectiveTheme(theme));
 
+  // Apply theme immediately on mount
+  useEffect(() => {
+    const effective = getEffectiveTheme(theme);
+    setEffectiveTheme(effective);
+    const root = document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(effective);
+    document.body.classList.remove("light", "dark");
+    document.body.classList.add(effective);
+    
+    // Force a repaint to ensure styles are applied
+    root.style.display = 'none';
+    void root.offsetHeight; // Trigger reflow
+    root.style.display = '';
+  }, []);
+
   useEffect(() => {
     const effective = getEffectiveTheme(theme);
     setEffectiveTheme(effective);
@@ -35,6 +51,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     const root = document.documentElement;
     root.classList.remove("light", "dark");
     root.classList.add(effective);
+    
+    // Also set the class on the body for better coverage
+    document.body.classList.remove("light", "dark");
+    document.body.classList.add(effective);
+    
     localStorage.setItem("theme", theme);
   }, [theme]);
 

@@ -24,8 +24,20 @@ export const useConversations = () => {
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
 
-  // Load user settings
+  // Stop the current AI response
+  const stopGeneration = useCallback(() => {
+    if (abortController) {
+      abortController.abort();
+      setAbortController(null);
+      setIsLoading(false);
+      toast({
+        title: "Response stopped",
+        description: "AI response generation has been cancelled",
+      });
+    }
+  }, [abortController, toast]);
   useEffect(() => {
     if (user) {
       supabase
@@ -118,6 +130,10 @@ export const useConversations = () => {
     setMessages((prev) => [...prev, userMessage]);
     setIsLoading(true);
 
+    // Create new AbortController for this request
+    const controller = new AbortController();
+    setAbortController(controller);
+
     let conversationId = currentConversationId;
 
     // Create conversation if needed
@@ -172,6 +188,7 @@ export const useConversations = () => {
           model: userSettings?.ai_model,
           responseStyle: userSettings?.ai_response_style,
         }),
+        signal: controller.signal, // Add abort signal
       });
 
       if (!response.ok) {
@@ -222,6 +239,12 @@ export const useConversations = () => {
       }
     } catch (error) {
       console.error("Chat error:", error);
+      
+      // Don't show error if request was aborted
+      if (error instanceof Error && error.name === 'AbortError') {
+        return;
+      }
+      
       toast({
         title: "Error",
         description: error instanceof Error ? error.message : "Failed to send message",
@@ -230,6 +253,7 @@ export const useConversations = () => {
       setMessages((prev) => prev.filter((m) => m.id !== userMessage.id));
     } finally {
       setIsLoading(false);
+      setAbortController(null);
     }
   }, [messages, isLoading, currentConversationId, user, createConversation, saveMessage, userSettings, toast]);
 
@@ -238,6 +262,75 @@ export const useConversations = () => {
     setMessages([]);
     setCurrentConversationId(null);
   }, []);
+
+  // Delete all conversations and messages for the current user
+  const clearAllHistory = useCallback(async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from("conversations")
+        .delete()
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Error clearing history:", error);
+        toast({
+          title: "Error",
+          description: "Failed to clear chat history",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Clear local state
+      setMessages([]);
+      setCurrentConversationId(null);
+      
+      toast({
+        title: "Success",
+        description: "All chat history has been cleared",
+      });
+    } catch (error) {
+      console.error("Error clearing history:", error);
+      toast({
+        title: "Error",
+        description: "Failed to clear chat history",
+        variant: "destructive",
+      });
+    }
+  }, [user, toast]);
+
+  // Edit a message
+  const editMessage = useCallback(async (messageId: string, newContent: string) => {
+    if (!user || !currentConversationId) return;
+
+    try {
+      // Update in database
+      const { error } = await supabase
+        .from("messages")
+        .update({ content: newContent })
+        .eq("id", messageId);
+
+      if (error) throw error;
+
+      // Update local state
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === messageId ? { ...m, content: newContent } : m
+        )
+      );
+
+      toast({ title: "Message updated" });
+    } catch (error) {
+      console.error("Error editing message:", error);
+      toast({
+        title: "Failed to edit message",
+        description: "Please try again",
+        variant: "destructive",
+      });
+    }
+  }, [user, currentConversationId, toast]);
 
   // Select a conversation
   const selectConversation = useCallback((id: string | null) => {
@@ -252,9 +345,12 @@ export const useConversations = () => {
     messages,
     isLoading,
     sendMessage,
+    stopGeneration,
     clearMessages,
+    clearAllHistory,
     currentConversationId,
     selectConversation,
     setMessages,
+    editMessage,
   };
 };

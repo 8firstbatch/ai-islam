@@ -1,5 +1,6 @@
 import { Sparkles, RotateCcw, Moon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { OpenRouterStatus } from "./OpenRouterStatus";
 
 interface ChatHeaderProps {
   onClear: () => void;
@@ -21,7 +22,10 @@ export const ChatHeader = ({ onClear, hasMessages, showActions = true }: ChatHea
         </div>
         <div>
           <h1 className="font-display text-xl text-foreground">Islamic AI</h1>
-          <p className="text-xs text-muted-foreground">Your spiritual guide</p>
+          <div className="flex items-center gap-3">
+            <p className="text-xs text-muted-foreground">Your spiritual guide</p>
+            {/* <OpenRouterStatus /> */}
+          </div>
         </div>
       </div>
 
