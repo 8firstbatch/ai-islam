@@ -1,10 +1,5 @@
-import { Sparkles, RotateCcw, Star, Zap, Settings } from "lucide-react";
+import { Sparkles, RotateCcw, Star, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { getUserProfile, getEffectiveProfileImage, getEffectiveDisplayName } from "@/utils/profileUtils";
 
 interface ChatHeaderProps {
   onClear: () => void;
@@ -14,15 +9,15 @@ interface ChatHeaderProps {
 
 export const ChatHeader = ({ onClear, hasMessages, showActions = true }: ChatHeaderProps) => {
   return (
-    <div className="flex items-center justify-between flex-1">
-      <div className="flex items-center gap-4">
+    <div className="flex items-center justify-between flex-1 gap-2 sm:gap-4">
+      <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
         {/* Stylish Logo */}
-        <div className="relative group">
+        <div className="relative group flex-shrink-0">
           {/* Outer rotating border */}
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-600 animate-spin-border opacity-75 group-hover:opacity-100 transition-opacity duration-300"></div>
           
           {/* Main logo container */}
-          <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-500 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-105">
+          <div className="relative w-10 h-10 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-emerald-600 via-emerald-500 to-teal-500 flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:scale-105">
             {/* Islamic geometric pattern overlay */}
             <div className="absolute inset-0 rounded-2xl opacity-20">
               <svg viewBox="0 0 48 48" className="w-full h-full">
@@ -38,12 +33,12 @@ export const ChatHeader = ({ onClear, hasMessages, showActions = true }: ChatHea
             
             {/* Central icon */}
             <div className="relative z-10 flex items-center justify-center">
-              <Sparkles className="w-6 h-6 text-white animate-pulse-glow" />
+              <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-white animate-pulse-glow" />
             </div>
             
             {/* Decorative elements */}
-            <Star className="absolute top-1 right-1 w-2.5 h-2.5 text-yellow-300 animate-bounce-gentle" />
-            <Zap className="absolute bottom-1 left-1 w-2.5 h-2.5 text-yellow-200 animate-float-gentle" />
+            <Star className="absolute top-0.5 right-0.5 sm:top-1 sm:right-1 w-2 h-2 sm:w-2.5 sm:h-2.5 text-yellow-300 animate-bounce-gentle" />
+            <Zap className="absolute bottom-0.5 left-0.5 sm:bottom-1 sm:left-1 w-2 h-2 sm:w-2.5 sm:h-2.5 text-yellow-200 animate-float-gentle" />
           </div>
           
           {/* Glowing accent */}
@@ -51,35 +46,40 @@ export const ChatHeader = ({ onClear, hasMessages, showActions = true }: ChatHea
         </div>
 
         {/* Enhanced Typography */}
-        <div className="flex flex-col">
-          <div className="flex items-center gap-2">
-            <h1 className="font-display text-2xl font-bold bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 bg-clip-text text-transparent">
+        <div className="flex flex-col min-w-0 flex-1">
+          <div className="flex items-center gap-1 sm:gap-2">
+            <h1 className="font-display text-lg sm:text-2xl font-bold bg-gradient-to-r from-emerald-700 via-emerald-600 to-teal-600 bg-clip-text text-transparent truncate">
               Islamic AI
             </h1>
-            <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 animate-pulse"></div>
+            <div className="w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-gradient-to-r from-yellow-400 to-amber-500 animate-pulse flex-shrink-0"></div>
           </div>
-          <div className="flex items-center gap-2">
-            <p className="text-sm text-muted-foreground font-medium">Your spiritual guide</p>
-            <div className="flex gap-1">
-              <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" style={{ animationDelay: '0ms' }}></div>
-              <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" style={{ animationDelay: '200ms' }}></div>
-              <div className="w-1 h-1 rounded-full bg-emerald-400 animate-pulse" style={{ animationDelay: '400ms' }}></div>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <p className="text-xs sm:text-sm text-muted-foreground font-medium truncate">Your spiritual guide</p>
+            <div className="flex gap-0.5 sm:gap-1 flex-shrink-0">
+              <div className="w-0.5 h-0.5 sm:w-1 sm:h-1 rounded-full bg-emerald-400 animate-pulse" style={{ animationDelay: '0ms' }}></div>
+              <div className="w-0.5 h-0.5 sm:w-1 sm:h-1 rounded-full bg-emerald-400 animate-pulse" style={{ animationDelay: '200ms' }}></div>
+              <div className="w-0.5 h-0.5 sm:w-1 sm:h-1 rounded-full bg-emerald-400 animate-pulse" style={{ animationDelay: '400ms' }}></div>
             </div>
           </div>
         </div>
       </div>
 
-      {showActions && hasMessages && (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={onClear}
-          className="text-muted-foreground hover:text-foreground hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-all duration-200"
-        >
-          <RotateCcw className="w-4 h-4 mr-2" />
-          New Chat
-        </Button>
-      )}
+      {/* Action Buttons */}
+      <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+        {/* New Chat Button */}
+        {showActions && hasMessages && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClear}
+            className="h-8 sm:h-9 px-2 sm:px-3 text-muted-foreground hover:text-foreground hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-all duration-200 rounded-full flex items-center gap-1 sm:gap-2"
+            title="New Chat"
+          >
+            <RotateCcw className="w-4 h-4 flex-shrink-0" />
+            <span className="hidden md:inline text-xs font-medium">New Chat</span>
+          </Button>
+        )}
+      </div>
     </div>
   );
 };

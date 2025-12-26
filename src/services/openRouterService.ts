@@ -73,14 +73,19 @@ export class OpenRouterService {
 
     // Check if user message contains language instruction
     const lastUserMessage = messages[messages.length - 1];
-    const hasLanguageInstruction = lastUserMessage?.content.includes('[Please respond in') && lastUserMessage?.content.includes('language');
+    const hasLanguageInstruction = lastUserMessage?.content.includes('IMPORTANT: You MUST respond');
     
-    // Extract language instruction if present
+    // Extract and enhance language instruction if present
     let languageInstruction = '';
     if (hasLanguageInstruction) {
-      const match = lastUserMessage.content.match(/\[Please respond in ([^[\]]+) language[^\]]*\]/);
-      if (match) {
-        languageInstruction = `\n\nIMPORTANT: The user has selected content in ${match[1]} language. Please respond primarily in ${match[1]} language while maintaining your Islamic knowledge and guidance. You may include Arabic terms and verses as appropriate, but your main explanation should be in ${match[1]}.`;
+      if (lastUserMessage.content.includes('Arabic language')) {
+        languageInstruction = `\n\nCRITICAL LANGUAGE REQUIREMENT: You MUST respond entirely in Arabic language (العربية). The user has selected Arabic mode. Write your entire response in Arabic script. Only use English for technical Islamic terms that have no Arabic equivalent. Start with "السلام عليكم" and "بسم الله" in Arabic.`;
+      } else if (lastUserMessage.content.includes('Manglish')) {
+        languageInstruction = `\n\nCRITICAL LANGUAGE REQUIREMENT: You MUST respond in Manglish (Malayalam-English mix). The user has selected Manglish mode. Use a natural mix of Malayalam and English words as commonly spoken by Malayalam speakers. Write Malayalam words in English script (transliteration). Example: "Assalamualaikum, ningal engane undu? Islam regarding ulla questions chodhikkam."`;
+      } else if (lastUserMessage.content.includes('Malayalam language')) {
+        languageInstruction = `\n\nCRITICAL LANGUAGE REQUIREMENT: You MUST respond entirely in Malayalam language (മലയാളം). The user has selected Malayalam mode. Write your complete response in Malayalam script using proper Malayalam Unicode characters. Use Malayalam Islamic terminology and start with "അസ്സലാമു അലൈകും" and "ബിസ്മില്ലാഹ്" in Malayalam script.`;
+      } else if (lastUserMessage.content.includes('English language')) {
+        languageInstruction = `\n\nCRITICAL LANGUAGE REQUIREMENT: You MUST respond entirely in English language. The user has selected English mode. Use clear, proper English throughout your response.`;
       }
     }
 

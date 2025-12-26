@@ -4,6 +4,14 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useConversations } from "@/hooks/useConversations";
 import { useOpenRouterChat } from "@/hooks/useOpenRouterChat";
 import { supabase } from "@/integrations/supabase/client";
+
+// Extend Window interface for Speech Recognition
+declare global {
+  interface Window {
+    SpeechRecognition: any;
+    webkitSpeechRecognition: any;
+  }
+}
 import { ChatHeader } from "@/components/ChatHeader";
 import { ChatMessage } from "@/components/ChatMessage";
 import { ChatInput } from "@/components/ChatInput";
@@ -42,6 +50,8 @@ const Index = () => {
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [guestContinued, setGuestContinued] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState("ENG");
+  const [isListening, setIsListening] = useState(false);
 
   // Test Supabase connection on mount
   useEffect(() => {
@@ -71,8 +81,8 @@ const Index = () => {
       return;
     }
     
-    // Send message using OpenRouter
-    sendMessage(content, attachments);
+    // Send message using OpenRouter with current language
+    sendMessage(content, attachments, currentLanguage);
   };
 
   const handleContinueAsGuest = () => {
@@ -96,6 +106,109 @@ const Index = () => {
 
   const handleRemoveTool = () => {
     setSelectedTool(null);
+  };
+
+  const handleMicrophoneClick = () => {
+    // Check if browser supports speech recognition
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+      console.log("Speech recognition not supported in this browser");
+      return;
+    }
+
+    // Create speech recognition instance
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+
+    // Configure speech recognition
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US'; // Default to English, can be changed based on selected language
+
+    // Set language based on current MLM selection
+    if (currentLanguage === 'ARB') {
+      recognition.lang = 'ar-SA'; // Arabic
+    } else if (currentLanguage === 'MLM' || currentLanguage === 'MNG') {
+      recognition.lang = 'ml-IN'; // Malayalam
+    } else {
+      recognition.lang = 'en-US'; // English
+    }
+
+    // Handle when speech recognition starts
+    recognition.onstart = () => {
+      setIsListening(true);
+      console.log('Speech recognition started - speak now');
+    };
+
+    // Handle successful speech recognition
+    recognition.onresult = (event) => {
+      const transcript = event.results[0][0].transcript;
+      console.log('Voice input received:', transcript);
+      
+      // Send the transcribed text as a message
+      if (transcript.trim()) {
+        handleSendMessage(transcript.trim());
+      }
+      setIsListening(false);
+    };
+
+    // Handle speech recognition errors
+    recognition.onerror = (event) => {
+      console.error('Speech recognition error:', event.error);
+      setIsListening(false);
+      
+      let errorMessage = 'Voice recognition failed. ';
+      
+      switch (event.error) {
+        case 'no-speech':
+          errorMessage += 'No speech detected. Please try again.';
+          break;
+        case 'audio-capture':
+          errorMessage += 'Microphone not accessible.';
+          break;
+        case 'not-allowed':
+          errorMessage += 'Microphone permission denied.';
+          break;
+        default:
+          errorMessage += 'Please try again.';
+      }
+      
+      console.log(errorMessage);
+    };
+
+    // Handle when speech recognition ends
+    recognition.onend = () => {
+      setIsListening(false);
+      console.log('Speech recognition ended');
+    };
+
+    // Start speech recognition
+    try {
+      recognition.start();
+      console.log('Starting speech recognition...');
+    } catch (error) {
+      console.error('Failed to start speech recognition:', error);
+      setIsListening(false);
+    }
+  };
+
+  const handleMLMClick = () => {
+    // Language cycling: ENG -> ARB -> MNG -> MLM -> ENG
+    const languages = ["ENG", "ARB", "MNG", "MLM"];
+    const currentIndex = languages.indexOf(currentLanguage);
+    const nextIndex = (currentIndex + 1) % languages.length;
+    const nextLanguage = languages[nextIndex];
+    
+    setCurrentLanguage(nextLanguage);
+    
+    // Show language change feedback
+    const languageNames = {
+      "ENG": "English",
+      "ARB": "Arabic (العربية)", 
+      "MNG": "Manglish (Malayalam-English)",
+      "MLM": "Malayalam (മലയാളം)"
+    };
+    
+    console.log(`Language changed to: ${languageNames[nextLanguage as keyof typeof languageNames]}`);
   };
 
   return (
@@ -152,7 +265,11 @@ const Index = () => {
                   </Button>
                 )}
                 <div className="min-w-0">
-                  <ChatHeader onClear={handleNewChat} hasMessages={messages.length > 0} showActions={!user} />
+                  <ChatHeader 
+                    onClear={handleNewChat} 
+                    hasMessages={messages.length > 0} 
+                    showActions={!user}
+                  />
                 </div>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
@@ -244,7 +361,11 @@ const Index = () => {
               onOpenTools={() => setShowToolsSearch(true)}
               selectedTool={selectedTool}
               onRemoveTool={handleRemoveTool}
-              isLoading={isLoading} 
+              isLoading={isLoading}
+              onMicrophoneClick={handleMicrophoneClick}
+              onMLMClick={handleMLMClick}
+              currentLanguage={currentLanguage}
+              isListening={isListening}
             />
           </div>
 

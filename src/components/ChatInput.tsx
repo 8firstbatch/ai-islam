@@ -1,5 +1,5 @@
-import { useState, KeyboardEvent, useRef, useEffect } from "react";
-import { Send, Loader2, Image, X, Square, Wrench } from "lucide-react";
+import { useState, KeyboardEvent, useEffect } from "react";
+import { Send, Loader2, Image, X, Square, Wrench, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -12,14 +12,17 @@ interface ChatInputProps {
   selectedTool?: string | null;
   onRemoveTool?: () => void;
   isLoading: boolean;
+  onMicrophoneClick?: () => void;
+  onMLMClick?: () => void;
+  currentLanguage?: string;
+  isListening?: boolean;
 }
 
-export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveTool, isLoading }: ChatInputProps) => {
+export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveTool, isLoading, onMicrophoneClick, onMLMClick, currentLanguage = "ENG", isListening = false }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
   
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const handleSend = () => {
@@ -42,51 +45,6 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
-    }
-  };
-
-  // Image upload handling
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const validImages: File[] = [];
-    const errors: string[] = [];
-    
-    files.forEach(file => {
-      if (!isValidImageType(file)) {
-        errors.push(`${file.name}: Invalid file type. Please select JPEG, PNG, GIF, or WebP images.`);
-        return;
-      }
-      
-      if (!isValidImageSize(file, 10)) {
-        errors.push(`${file.name}: File too large. Maximum size is 10MB.`);
-        return;
-      }
-      
-      validImages.push(file);
-    });
-    
-    if (errors.length > 0) {
-      toast({
-        title: "Invalid Files",
-        description: errors.join('\n'),
-        variant: "destructive"
-      });
-    }
-    
-    if (selectedImages.length + validImages.length > 5) {
-      toast({
-        title: "Too Many Images",
-        description: "You can upload up to 5 images at once.",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    setSelectedImages(prev => [...prev, ...validImages]);
-    
-    // Reset file input
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
     }
   };
 
@@ -206,23 +164,23 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
 
         {/* Input Area */}
         <div className="flex gap-2 items-end">
-          {/* Image Upload Button */}
+          {/* MLM Button */}
           <Button
             variant="ghost"
-            size="icon"
-            onClick={() => fileInputRef.current?.click()}
+            size="sm"
+            onClick={onMLMClick}
             disabled={isLoading}
-            className="h-[52px] w-[52px] rounded-3xl hover:bg-amber-500/20 hover:text-amber-600 transition-all duration-300"
-            title="Upload Images"
+            className="h-[52px] px-3 sm:px-4 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-all duration-200 rounded-3xl border border-emerald-500/30 hover:border-emerald-500/50 flex items-center gap-2 font-semibold active:scale-[1.2] active:bg-emerald-100 dark:active:bg-emerald-900"
+            title="Multi-Language Mode - Click to change language"
           >
-            <Image className="w-5 h-5" />
+            <span className="text-xs sm:text-sm font-bold tracking-wider">{currentLanguage}</span>
           </Button>
 
-          {/* Text Input with Tool Tag */}
+          {/* Text Input with Tool Tag and Voice Button */}
           <div className="relative flex-1">
             {/* Selected Tool Tag */}
             {selectedTool && (
-              <div className="absolute left-3 top-3 z-10 flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1 text-sm">
+              <div className="absolute left-12 top-3 z-10 flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1 text-sm">
                 <div className="w-4 h-4 rounded-sm bg-primary/20 flex items-center justify-center">
                   <Wrench className="w-2.5 h-2.5 text-primary" />
                 </div>
@@ -238,6 +196,22 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
                 )}
               </div>
             )}
+
+            {/* Voice Button - Inside Input Left */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onMicrophoneClick}
+              disabled={isLoading}
+              className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full transition-all duration-200 hover:scale-105 shadow-lg ${
+                isListening 
+                  ? 'bg-red-500 hover:bg-red-600 animate-pulse' 
+                  : 'bg-emerald-500 hover:bg-emerald-600'
+              } text-white`}
+              title={isListening ? "Listening... Click to stop" : "Voice Input"}
+            >
+              <Mic className="w-4 h-4" />
+            </Button>
             
             <Textarea
               value={input}
@@ -245,12 +219,12 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
               onKeyDown={handleKeyDown}
               placeholder={selectedTool ? "Ask about this tool..." : "Ask about Islam, Quran, prayers, or seek guidance..."}
               className={`min-h-[52px] max-h-32 resize-none bg-background border-border focus:ring-2 focus:ring-primary/20 rounded-3xl transition-all duration-300 ${
-                selectedTool ? 'pt-12 pr-16' : 'pr-16'
+                selectedTool ? 'pt-12 pl-12 pr-16' : 'pl-12 pr-16'
               }`}
               disabled={isLoading}
             />
             
-            {/* Tools Button - Inside Input */}
+            {/* Tools Button - Inside Input Right */}
             {onOpenTools && !selectedTool && (
               <Button
                 variant="ghost"
@@ -286,16 +260,6 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
             )}
           </Button>
         </div>
-
-        {/* Hidden File Input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handleImageSelect}
-          className="hidden"
-        />
       </div>
     </div>
   );

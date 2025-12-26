@@ -105,7 +105,7 @@ export const useOpenRouterChat = () => {
   }, [abortController, toast]);
 
   // Send a message using OpenRouter
-  const sendMessage = useCallback(async (content: string, attachments?: { images?: File[] }) => {
+  const sendMessage = useCallback(async (content: string, attachments?: { images?: File[] }, selectedLanguage?: string) => {
     if (!content.trim() || isLoading) return;
 
     const userMessage: Message = {
@@ -169,24 +169,37 @@ export const useOpenRouterChat = () => {
         content: m.content,
       }));
 
-      // Add the new user message
+      // Prepare the message content with language instruction
+      let messageContent = content.trim();
+      
+      // Add strong language instruction based on selected language
+      if (selectedLanguage === "ARB") {
+        messageContent = `${content.trim()}\n\nIMPORTANT: You MUST respond entirely in Arabic language (العربية). Do not use English except for technical terms that have no Arabic equivalent.`;
+      } else if (selectedLanguage === "MNG") {
+        messageContent = `${content.trim()}\n\nIMPORTANT: You MUST respond in Manglish (Malayalam-English mix). Use a natural mix of Malayalam and English words as commonly spoken by Malayalam speakers. Write Malayalam words in English script (transliteration).`;
+      } else if (selectedLanguage === "MLM") {
+        messageContent = `${content.trim()}\n\nIMPORTANT: You MUST respond entirely in Malayalam language (മലയാളം). Write your complete response in Malayalam script. Use proper Malayalam Islamic terminology and greetings.`;
+      } else if (selectedLanguage === "ENG") {
+        messageContent = `${content.trim()}\n\nIMPORTANT: You MUST respond entirely in English language.`;
+      }
+
+      // Add the new user message with language instruction
       chatMessages.push({
         role: "user",
-        content: content.trim(),
+        content: messageContent,
       });
 
       // Handle image attachments if present
-      let messageContent = content.trim();
       if (attachments?.images && attachments.images.length > 0) {
         // For now, we'll just mention the images in the text
         // In a full implementation, you'd need to use a vision model
-        messageContent += `\n\n[Note: ${attachments.images.length} image(s) were uploaded but cannot be processed in this version]`;
+        const imageNote = `\n\n[Note: ${attachments.images.length} image(s) were uploaded but cannot be processed in this version]`;
         
         // Update the user message to reflect the images
         setMessages((prev) => 
           prev.map((m) => 
             m.id === userMessage.id 
-              ? { ...m, content: messageContent }
+              ? { ...m, content: content.trim() + imageNote }
               : m
           )
         );
