@@ -1,3 +1,5 @@
+import { supabase } from "@/integrations/supabase/client";
+
 interface OpenRouterMessage {
   role: 'user' | 'assistant' | 'system';
   content: string;
@@ -16,13 +18,37 @@ interface OpenRouterResponse {
 
 export class OpenRouterService {
   private apiKey: string;
+  private proApiKey: string;
   private baseURL = 'https://openrouter.ai/api/v1';
 
   constructor() {
     this.apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
+    this.proApiKey = "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";
     if (!this.apiKey) {
       console.warn('OpenRouter API key not found. Please set VITE_OPENROUTER_API_KEY in your .env file');
     }
+  }
+
+  private async getEffectiveApiKey(userId?: string): Promise<string> {
+    if (!userId) {
+      return this.apiKey;
+    }
+
+    try {
+      const { data } = await supabase
+        .from("user_settings")
+        .select("is_pro_enabled")
+        .eq("user_id", userId)
+        .single();
+
+      if (data?.is_pro_enabled) {
+        return this.proApiKey;
+      }
+    } catch (error) {
+      console.warn('Failed to check Pro status, using default API key');
+    }
+
+    return this.apiKey;
   }
 
   async sendMessage(
