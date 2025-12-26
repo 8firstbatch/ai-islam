@@ -9,6 +9,9 @@ export interface Message {
   role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  attachments?: {
+    images?: string[]; // Array of image URLs or base64 strings
+  };
 }
 
 export const useOpenRouterChat = () => {

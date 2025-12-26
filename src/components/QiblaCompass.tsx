@@ -41,12 +41,16 @@ export const QiblaCompass = ({ isOpen, onClose }: QiblaCompassProps) => {
   const [userLocation, setUserLocation] = useState<Location | null>(null);
   const [qiblaData, setQiblaData] = useState<QiblaData | null>(null);
   const [deviceOrientation, setDeviceOrientation] = useState<number>(0);
+  const [previousOrientation, setPreviousOrientation] = useState<number>(0);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [isOrientationSupported, setIsOrientationSupported] = useState(false);
   const [isOrientationPermissionGranted, setIsOrientationPermissionGranted] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isCalibrating, setIsCalibrating] = useState(false);
+  const [compassPulse, setCompassPulse] = useState(false);
+  const [needleGlow, setNeedleGlow] = useState(false);
   const compassRef = useRef<HTMLDivElement>(null);
+  const animationRef = useRef<number>();
   const { toast } = useToast();
 
   // Calculate Qibla direction using the great circle method
