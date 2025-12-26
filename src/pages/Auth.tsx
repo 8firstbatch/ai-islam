@@ -10,7 +10,6 @@ import { Sparkles, Moon, Mail, Lock, User, ArrowRight } from "lucide-react";
 import { Helmet } from "react-helmet-async";
 import { Footer } from "@/components/Footer";
 import { SupabaseConfigWarning } from "@/components/SupabaseConfigWarning";
-import AuthDebug from "@/components/AuthDebug";
 import { z } from "zod";
 
 const emailSchema = z.string().email("Please enter a valid email address");
@@ -322,8 +321,6 @@ const Auth = () => {
             بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ
           </p>
         </div>
-
-        <AuthDebug />
 
         <Footer />
       </div>
