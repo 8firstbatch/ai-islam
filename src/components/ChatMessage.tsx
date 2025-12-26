@@ -30,6 +30,31 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
 
+  // Function to format AI responses with proper Islamic greetings
+  const formatAIResponse = (text: string): string => {
+    let formattedText = text.trim();
+    
+    // Check if response already starts with Islamic greeting
+    const startsWithGreeting = /^(Assalamualaikum|Assalamu alaikum|As-salamu alaikum)/i.test(formattedText);
+    
+    // Check if response already has Bismillah after greeting
+    const hasBismillahAfterGreeting = /^(Assalamualaikum|Assalamu alaikum|As-salamu alaikum)[\s\n]*Bismillah/i.test(formattedText);
+    
+    // If no greeting at all, add the full format
+    if (!startsWithGreeting) {
+      formattedText = `Assalamualaikum\n\nBismillah\n\n${formattedText}`;
+    }
+    // If greeting exists but no Bismillah after it, add Bismillah
+    else if (!hasBismillahAfterGreeting) {
+      formattedText = formattedText.replace(
+        /^(Assalamualaikum|Assalamu alaikum|As-salamu alaikum)/i,
+        '$1\n\nBismillah'
+      );
+    }
+    
+    return formattedText;
+  };
+
   // Function to clean markdown symbols from AI responses
   const cleanAIResponse = (text: string): string => {
     return text
@@ -192,7 +217,8 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Clean the message content for better speech
-      const cleanContent = message.content
+      const messageContent = isUser ? message.content : formatAIResponse(message.content);
+      const cleanContent = messageContent
         .replace(/\*\*(.*?)\*\*/g, '$1') // Remove markdown bold
         .replace(/\*(.*?)\*/g, '$1') // Remove markdown italic
         .replace(/`(.*?)`/g, '$1') // Remove code blocks
@@ -552,7 +578,7 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
             </div>
           ) : (
             <p className="text-sm leading-relaxed whitespace-pre-wrap">
-              {message.content}
+              {isUser ? message.content : formatAIResponse(message.content)}
             </p>
           )}
 
