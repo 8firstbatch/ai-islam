@@ -15,7 +15,7 @@ export const WelcomeScreen = ({ onSuggestionClick }: WelcomeScreenProps) => {
       <p className="text-muted-foreground text-center max-w-md mb-2 animate-slide-in-right" style={{ animationDelay: "200ms" }}>
         Peace be upon you. I am your Islamic AI assistant, here to help you with questions about Islam, Quran, prayers, and spiritual guidance.
       </p>
-      <p className="text-sm text-primary font-display mb-12 opacity-80 animate-bounce-gentle" style={{ animationDelay: "400ms" }}>
+      <p className="text-sm text-primary font-display mb-12 opacity-80" style={{ animationDelay: "400ms" }}>
         بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ 
       </p>
       

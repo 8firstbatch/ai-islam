@@ -203,11 +203,11 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
               size="icon"
               onClick={onMicrophoneClick}
               disabled={isLoading}
-              className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full transition-all duration-200 hover:scale-105 shadow-lg ${
+              className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full transition-all duration-200 hover:scale-105 ${
                 isListening 
-                  ? 'bg-red-500 hover:bg-red-600 animate-pulse' 
-                  : 'bg-emerald-500 hover:bg-emerald-600'
-              } text-white`}
+                  ? 'text-red-500 animate-pulse' 
+                  : 'text-white hover:text-white hover:bg-emerald-500'
+              }`}
               title={isListening ? "Listening... Click to stop" : "Voice Input"}
             >
               <Mic className="w-4 h-4" />

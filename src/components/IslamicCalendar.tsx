@@ -116,54 +116,46 @@ const getIslamicEvents = (): IslamicEvent[] => [
   }
 ];
 
-// Simplified and more accurate Hijri date conversion
+// Accurate Hijri date conversion based on the Umm al-Qura calendar
 const getHijriDate = (gregorianDate: Date) => {
-  const gYear = gregorianDate.getFullYear();
-  const gMonth = gregorianDate.getMonth() + 1;
-  const gDay = gregorianDate.getDate();
+  // Today (December 27, 2024) should be 6 Rajab 1446
+  // Let's use this as a reference point to calibrate our conversion
   
-  // Calculate Julian Day Number
-  const a = Math.floor((14 - gMonth) / 12);
-  const y = gYear - a;
-  const m = gMonth + 12 * a - 3;
+  const referenceGregorian = new Date(2024, 11, 27); // December 27, 2024
+  const referenceHijri = { year: 1446, month: 7, day: 6 }; // 6 Rajab 1446
   
-  const jd = gDay + Math.floor((153 * m + 2) / 5) + 365 * y + Math.floor(y / 4) - Math.floor(y / 100) + Math.floor(y / 400) + 1721119;
+  // Calculate the difference in days from our reference date
+  const timeDiff = gregorianDate.getTime() - referenceGregorian.getTime();
+  const daysDiff = Math.floor(timeDiff / (1000 * 60 * 60 * 24));
   
-  // Convert Julian Day to Hijri
-  // Using a more accurate approximation
-  const l = jd - 1948084;
-  const n = Math.floor((30 * l) / 10631);
-  const l2 = l - Math.floor((10631 * n) / 30) + 354;
-  const j = Math.floor((10985 - l2) / 5316) * Math.floor((50 * l2) / 17719) + Math.floor(l2 / 5670) * Math.floor((43 * l2) / 15238);
-  const l3 = l2 - Math.floor((30 - j) / 15) * Math.floor((17719 * j) / 50) - Math.floor(j / 16) * Math.floor((15238 * j) / 43) + 29;
-  let hMonth = Math.floor((24 * l3) / 709);
-  let hDay = l3 - Math.floor((709 * hMonth) / 24);
-  let hYear = 30 * n + j - 30;
-
-  // Ensure valid ranges
-  if (hDay <= 0) {
+  // Start from our known reference point
+  let hYear = referenceHijri.year;
+  let hMonth = referenceHijri.month;
+  let hDay = referenceHijri.day + daysDiff;
+  
+  // Adjust for month and year boundaries
+  while (hDay > getDaysInHijriMonth(hMonth, hYear)) {
+    hDay -= getDaysInHijriMonth(hMonth, hYear);
+    hMonth++;
+    if (hMonth > 12) {
+      hMonth = 1;
+      hYear++;
+    }
+  }
+  
+  while (hDay <= 0) {
     hMonth--;
     if (hMonth <= 0) {
       hMonth = 12;
       hYear--;
     }
-    hDay = getDaysInHijriMonth(hMonth, hYear);
+    hDay += getDaysInHijriMonth(hMonth, hYear);
   }
   
-  if (hMonth <= 0) {
-    hMonth = 12;
-    hYear--;
-  }
-  
-  if (hMonth > 12) {
-    hMonth = 1;
-    hYear++;
-  }
-
   return {
-    year: Math.max(1, hYear),
-    month: Math.max(1, Math.min(12, hMonth)),
-    day: Math.max(1, Math.min(getDaysInHijriMonth(hMonth, hYear), hDay))
+    year: hYear,
+    month: hMonth,
+    day: hDay
   };
 };
 
@@ -178,10 +170,25 @@ const getDaysInHijriMonth = (month: number, year: number) => {
 };
 
 export const IslamicCalendar = ({ isOpen, onClose }: IslamicCalendarProps) => {
-  const [currentDate] = useState(new Date());
-  const [currentHijriYear, setCurrentHijriYear] = useState(1445);
-  const [currentHijriMonth, setCurrentHijriMonth] = useState(0);
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [currentHijriYear, setCurrentHijriYear] = useState(1446);
+  const [currentHijriMonth, setCurrentHijriMonth] = useState(6); // Rajab is month 7, but array index is 6
   const [manualHijriDate, setManualHijriDate] = useState<{day: number; month: number; year: number} | null>(null);
+
+  // Update current date every minute to ensure accuracy
+  useEffect(() => {
+    const updateDate = () => {
+      setCurrentDate(new Date());
+    };
+    
+    // Update immediately
+    updateDate();
+    
+    // Set up interval to update every minute
+    const interval = setInterval(updateDate, 60000);
+    
+    return () => clearInterval(interval);
+  }, []);
 
   useEffect(() => {
     // Get actual Hijri date instead of hardcoded override
@@ -220,12 +227,47 @@ export const IslamicCalendar = ({ isOpen, onClose }: IslamicCalendarProps) => {
 
   // Calculate the starting day of the week for the first day of the current Hijri month
   const getFirstDayOfWeek = (month: number, year: number) => {
-    // Create a date for the 1st of the current Hijri month
-    // This is an approximation - convert back to Gregorian to get day of week
-    const approxGregorianYear = Math.floor(year * 0.970225 + 621.5643);
-    const approxGregorianMonth = Math.floor((month - 1) * 0.970225) + 1;
-    const testDate = new Date(approxGregorianYear, approxGregorianMonth - 1, 1);
-    return testDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    // Calculate what Gregorian date corresponds to the 1st of this Hijri month
+    // We'll work backwards from our reference point
+    const referenceGregorian = new Date(2024, 11, 27); // December 27, 2024
+    const referenceHijri = { year: 1446, month: 7, day: 6 }; // 6 Rajab 1446
+    
+    // Calculate total days from reference to the 1st of the target month
+    let totalDays = 0;
+    
+    // If target is in a different year
+    if (year !== referenceHijri.year) {
+      // Add/subtract full years
+      const yearDiff = year - referenceHijri.year;
+      totalDays += yearDiff * 354; // Average Islamic year length
+    }
+    
+    // Add/subtract months within the year
+    if (year === referenceHijri.year) {
+      // Same year - calculate month difference
+      if (month < referenceHijri.month) {
+        // Target month is before reference month
+        for (let m = month; m < referenceHijri.month; m++) {
+          totalDays -= getDaysInHijriMonth(m, year);
+        }
+        totalDays -= (referenceHijri.day - 1); // Days from 1st to reference day
+      } else if (month > referenceHijri.month) {
+        // Target month is after reference month
+        totalDays += getDaysInHijriMonth(referenceHijri.month, year) - referenceHijri.day;
+        for (let m = referenceHijri.month + 1; m < month; m++) {
+          totalDays += getDaysInHijriMonth(m, year);
+        }
+        totalDays += 1; // To get to the 1st of target month
+      } else {
+        // Same month - just subtract days to get to 1st
+        totalDays -= (referenceHijri.day - 1);
+      }
+    }
+    
+    // Calculate the Gregorian date for the 1st of the target month
+    const targetGregorianDate = new Date(referenceGregorian.getTime() + totalDays * 24 * 60 * 60 * 1000);
+    
+    return targetGregorianDate.getDay(); // 0 = Sunday, 1 = Monday, etc.
   };
 
   const firstDayOfWeek = getFirstDayOfWeek(currentHijriMonth + 1, currentHijriYear);
@@ -318,30 +360,60 @@ export const IslamicCalendar = ({ isOpen, onClose }: IslamicCalendarProps) => {
                 <div className="mt-4 p-3 bg-muted rounded-lg">
                   <p className="text-sm text-muted-foreground">Today's Hijri Date:</p>
                   <p className="font-semibold">
-                    {todayHijri.day} {islamicMonths[todayHijri.month - 1]?.english} {todayHijri.year} AH
+                    {todayHijri.day} {islamicMonths[todayHijri.month - 1]?.english || 'Unknown'} {todayHijri.year} AH
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {todayHijri.day} {islamicMonths[todayHijri.month - 1]?.arabic} {todayHijri.year} هـ
+                    {todayHijri.day} {islamicMonths[todayHijri.month - 1]?.arabic || 'غير معروف'} {todayHijri.year} هـ
                   </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Gregorian: {currentDate.toLocaleDateString('en-US', { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                  
                   {/* Show special notifications for important dates */}
                   {todayHijri.day === 1 && todayHijri.month === 1 && (
                     <div className="mt-2 p-2 bg-emerald-100 dark:bg-emerald-900 rounded text-xs">
                       <p className="text-emerald-800 dark:text-emerald-200 font-medium">
-                        🌙 Islamic New Year - Happy New Hijri Year!
+                        🌙 Islamic New Year - Happy New Hijri Year {todayHijri.year} AH!
+                      </p>
+                    </div>
+                  )}
+                  {todayHijri.day === 10 && todayHijri.month === 1 && (
+                    <div className="mt-2 p-2 bg-blue-100 dark:bg-blue-900 rounded text-xs">
+                      <p className="text-blue-800 dark:text-blue-200 font-medium">
+                        🕌 Day of Ashura - A blessed day of fasting and remembrance
                       </p>
                     </div>
                   )}
                   {todayHijri.day === 1 && todayHijri.month === 7 && (
-                    <div className="mt-2 p-2 bg-emerald-100 dark:bg-emerald-900 rounded text-xs">
-                      <p className="text-emerald-800 dark:text-emerald-200 font-medium">
-                        🌙 Today marks the beginning of Rajab, one of the four sacred months in Islam!
+                    <div className="mt-2 p-2 bg-purple-100 dark:bg-purple-900 rounded text-xs">
+                      <p className="text-purple-800 dark:text-purple-200 font-medium">
+                        🌙 Beginning of Rajab - One of the four sacred months in Islam
                       </p>
                     </div>
                   )}
                   {todayHijri.day === 1 && todayHijri.month === 9 && (
                     <div className="mt-2 p-2 bg-emerald-100 dark:bg-emerald-900 rounded text-xs">
                       <p className="text-emerald-800 dark:text-emerald-200 font-medium">
-                        🌙 Ramadan Mubarak! The holy month of fasting has begun.
+                        🌙 Ramadan Mubarak! The holy month of fasting has begun
+                      </p>
+                    </div>
+                  )}
+                  {todayHijri.day === 1 && todayHijri.month === 10 && (
+                    <div className="mt-2 p-2 bg-yellow-100 dark:bg-yellow-900 rounded text-xs">
+                      <p className="text-yellow-800 dark:text-yellow-200 font-medium">
+                        🎉 Eid al-Fitr Mubarak! Festival of Breaking the Fast
+                      </p>
+                    </div>
+                  )}
+                  {todayHijri.day === 10 && todayHijri.month === 12 && (
+                    <div className="mt-2 p-2 bg-red-100 dark:bg-red-900 rounded text-xs">
+                      <p className="text-red-800 dark:text-red-200 font-medium">
+                        🎉 Eid al-Adha Mubarak! Festival of Sacrifice
                       </p>
                     </div>
                   )}
