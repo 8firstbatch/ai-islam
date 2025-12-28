@@ -163,7 +163,7 @@ export const ToolsSearch = ({
             />
           </div>
           <div className="mt-2 text-xs text-muted-foreground text-center">
-            Use ↑ ↓ arrows to navigate • Press Enter to select • Esc to close
+            {/* Navigation instructions removed */}
           </div>
         </div>
 

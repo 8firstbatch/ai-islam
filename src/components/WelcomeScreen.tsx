@@ -9,11 +9,11 @@ export const WelcomeScreen = ({ onSuggestionClick }: WelcomeScreenProps) => {
       <div className="absolute inset-0 pattern-islamic opacity-30 pointer-events-none animate-float-gentle" />
 
       {/* Welcome text */}
-      <h1 className="font-display text-4xl md:text-5xl text-primary mb-4 text-center animate-slide-in-left">
+      <h1 className="font-islamic-greeting text-4xl md:text-5xl text-primary mb-4 text-center animate-slide-in-left font-bold">
         Assalamu Alaikum
       </h1>
       <p className="text-muted-foreground text-center max-w-md mb-2 animate-slide-in-right" style={{ animationDelay: "200ms" }}>
-        Peace be upon you. I am your Islamic AI assistant, here to help you with questions about Islam, Quran, prayers, and spiritual guidance.
+        Peace be upon you. I am your AI Islam  assistant, here to help you with questions about Islam, Quran, prayers, and spiritual guidance.
       </p>
       <p className="text-sm text-primary font-display mb-12 opacity-80" style={{ animationDelay: "400ms" }}>
         بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ 

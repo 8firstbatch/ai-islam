@@ -214,7 +214,7 @@ const Index = () => {
   return (
     <>
       <Helmet>
-        <title>Islamic AI - Your Spiritual Guide</title>
+        <title> AI Islam  - Your Spiritual Guide</title>
         <meta name="description" content="Ask questions about Islam, Quran, Hadith, prayers, and receive guidance rooted in authentic Islamic teachings." />
       </Helmet>
 

@@ -206,7 +206,7 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
               className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full transition-all duration-200 hover:scale-105 ${
                 isListening 
                   ? 'text-red-500 animate-pulse' 
-                  : 'text-white hover:text-white hover:bg-emerald-500'
+                  : 'text-foreground hover:text-primary-foreground hover:bg-emerald-500 dark:text-white dark:hover:text-white'
               }`}
               title={isListening ? "Listening... Click to stop" : "Voice Input"}
             >
@@ -217,7 +217,7 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={selectedTool ? "Ask about this tool..." : "Ask about Islam, Quran, prayers, or seek guidance..."}
+              placeholder={selectedTool ? "Ask about this tool..." : "Ask AI Islam"}
               className={`min-h-[52px] max-h-32 resize-none bg-background border-border focus:ring-2 focus:ring-primary/20 rounded-3xl transition-all duration-300 ${
                 selectedTool ? 'pt-12 pl-12 pr-16' : 'pl-12 pr-16'
               }`}

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { getUserProfile, updateUserProfile, uploadProfileImage, getEffectiveProfileImage, getEffectiveDisplayName } from "@/utils/profileUtils";
+import { loadUserSettings, saveUserSettings } from "@/utils/settingsUtils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -88,25 +89,11 @@ const Settings = () => {
   const loadSettings = async () => {
     if (!user) return;
     
-    try {
-      const { data, error } = await supabase
-        .from("user_settings")
-        .select("ai_model, ai_response_style, is_pro_enabled")
-        .eq("user_id", user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') { // PGRST116 is "not found" error
-        console.error('Error loading settings:', error);
-        return;
-      }
-
-      if (data) {
-        setAiModel(data.ai_model || "google/gemini-2.5-flash");
-        setResponseStyle(data.ai_response_style || "balanced");
-        setIsProEnabled(data.is_pro_enabled || false);
-      }
-    } catch (error) {
-      console.error('Error loading settings:', error);
+    const settings = await loadUserSettings(user.id);
+    if (settings) {
+      setAiModel(settings.ai_model);
+      setResponseStyle(settings.ai_response_style);
+      setIsProEnabled(settings.is_pro_enabled || false);
     }
   };
 
@@ -195,53 +182,23 @@ const Settings = () => {
     if (!user) return;
     setSaving(true);
 
-    try {
-      // First, try to save with is_pro_enabled
-      let { error } = await supabase
-        .from("user_settings")
-        .upsert({
-          user_id: user.id,
-          ai_model: aiModel,
-          ai_response_style: responseStyle,
-          is_pro_enabled: isProEnabled,
-        }, {
-          onConflict: 'user_id'
-        });
+    const result = await saveUserSettings(user.id, {
+      ai_model: aiModel,
+      ai_response_style: responseStyle,
+      is_pro_enabled: isProEnabled,
+    });
 
-      // If column doesn't exist, try without is_pro_enabled
-      if (error && error.message?.includes('is_pro_enabled')) {
-        console.log('is_pro_enabled column not found, saving without it');
-        const { error: fallbackError } = await supabase
-          .from("user_settings")
-          .upsert({
-            user_id: user.id,
-            ai_model: aiModel,
-            ai_response_style: responseStyle,
-          }, {
-            onConflict: 'user_id'
-          });
-        
-        if (fallbackError) throw fallbackError;
-        
-        toast({ 
-          title: "AI settings saved", 
-          description: "Pro settings will be available after database update"
-        });
-      } else if (error) {
-        throw error;
-      } else {
-        toast({ title: "AI settings saved" });
-      }
-    } catch (error) {
-      console.error('AI settings save error:', error);
+    if (result.success) {
+      toast({ title: result.message });
+    } else {
       toast({
-        title: "Failed to save",
-        description: error instanceof Error ? error.message : "Please try again",
+        title: "Failed to save AI settings",
+        description: result.message,
         variant: "destructive",
       });
-    } finally {
-      setSaving(false);
     }
+
+    setSaving(false);
   };
 
   if (authLoading) {
@@ -455,31 +412,6 @@ const Settings = () => {
                     </div>
 
                     <div className="space-y-4">
-                      {/* Pro Toggle */}
-                      <div className="p-4 border border-border rounded-xl bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20">
-                        <div className="flex items-center justify-between">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                              <Label htmlFor="pro-toggle" className="font-semibold text-amber-700 dark:text-amber-300">
-                                Pro Mode
-                              </Label>
-                              <div className="px-2 py-1 bg-gradient-to-r from-amber-500 to-yellow-500 text-white text-xs font-bold rounded-full">
-                                PREMIUM
-                              </div>
-                            </div>
-                            <p className="text-sm text-amber-600 dark:text-amber-400">
-                              Enable advanced AI capabilities with premium models and features
-                            </p>
-                          </div>
-                          <Switch
-                            id="pro-toggle"
-                            checked={isProEnabled}
-                            onCheckedChange={setIsProEnabled}
-                            className="data-[state=checked]:bg-amber-500"
-                          />
-                        </div>
-                      </div>
-
                       <div className="space-y-2">
                         <Label>AI Model</Label>
                         <Select value={aiModel} onValueChange={setAiModel}>
@@ -488,13 +420,20 @@ const Settings = () => {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="google/gemini-2.5-flash">Smart</SelectItem>
-                            <SelectItem value="google/gemini-2.5-pro">Thinking</SelectItem>
-                            <SelectItem value="openai/gpt-5-mini" disabled={!isProEnabled}>
+                            <SelectItem value="google/gemini-2.5-pro" disabled>
                               <div className="flex items-center gap-2">
-                                Pro
-                                {!isProEnabled && (
-                                  <span className="text-xs text-muted-foreground">(Pro required)</span>
-                                )}
+                                <span>Thinking</span>
+                                <span className="text-xs bg-gradient-to-r from-purple-500 to-purple-600 text-white px-2 py-1 rounded-full font-medium">
+                                  COMING SOON
+                                </span>
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="pro-model-coming-soon" disabled>
+                              <div className="flex items-center gap-2">
+                                <span className="text-muted-foreground">Pro Model</span>
+                                <div className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full">
+                                  COMING SOON
+                                </div>
                               </div>
                             </SelectItem>
                           </SelectContent>

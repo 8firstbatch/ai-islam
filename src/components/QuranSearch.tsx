@@ -26,6 +26,28 @@ interface Translation {
   type: string;
 }
 
+interface Reciter {
+  id: string;
+  name: string;
+  arabicName: string;
+  folder: string;
+  bitrate: string;
+}
+
+// Available Quran reciters
+const availableReciters: Reciter[] = [
+  { id: "alafasy", name: "Mishary Rashid Al-Afasy", arabicName: "مشاري راشد العفاسي", folder: "Alafasy_128kbps", bitrate: "128kbps" },
+  { id: "husary", name: "Mahmoud Khalil Al-Husary", arabicName: "محمود خليل الحصري", folder: "Husary_128kbps", bitrate: "128kbps" },
+  { id: "sudais", name: "Abdul Rahman Al-Sudais", arabicName: "عبد الرحمن السديس", folder: "Sudais_128kbps", bitrate: "128kbps" },
+  { id: "shuraim", name: "Saud Al-Shuraim", arabicName: "سعود الشريم", folder: "Shuraim_128kbps", bitrate: "128kbps" },
+  { id: "maher", name: "Maher Al-Muaiqly", arabicName: "ماهر المعيقلي", folder: "MaherAlMuaiqly128kbps", bitrate: "128kbps" },
+  { id: "minshawi", name: "Mohamed Siddiq Al-Minshawi", arabicName: "محمد صديق المنشاوي", folder: "Minshawi_Murattal_128kbps", bitrate: "128kbps" },
+  { id: "ajmi", name: "Ahmed ibn Ali Al-Ajmi", arabicName: "أحمد بن علي العجمي", folder: "Ahmed_ibn_Ali_al-Ajmi_128kbps", bitrate: "128kbps" },
+  { id: "ghamdi", name: "Saad Al-Ghamdi", arabicName: "سعد الغامدي", folder: "Ghamdi_40kbps", bitrate: "40kbps" },
+  { id: "basfar", name: "Abdullah Basfar", arabicName: "عبد الله بصفر", folder: "Abdullah_Basfar_192kbps", bitrate: "192kbps" },
+  { id: "rifai", name: "Hani Ar-Rifai", arabicName: "هاني الرفاعي", folder: "Hani_Rifai_192kbps", bitrate: "192kbps" }
+];
+
 // Available translations in different languages
 const availableTranslations: Translation[] = [
   { identifier: "en.sahih", language: "en", name: "Sahih International", englishName: "English", type: "translation" },
@@ -70,6 +92,7 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
   const [loading, setLoading] = useState(false);
   const [searchMode, setSearchMode] = useState<"reference" | "keyword">("reference");
   const [selectedTranslation, setSelectedTranslation] = useState("en.sahih");
+  const [selectedReciter, setSelectedReciter] = useState("alafasy");
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [loadingAudio, setLoadingAudio] = useState<string | null>(null);
   const [selectedResultIndex, setSelectedResultIndex] = useState(0);
@@ -149,10 +172,15 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
     setLoadingAudio(verseKey);
 
     try {
-      // Use Al-Afasy reciter from everyayah.com
+      // Get selected reciter info
+      const reciter = availableReciters.find(r => r.id === selectedReciter) || availableReciters[0];
+      
+      // Format surah and ayah numbers with leading zeros
       const surahNum = String(verse.surah.number).padStart(3, "0");
       const ayahNum = String(verse.number).padStart(3, "0");
-      const audioUrl = `https://everyayah.com/data/Alafasy_128kbps/${surahNum}${ayahNum}.mp3`;
+      
+      // Construct audio URL based on selected reciter
+      const audioUrl = `https://everyayah.com/data/${reciter.folder}/${surahNum}${ayahNum}.mp3`;
 
       const audio = new Audio(audioUrl);
       audioRef.current = audio;
@@ -171,7 +199,7 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
         setLoadingAudio(null);
         toast({
           title: "Audio Error",
-          description: "Could not load the recitation. Please try again.",
+          description: `Could not load the recitation by ${reciter.name}. Please try another reciter.`,
           variant: "destructive",
         });
       };
@@ -427,7 +455,7 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
               </Button>
             </div>
             <div className="text-xs text-muted-foreground">
-              Use ← → arrows to switch modes
+              {/* Switch modes instruction removed */}
             </div>
           </div>
 
@@ -451,6 +479,28 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
                           <span className="text-xs bg-muted px-1 rounded">Tafsir</span>
                         )}
                       </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          {/* Reciter Selector */}
+          <div className="mb-4">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Volume2 className="w-4 h-4" />
+                <span>Reciter:</span>
+              </div>
+              <Select value={selectedReciter} onValueChange={setSelectedReciter}>
+                <SelectTrigger className="w-64">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {availableReciters.map((reciter) => (
+                    <SelectItem key={reciter.id} value={reciter.id}>
+                      <span className="font-medium">{reciter.name}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -540,7 +590,7 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
               <p className="text-xs mt-2">Available in 25+ languages including Arabic, English, Urdu, Hindi, French, German, and more</p>
               <div className="mt-4 text-xs text-center space-y-1">
                 <p>Keyboard shortcuts:</p>
-                <p>← → Switch modes | ↑ ↓ Navigate results | Enter Select</p>
+                <p>{/* Navigation instructions removed */}</p>
               </div>
             </div>
           ) : (
@@ -608,7 +658,7 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
               
               {results.length > 0 && (
                 <div className="text-center text-xs text-muted-foreground py-2">
-                  Use ↑ ↓ arrows to navigate • Press Enter to select • Esc to close
+                  {/* Navigation instructions removed */}
                 </div>
               )}
             </div>

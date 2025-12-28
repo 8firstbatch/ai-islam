@@ -555,7 +555,7 @@ export const HadithSearch = ({ isOpen, onClose, onInsertHadith }: HadithSearchPr
             <BookOpen className="w-5 h-5" />
             Hadith Search
             <div className="ml-auto text-xs text-muted-foreground">
-              ← → Switch collections | ↑ ↓ Navigate | Enter Select | Ctrl+C Copy
+              {/* Navigation instructions removed */}
             </div>
           </DialogTitle>
         </DialogHeader>
@@ -582,7 +582,7 @@ export const HadithSearch = ({ isOpen, onClose, onInsertHadith }: HadithSearchPr
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <ArrowLeft className="w-3 h-3" />
-              <span>Use arrow keys to navigate collections</span>
+              <span>{/* Arrow navigation instruction removed */}</span>
               <ArrowRight className="w-3 h-3" />
             </div>
             <Tabs value={selectedCollection} onValueChange={setSelectedCollection}>
@@ -652,7 +652,7 @@ export const HadithSearch = ({ isOpen, onClose, onInsertHadith }: HadithSearchPr
                 </p>
                 <div className="mt-4 text-xs text-center space-y-1">
                   <p>Keyboard shortcuts:</p>
-                  <p>← → Switch collections | ↑ ↓ Navigate results | Enter Select | Ctrl+C Copy</p>
+                  <p>{/* Navigation instructions removed */}</p>
                 </div>
               </div>
             ) : (
@@ -751,7 +751,7 @@ export const HadithSearch = ({ isOpen, onClose, onInsertHadith }: HadithSearchPr
                 
                 {searchResults.length > 0 && (
                   <div className="text-center text-xs text-muted-foreground py-2">
-                    Use ↑ ↓ arrows to navigate • Press Enter to insert • Ctrl+C to copy • Esc to close
+                    {/* Navigation instructions removed */}
                   </div>
                 )}
               </div>

@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Outfit:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Outfit:wght@300;400;500;600;700&family=Scheherazade+New:wght@400;500;600;700&family=Aref+Ruqaa:wght@400;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -130,23 +130,110 @@
     @apply border-border;
   }
 
+  /* 120fps Performance Optimizations */
+  html {
+    /* Enable high refresh rate displays */
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    
+    /* GPU acceleration for better performance */
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
   html, body {
     height: 100%;
     overflow: hidden;
+    
+    /* Performance optimizations for 120fps */
+    will-change: transform;
+    contain: layout style paint;
   }
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
+    
+    /* High refresh rate optimizations */
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    
+    /* Enable hardware acceleration */
+    transform: translate3d(0, 0, 0);
+    -webkit-transform: translate3d(0, 0, 0);
+    
+    /* Make all text bolder by default */
+    font-weight: 500;
   }
 
   #root {
     height: 100vh;
     width: 100vw;
     overflow: hidden;
+    
+    /* GPU layer promotion for smooth animations */
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 
+  /* Optimize all interactive elements for 120fps */
+  button, input, textarea, select {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    /* Make interactive elements bolder */
+    font-weight: 600;
+  }
+
+  /* Smooth scrolling containers */
+  .scroll-smooth {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    will-change: scroll-position;
+  }
+
+  /* Animation performance optimizations */
+  [class*="animate-"] {
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+    animation-fill-mode: both;
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  /* Make all headings bolder */
   h1, h2, h3, h4, h5, h6 {
     @apply font-display;
+    text-rendering: optimizeLegibility;
+    font-weight: 700;
+  }
+
+  /* Make paragraphs and general text bolder */
+  p, span, div, label {
+    font-weight: 500;
+  }
+
+  /* Make links bolder */
+  a {
+    font-weight: 600;
+  }
+
+  /* Make form elements bolder */
+  input, textarea, select {
+    font-weight: 500;
+  }
+
+  /* Make table text bolder */
+  th, td {
+    font-weight: 500;
+  }
+
+  /* Make list items bolder */
+  li {
+    font-weight: 500;
   }
 }
 
@@ -163,6 +250,13 @@
     font-family: 'Amiri', 'Arabic Typesetting', 'Traditional Arabic', serif;
     direction: rtl;
     text-align: right;
+  }
+
+  .font-islamic-greeting {
+    font-family: 'Scheherazade New', 'Aref Ruqaa', 'Amiri', serif;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   }
 
   .bg-gradient-emerald {
@@ -187,6 +281,63 @@
 
   .text-balance {
     text-wrap: balance;
+  }
+
+  /* Bold text utilities */
+  .text-bold {
+    font-weight: 600;
+  }
+
+  .text-extra-bold {
+    font-weight: 700;
+  }
+
+  .text-super-bold {
+    font-weight: 800;
+  }
+
+  /* Override for specific elements that need to be bolder */
+  .font-bold-override {
+    font-weight: 700 !important;
+  }
+
+  .font-semibold-override {
+    font-weight: 600 !important;
+  }
+
+  /* 120fps Performance Utilities */
+  .gpu-accelerated {
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    perspective: 1000px;
+  }
+
+  .smooth-animation {
+    animation-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+    will-change: transform, opacity;
+    backface-visibility: hidden;
+  }
+
+  .high-performance {
+    contain: layout style paint;
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+
+  .smooth-scroll {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    will-change: scroll-position;
+  }
+
+  .crisp-rendering {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
   /* Islamic geometric pattern background */
@@ -214,83 +365,188 @@
   }
 }
 
-/* Animations */
+/* High-Performance 120fps Animations */
 @keyframes float {
   0%, 100% {
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
   50% {
-    transform: translateY(-10px);
+    transform: translate3d(0, -10px, 0);
   }
 }
 
 @keyframes pulse-glow {
   0%, 100% {
     box-shadow: 0 0 20px hsl(42 75% 50% / 0.3);
+    transform: scale3d(1, 1, 1);
   }
   50% {
     box-shadow: 0 0 40px hsl(42 75% 50% / 0.5);
+    transform: scale3d(1.02, 1.02, 1);
   }
 }
 
 @keyframes slide-up {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translate3d(0, 20px, 0);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
 @keyframes fade-in {
   from {
     opacity: 0;
+    transform: translateZ(0);
   }
   to {
     opacity: 1;
+    transform: translateZ(0);
   }
 }
 
 @keyframes compass-spin {
   from {
-    transform: rotate(0deg);
+    transform: rotate3d(0, 0, 1, 0deg);
   }
   to {
-    transform: rotate(360deg);
+    transform: rotate3d(0, 0, 1, 360deg);
   }
 }
 
 @keyframes recording-pulse {
   0%, 100% {
     opacity: 1;
-    transform: scale(1);
+    transform: scale3d(1, 1, 1);
   }
   50% {
     opacity: 0.5;
-    transform: scale(1.1);
+    transform: scale3d(1.1, 1.1, 1);
+  }
+}
+
+/* Loading Screen Specific Animations */
+@keyframes spin-slow {
+  from {
+    transform: rotate3d(0, 0, 1, 0deg);
+  }
+  to {
+    transform: rotate3d(0, 0, 1, 360deg);
+  }
+}
+
+@keyframes spin-reverse {
+  from {
+    transform: rotate3d(0, 0, 1, 360deg);
+  }
+  to {
+    transform: rotate3d(0, 0, 1, 0deg);
+  }
+}
+
+@keyframes glow-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(52, 211, 153, 0.5);
+    filter: brightness(1);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(52, 211, 153, 0.8);
+    filter: brightness(1.2);
+  }
+}
+
+@keyframes float-gentle {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate3d(0, 0, 1, 0deg);
+  }
+  33% {
+    transform: translate3d(0, -3px, 0) rotate3d(0, 0, 1, 1deg);
+  }
+  66% {
+    transform: translate3d(0, 3px, 0) rotate3d(0, 0, 1, -1deg);
+  }
+}
+
+@keyframes sparkle-rotate {
+  0% {
+    transform: rotate3d(0, 0, 1, 0deg) scale3d(1, 1, 1);
+  }
+  25% {
+    transform: rotate3d(0, 0, 1, 90deg) scale3d(1.1, 1.1, 1);
+  }
+  50% {
+    transform: rotate3d(0, 0, 1, 180deg) scale3d(1, 1, 1);
+  }
+  75% {
+    transform: rotate3d(0, 0, 1, 270deg) scale3d(1.1, 1.1, 1);
+  }
+  100% {
+    transform: rotate3d(0, 0, 1, 360deg) scale3d(1, 1, 1);
   }
 }
 
 .animate-float {
   animation: float 3s ease-in-out infinite;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 .animate-pulse-glow {
   animation: pulse-glow 2s ease-in-out infinite;
+  will-change: transform, box-shadow;
+  backface-visibility: hidden;
 }
 
 .animate-slide-up {
-  animation: slide-up 0.5s ease-out forwards;
+  animation: slide-up 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 .animate-fade-in {
-  animation: fade-in 0.3s ease-out forwards;
+  animation: fade-in 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: opacity;
+  backface-visibility: hidden;
 }
 
 .animate-compass-spin {
   animation: compass-spin 2s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Loading Screen Animation Classes */
+.animate-spin-slow {
+  animation: spin-slow 4s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.animate-spin-reverse {
+  animation: spin-reverse 6s linear infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+  will-change: box-shadow, filter;
+  backface-visibility: hidden;
+}
+
+.animate-float-gentle {
+  animation: float-gentle 4s ease-in-out infinite;
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+.animate-sparkle-rotate {
+  animation: sparkle-rotate 4s ease-in-out infinite;
+  will-change: transform;
+  backface-visibility: hidden;
 }
 
 @keyframes typing-dot {
