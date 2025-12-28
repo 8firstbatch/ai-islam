@@ -3,6 +3,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { openRouterService } from "@/services/openRouterService";
+import { googleAIService } from "@/services/googleAIService";
+import { thinkingAIService } from "@/services/thinkingAIService";
+import { loadUserSettings } from "@/utils/settingsUtils";
 
 export interface Message {
   id: string;
@@ -205,15 +208,45 @@ export const useOpenRouterChat = () => {
         );
       }
 
-      await openRouterService.sendMessage(
-        chatMessages,
-        {
-          model: 'openai/gpt-4o-mini', // You can make this configurable
-          stream: true,
-          onChunk: updateAssistant,
-          signal: controller.signal,
-        }
-      );
+      // Get user's AI model preference
+      const userSettings = await loadUserSettings(user?.id || '');
+      const selectedModel = userSettings?.ai_model || "google/gemini-2.5-flash";
+
+      // Use appropriate AI service based on selected model
+      if (selectedModel === "google/gemini-2.5-flash") {
+        // Use Google AI service for Smart model
+        await googleAIService.sendMessage(
+          chatMessages,
+          {
+            model: 'gemini-2.5-flash',
+            stream: true,
+            onChunk: updateAssistant,
+            signal: controller.signal,
+          }
+        );
+      } else if (selectedModel === "google/gemini-2.5-pro") {
+        // Use Thinking AI service for Thinking model
+        await thinkingAIService.sendMessage(
+          chatMessages,
+          {
+            model: 'gemini-2.5-pro',
+            stream: true,
+            onChunk: updateAssistant,
+            signal: controller.signal,
+          }
+        );
+      } else {
+        // Use OpenRouter service for other models
+        await openRouterService.sendMessage(
+          chatMessages,
+          {
+            model: 'openai/gpt-4o-mini',
+            stream: true,
+            onChunk: updateAssistant,
+            signal: controller.signal,
+          }
+        );
+      }
 
       // Save assistant message if authenticated and we have content
       if (conversationId && user && assistantContent) {
