@@ -1,5 +1,5 @@
 import { useState, KeyboardEvent, useEffect } from "react";
-import { Send, Loader2, Image, X, Square, Wrench, Mic } from "lucide-react";
+import { Send, Image, X, Square, Wrench, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";

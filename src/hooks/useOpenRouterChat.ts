@@ -97,6 +97,7 @@ export const useOpenRouterChat = () => {
   // Stop the current AI response
   const stopGeneration = useCallback(() => {
     if (abortController) {
+      console.log('Stopping AI generation...');
       abortController.abort();
       setAbortController(null);
       setIsLoading(false);
@@ -257,7 +258,8 @@ export const useOpenRouterChat = () => {
       console.error("Chat error:", error);
       
       // Don't show error if request was aborted
-      if (error instanceof Error && error.name === 'AbortError') {
+      if (error instanceof Error && (error.name === 'AbortError' || error.message.includes('aborted'))) {
+        console.log('Request was aborted by user');
         return;
       }
       

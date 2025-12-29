@@ -1,0 +1,23 @@
+{
+  "mcpServers": {
+    "islamic-ai": {
+      "command": "node",
+      "args": ["mcp-server/islamic-ai-server.js"],
+      "env": {
+        "NODE_ENV": "production"
+      },
+      "disabled": true,
+      "autoApprove": [
+        "get_quran_verse",
+        "search_hadith",
+        "get_prayer_times",
+        "get_islamic_calendar",
+        "get_qibla_direction",
+        "get_islamic_knowledge",
+        "get_dua_collection",
+        "get_islamic_names",
+        "generate_islamic_image"
+      ]
+    }
+  }
+}

@@ -117,6 +117,11 @@ For non-Islamic questions, provide helpful, detailed responses while maintaining
         // Simulate thinking/processing with more natural streaming
         const sentences = content.split(/(?<=[.!?])\s+/);
         for (let i = 0; i < sentences.length; i++) {
+          // Check if request was aborted
+          if (signal?.aborted) {
+            throw new DOMException('Request aborted', 'AbortError');
+          }
+          
           const chunk = (i === 0 ? '' : ' ') + sentences[i];
           onChunk(chunk);
           // Slightly longer delay to simulate deeper thinking

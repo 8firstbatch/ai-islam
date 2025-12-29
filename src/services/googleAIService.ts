@@ -112,6 +112,11 @@ For non-Islamic questions, provide helpful responses while maintaining Islamic v
         // Simulate streaming by sending word chunks
         const words = content.split(' ');
         for (let i = 0; i < words.length; i++) {
+          // Check if request was aborted
+          if (signal?.aborted) {
+            throw new DOMException('Request aborted', 'AbortError');
+          }
+          
           const chunk = (i === 0 ? '' : ' ') + words[i];
           onChunk(chunk);
           // Small delay to simulate streaming

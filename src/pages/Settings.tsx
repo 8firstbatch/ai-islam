@@ -507,11 +507,11 @@ const Settings = () => {
                             </div>
                           </div>
                           <Button
-                            onClick={() => setShowImageGeneration(true)}
+                            disabled
                             variant="outline"
                             size="sm"
                           >
-                            Open Tool
+                            Coming Soon
                           </Button>
                         </div>
                       </div>
@@ -531,11 +531,11 @@ const Settings = () => {
                             </div>
                           </div>
                           <Button
-                            onClick={() => setShowQiblaCompass(true)}
+                            disabled
                             variant="outline"
                             size="sm"
                           >
-                            Open Tool
+                            Coming Soon
                           </Button>
                         </div>
                       </div>
