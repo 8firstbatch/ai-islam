@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+  import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -32,20 +32,24 @@ interface Reciter {
   arabicName: string;
   folder: string;
   bitrate: string;
+  status?: 'working' | 'fallback' | 'unavailable';
 }
 
 // Available Quran reciters
 const availableReciters: Reciter[] = [
   { id: "alafasy", name: "Mishary Rashid Al-Afasy", arabicName: "مشاري راشد العفاسي", folder: "Alafasy_128kbps", bitrate: "128kbps" },
   { id: "husary", name: "Mahmoud Khalil Al-Husary", arabicName: "محمود خليل الحصري", folder: "Husary_128kbps", bitrate: "128kbps" },
-  { id: "sudais", name: "Abdul Rahman Al-Sudais", arabicName: "عبد الرحمن السديس", folder: "Sudais_128kbps", bitrate: "128kbps" },
-  { id: "shuraim", name: "Saud Al-Shuraim", arabicName: "سعود الشريم", folder: "Shuraim_128kbps", bitrate: "128kbps" },
+  { id: "sudais", name: "Abdul Rahman Al-Sudais", arabicName: "عبد الرحمن السديس", folder: "Abdurrahmaan_As-Sudais_192kbps", bitrate: "192kbps" },
+  { id: "shuraim", name: "Saud Al-Shuraim", arabicName: "سعود الشريم", folder: "Saood_ash-Shuraym_128kbps", bitrate: "128kbps" },
   { id: "maher", name: "Maher Al-Muaiqly", arabicName: "ماهر المعيقلي", folder: "MaherAlMuaiqly128kbps", bitrate: "128kbps" },
-  { id: "minshawi", name: "Mohamed Siddiq Al-Minshawi", arabicName: "محمد صديق المنشاوي", folder: "Minshawi_Murattal_128kbps", bitrate: "128kbps" },
-  { id: "ajmi", name: "Ahmed ibn Ali Al-Ajmi", arabicName: "أحمد بن علي العجمي", folder: "Ahmed_ibn_Ali_al-Ajmi_128kbps", bitrate: "128kbps" },
-  { id: "ghamdi", name: "Saad Al-Ghamdi", arabicName: "سعد الغامدي", folder: "Ghamdi_40kbps", bitrate: "40kbps" },
+  { id: "minshawi", name: "Mohamed Siddiq Al-Minshawi", arabicName: "محمد صديق المنشاوي", folder: "Minshawy_Murattal_128kbps", bitrate: "128kbps" },
+  { id: "ajmi", name: "Ahmed ibn Ali Al-Ajmi", arabicName: "أحمد بن علي العجمي", folder: "ahmed_ibn_ali_al_ajamy_128kbps", bitrate: "128kbps" },
+  { id: "ghamdi", name: "Saad Al-Ghamdi", arabicName: "سعد الغامدي", folder: "Ghamadi_40kbps", bitrate: "40kbps" },
   { id: "basfar", name: "Abdullah Basfar", arabicName: "عبد الله بصفر", folder: "Abdullah_Basfar_192kbps", bitrate: "192kbps" },
-  { id: "rifai", name: "Hani Ar-Rifai", arabicName: "هاني الرفاعي", folder: "Hani_Rifai_192kbps", bitrate: "192kbps" }
+  { id: "rifai", name: "Hani Ar-Rifai", arabicName: "هاني الرفاعي", folder: "Hani_Rifai_192kbps", bitrate: "192kbps" },
+  { id: "abdulbasit", name: "Abdul Basit Abdul Samad", arabicName: "عبد الباسط عبد الصمد", folder: "Abdul_Basit_Murattal_192kbps", bitrate: "192kbps" },
+  { id: "hudhaify", name: "Ali Al-Hudhaify", arabicName: "علي الحذيفي", folder: "Hudhaify_128kbps", bitrate: "128kbps" },
+  { id: "bukhatir", name: "Salah Bukhatir", arabicName: "صلاح بخاطر", folder: "Salaah_AbdulRahman_Bukhatir_128kbps", bitrate: "128kbps" }
 ];
 
 // Available translations in different languages
@@ -97,8 +101,50 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
   const [loadingAudio, setLoadingAudio] = useState<string | null>(null);
   const [selectedResultIndex, setSelectedResultIndex] = useState(0);
   const [isSearching, setIsSearching] = useState(false);
+  const [reciterStatus, setReciterStatus] = useState<Record<string, 'working' | 'fallback' | 'unavailable'>>({});
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
+
+  // Test reciter availability on component mount
+  useEffect(() => {
+    const testReciterAvailability = async () => {
+      // Test with Al-Fatiha (1:1) as it's available for most reciters
+      const testSurah = "001";
+      const testAyah = "001";
+      
+      for (const reciter of availableReciters) {
+        try {
+          const testUrl = `https://everyayah.com/data/${reciter.folder}/${testSurah}${testAyah}.mp3`;
+          const response = await fetch(testUrl, { method: 'HEAD' });
+          
+          if (response.ok) {
+            setReciterStatus(prev => ({ ...prev, [reciter.id]: 'working' }));
+          } else {
+            // Try fallback
+            const fallbackFolder = reciter.folder.replace('_128kbps', '_64kbps').replace('_192kbps', '_64kbps');
+            if (fallbackFolder !== reciter.folder) {
+              const fallbackUrl = `https://everyayah.com/data/${fallbackFolder}/${testSurah}${testAyah}.mp3`;
+              const fallbackResponse = await fetch(fallbackUrl, { method: 'HEAD' });
+              
+              if (fallbackResponse.ok) {
+                setReciterStatus(prev => ({ ...prev, [reciter.id]: 'fallback' }));
+              } else {
+                setReciterStatus(prev => ({ ...prev, [reciter.id]: 'unavailable' }));
+              }
+            } else {
+              setReciterStatus(prev => ({ ...prev, [reciter.id]: 'unavailable' }));
+            }
+          }
+        } catch {
+          setReciterStatus(prev => ({ ...prev, [reciter.id]: 'unavailable' }));
+        }
+      }
+    };
+
+    if (isOpen) {
+      testReciterAvailability();
+    }
+  }, [isOpen]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -188,6 +234,7 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
       audio.onloadeddata = () => {
         setLoadingAudio(null);
         setPlayingAudio(verseKey);
+        setReciterStatus(prev => ({ ...prev, [selectedReciter]: 'working' }));
         audio.play();
       };
 
@@ -197,11 +244,45 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
 
       audio.onerror = () => {
         setLoadingAudio(null);
-        toast({
-          title: "Audio Error",
-          description: `Could not load the recitation by ${reciter.name}. Please try another reciter.`,
-          variant: "destructive",
-        });
+        
+        // Try fallback with 64kbps version if 128kbps/192kbps fails
+        const fallbackFolder = reciter.folder.replace('_128kbps', '_64kbps').replace('_192kbps', '_64kbps');
+        
+        if (fallbackFolder !== reciter.folder) {
+          // Try fallback
+          const fallbackUrl = `https://everyayah.com/data/${fallbackFolder}/${surahNum}${ayahNum}.mp3`;
+          const fallbackAudio = new Audio(fallbackUrl);
+          audioRef.current = fallbackAudio;
+          
+          fallbackAudio.onloadeddata = () => {
+            setPlayingAudio(verseKey);
+            fallbackAudio.play();
+            // Update status to fallback if it was working
+            setReciterStatus(prev => ({ ...prev, [selectedReciter]: 'fallback' }));
+          };
+          
+          fallbackAudio.onerror = () => {
+            setReciterStatus(prev => ({ ...prev, [selectedReciter]: 'unavailable' }));
+            toast({
+              title: "Audio Error",
+              description: `Recitation by ${reciter.name} is not available for this verse. Please try another reciter.`,
+              variant: "destructive",
+            });
+          };
+          
+          fallbackAudio.onended = () => {
+            setPlayingAudio(null);
+          };
+          
+          fallbackAudio.load();
+        } else {
+          setReciterStatus(prev => ({ ...prev, [selectedReciter]: 'unavailable' }));
+          toast({
+            title: "Audio Error",
+            description: `Recitation by ${reciter.name} is not available for this verse. Please try another reciter.`,
+            variant: "destructive",
+          });
+        }
       };
 
       audio.load();
@@ -488,7 +569,7 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
 
           {/* Reciter Selector */}
           <div className="mb-4">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 mb-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Volume2 className="w-4 h-4" />
                 <span>Reciter:</span>
@@ -498,13 +579,46 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="max-h-60">
-                  {availableReciters.map((reciter) => (
-                    <SelectItem key={reciter.id} value={reciter.id}>
-                      <span className="font-medium">{reciter.name}</span>
-                    </SelectItem>
-                  ))}
+                  {availableReciters.map((reciter) => {
+                    const status = reciterStatus[reciter.id];
+                    return (
+                      <SelectItem key={reciter.id} value={reciter.id}>
+                        <div className="flex items-center justify-between w-full">
+                          <span className="font-medium">{reciter.name}</span>
+                          <div className="flex items-center gap-1 ml-2">
+                            {status === 'working' && (
+                              <div className="w-2 h-2 bg-green-500 rounded-full" title="Available" />
+                            )}
+                            {status === 'fallback' && (
+                              <div className="w-2 h-2 bg-yellow-500 rounded-full" title="Available (lower quality)" />
+                            )}
+                            {status === 'unavailable' && (
+                              <div className="w-2 h-2 bg-red-500 rounded-full" title="Unavailable" />
+                            )}
+                            {!status && (
+                              <div className="w-2 h-2 bg-gray-400 rounded-full animate-pulse" title="Testing..." />
+                            )}
+                          </div>
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
+            </div>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-green-500 rounded-full" />
+                <span>Available</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-yellow-500 rounded-full" />
+                <span>Lower quality</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-2 h-2 bg-red-500 rounded-full" />
+                <span>Unavailable</span>
+              </div>
             </div>
           </div>
 
