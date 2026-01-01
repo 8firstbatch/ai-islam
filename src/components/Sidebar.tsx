@@ -13,8 +13,7 @@ import {
   Trash2,
   Settings,
   LogOut,
-  ChevronLeft,
-  ChevronRight,
+  Menu,
   Edit3,
   Trash,
 } from "lucide-react";
@@ -173,21 +172,24 @@ export const Sidebar = ({
       className={`h-screen bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-500 ease-in-out overflow-hidden ${
         isCollapsed ? "w-16" : "w-72"
       }`}
+      onClick={isCollapsed ? onToggleCollapse : undefined}
     >
       {/* Header */}
       <div className="p-4 border-b border-sidebar-border animate-slide-in-left">
         <div className="flex items-center justify-between mb-2">
           {!isCollapsed && (
-            <h2 className="font-display text-lg text-sidebar-foreground animate-fade-in">Chats</h2>
+            <h2 className="font-sans text-lg text-sidebar-foreground font-bold animate-fade-in">Chats</h2>
           )}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onToggleCollapse}
-            className="text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-300 hover:scale-110"
-          >
-            {isCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-          </Button>
+          {!isCollapsed && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggleCollapse}
+              className="text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-300 hover:scale-110"
+            >
+              <Menu className="w-4 h-4" />
+            </Button>
+          )}
         </div>
         
         {/* Delete All Conversations Button */}

@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { getUserProfile, updateUserProfile, uploadProfileImage, getEffectiveProfileImage, getEffectiveDisplayName } from "@/utils/profileUtils";
 import { loadUserSettings, saveUserSettings } from "@/utils/settingsUtils";
+import { testDatabaseTables } from "@/utils/dbTest";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -67,6 +68,8 @@ const Settings = () => {
     if (user) {
       loadProfile();
       loadSettings();
+      // Test database tables
+      testDatabaseTables();
     }
   }, [user]);
 
@@ -178,6 +181,54 @@ const Settings = () => {
     }
   };
 
+  const createDatabaseTables = async () => {
+    try {
+      console.log("Creating database tables...");
+      
+      // Create profiles table
+      const { error: profilesError } = await supabase
+        .from('profiles')
+        .select('id')
+        .limit(1);
+
+      if (profilesError && profilesError.code === 'PGRST116') {
+        console.log("Profiles table doesn't exist, but we can't create it from client");
+        toast({
+          title: "Database setup required",
+          description: "Please run the database migration scripts",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Create user_settings table
+      const { error: settingsError } = await supabase
+        .from('user_settings')
+        .select('id')
+        .limit(1);
+
+      if (settingsError && settingsError.code === 'PGRST116') {
+        console.log("User settings table doesn't exist, but we can't create it from client");
+        toast({
+          title: "Database setup required",
+          description: "Please run the database migration scripts",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      console.log("Tables verified successfully");
+      toast({ title: "Database tables verified successfully!" });
+    } catch (error) {
+      console.error("Failed to verify tables:", error);
+      toast({
+        title: "Failed to verify tables",
+        description: error instanceof Error ? error.message : "Unknown error",
+        variant: "destructive",
+      });
+    }
+  };
+
   const saveAiSettings = async () => {
     if (!user) return;
     setSaving(true);
@@ -234,7 +285,7 @@ const Settings = () => {
             >
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <h1 className="font-display text-xl text-foreground">Settings</h1>
+            <h1 className="font-sans text-xl text-foreground">Settings</h1>
           </div>
         </header>
 
@@ -265,7 +316,7 @@ const Settings = () => {
                 {activeTab === "profile" && (
                   <div className="space-y-6">
                     <div>
-                      <h2 className="font-display text-xl text-foreground mb-1">Profile</h2>
+                      <h2 className="font-sans text-xl text-foreground mb-1">Profile</h2>
                       <p className="text-sm text-muted-foreground">
                         Manage your profile information
                       </p>
@@ -363,7 +414,7 @@ const Settings = () => {
                 {activeTab === "appearance" && (
                   <div className="space-y-6">
                     <div>
-                      <h2 className="font-display text-xl text-foreground mb-1">Appearance</h2>
+                      <h2 className="font-sans text-xl text-foreground mb-1">Appearance</h2>
                       <p className="text-sm text-muted-foreground">
                         Customize the look and feel
                       </p>
@@ -405,7 +456,7 @@ const Settings = () => {
                 {activeTab === "ai" && (
                   <div className="space-y-6">
                     <div>
-                      <h2 className="font-display text-xl text-foreground mb-1">AI Settings</h2>
+                      <h2 className="font-sans text-xl text-foreground mb-1">AI Settings</h2>
                       <p className="text-sm text-muted-foreground">
                         Customize your AI assistant
                       </p>
@@ -420,14 +471,6 @@ const Settings = () => {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="google/gemini-2.5-flash">Smart</SelectItem>
-                            <SelectItem value="google/gemini-2.5-pro" disabled>
-                              <div className="flex items-center gap-2">
-                                <span>Thinking</span>
-                                <span className="text-xs bg-gradient-to-r from-purple-500 to-purple-600 text-white px-2 py-1 rounded-full font-medium">
-                                  COMING SOON
-                                </span>
-                              </div>
-                            </SelectItem>
                             <SelectItem value="pro-model-coming-soon" disabled>
                               <div className="flex items-center gap-2">
                                 <span className="text-muted-foreground">Pro Model</span>
@@ -485,7 +528,7 @@ const Settings = () => {
                 {activeTab === "tools" && (
                   <div className="space-y-6">
                     <div>
-                      <h2 className="font-display text-xl text-foreground mb-1">Islamic Tools</h2>
+                      <h2 className="font-sans text-xl text-foreground mb-1">Islamic Tools</h2>
                       <p className="text-sm text-muted-foreground">
                         Access Islamic tools and features
                       </p>

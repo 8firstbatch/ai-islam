@@ -8,35 +8,40 @@ export interface UserSettings {
 
 export const loadUserSettings = async (userId: string): Promise<UserSettings | null> => {
   try {
-    // First try to load with is_pro_enabled column
+    console.log('Loading settings for user:', userId);
+    
+    // Try to load from database first
     let { data, error } = await supabase
       .from("user_settings")
       .select("ai_model, ai_response_style, is_pro_enabled")
       .eq("user_id", userId)
       .single();
 
-    // If is_pro_enabled column doesn't exist, try without it
-    if (error && error.message?.includes('is_pro_enabled')) {
-      console.log('is_pro_enabled column not found, loading without it');
-      const { data: fallbackData, error: fallbackError } = await supabase
-        .from("user_settings")
-        .select("ai_model, ai_response_style")
-        .eq("user_id", userId)
-        .single();
+    if (error) {
+      console.log('Database load error:', error);
       
-      if (fallbackError && fallbackError.code !== 'PGRST116') {
-        console.error('Error loading settings:', fallbackError);
-        return null;
+      // If database fails, try localStorage as fallback
+      console.log('Falling back to localStorage');
+      const localSettings = localStorage.getItem(`user_settings_${userId}`);
+      if (localSettings) {
+        try {
+          const parsed = JSON.parse(localSettings);
+          return {
+            ai_model: parsed.ai_model || "google/gemini-2.5-flash",
+            ai_response_style: parsed.ai_response_style || "balanced",
+            is_pro_enabled: parsed.is_pro_enabled || false
+          };
+        } catch (parseError) {
+          console.error('Error parsing localStorage settings:', parseError);
+        }
       }
       
-      return fallbackData ? {
-        ai_model: (fallbackData as any).ai_model || "google/gemini-2.5-flash",
-        ai_response_style: (fallbackData as any).ai_response_style || "balanced",
-        is_pro_enabled: false // Default value when column doesn't exist
-      } : null;
-    } else if (error && error.code !== 'PGRST116') {
-      console.error('Error loading settings:', error);
-      return null;
+      // Return defaults if everything fails
+      return {
+        ai_model: "google/gemini-2.5-flash",
+        ai_response_style: "balanced",
+        is_pro_enabled: false
+      };
     }
 
     return data ? {
@@ -45,8 +50,13 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
       is_pro_enabled: (data as any).is_pro_enabled || false
     } : null;
   } catch (error) {
-    console.error('Error loading settings:', error);
-    return null;
+    console.error('Unexpected error loading settings:', error);
+    // Return defaults on any error
+    return {
+      ai_model: "google/gemini-2.5-flash",
+      ai_response_style: "balanced",
+      is_pro_enabled: false
+    };
   }
 };
 
@@ -55,8 +65,10 @@ export const saveUserSettings = async (
   settings: UserSettings
 ): Promise<{ success: boolean; message?: string }> => {
   try {
-    // First, try to save with is_pro_enabled
-    let { error } = await supabase
+    console.log('Attempting to save settings:', { userId, settings });
+    
+    // Try to save to database first
+    const { error } = await supabase
       .from("user_settings")
       .upsert({
         user_id: userId,
@@ -67,35 +79,43 @@ export const saveUserSettings = async (
         onConflict: 'user_id'
       });
 
-    // If column doesn't exist, try without is_pro_enabled
-    if (error && error.message?.includes('is_pro_enabled')) {
-      console.log('is_pro_enabled column not found, saving without it');
-      const { error: fallbackError } = await supabase
-        .from("user_settings")
-        .upsert({
-          user_id: userId,
-          ai_model: settings.ai_model,
-          ai_response_style: settings.ai_response_style,
-        }, {
-          onConflict: 'user_id'
-        });
+    if (error) {
+      console.error('Database save error:', error);
       
-      if (fallbackError) throw fallbackError;
-      
-      return { 
-        success: true, 
-        message: "AI settings saved successfully! Pro settings will be available after database update" 
-      };
-    } else if (error) {
-      throw error;
+      // Fallback to localStorage
+      console.log('Falling back to localStorage');
+      try {
+        localStorage.setItem(`user_settings_${userId}`, JSON.stringify(settings));
+        return { 
+          success: true, 
+          message: "Settings saved locally (database unavailable)" 
+        };
+      } catch (localError) {
+        console.error('localStorage save error:', localError);
+        return { 
+          success: false, 
+          message: "Failed to save settings both to database and locally" 
+        };
+      }
     }
 
+    console.log('Settings saved to database successfully');
     return { success: true, message: "AI settings saved successfully!" };
   } catch (error) {
-    console.error('AI settings save error:', error);
-    return { 
-      success: false, 
-      message: error instanceof Error ? error.message : "Failed to save settings" 
-    };
+    console.error('Unexpected error:', error);
+    
+    // Try localStorage as final fallback
+    try {
+      localStorage.setItem(`user_settings_${userId}`, JSON.stringify(settings));
+      return { 
+        success: true, 
+        message: "Settings saved locally (database error)" 
+      };
+    } catch (localError) {
+      return { 
+        success: false, 
+        message: error instanceof Error ? error.message : "Unexpected error occurred" 
+      };
+    }
   }
 };
