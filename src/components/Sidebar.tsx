@@ -331,7 +331,7 @@ export const Sidebar = ({
                             e.stopPropagation();
                             startEditing(conv.id, conv.title);
                           }}
-                          className="h-8 w-8 text-slate-400 hover:text-emerald-600 hover:bg-emerald-500/10 transition-colors duration-200 flex-shrink-0"
+                          className="h-8 w-8 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/10 transition-colors duration-200 flex-shrink-0"
                           title="Rename conversation"
                         >
                           <Edit3 className="w-4 h-4" />
