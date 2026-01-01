@@ -21,13 +21,10 @@ import {
   Monitor,
   Camera,
   Save,
-  Image,
-  Compass,
   RefreshCw,
+  Wrench,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ImageGeneration } from "@/components/ImageGeneration";
-import { QiblaCompass } from "@/components/QiblaCompass";
 import {
   Select,
   SelectContent,
@@ -55,8 +52,6 @@ const Settings = () => {
   const [isProEnabled, setIsProEnabled] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [showImageGeneration, setShowImageGeneration] = useState(false);
-  const [showQiblaCompass, setShowQiblaCompass] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -264,7 +259,7 @@ const Settings = () => {
     { id: "profile" as const, label: "Profile", icon: User },
     { id: "appearance" as const, label: "Appearance", icon: Palette },
     { id: "ai" as const, label: "AI Settings", icon: Bot },
-    { id: "tools" as const, label: "Tools", icon: Image },
+    { id: "tools" as const, label: "Tools", icon: Wrench },
   ];
 
   return (
@@ -471,11 +466,11 @@ const Settings = () => {
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="google/gemini-2.5-flash">Thinking</SelectItem>
-                            <SelectItem value="pro-model-coming-soon" disabled>
+                            <SelectItem value="google/gemini-2.5-pro">
                               <div className="flex items-center gap-2">
-                                <span className="text-muted-foreground">Pro Model</span>
+                                <span>Pro Model</span>
                                 <div className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full">
-                                  COMING SOON
+                                  PRO
                                 </div>
                               </div>
                             </SelectItem>
@@ -535,54 +530,6 @@ const Settings = () => {
                     </div>
 
                     <div className="grid gap-4">
-                      {/* Image Generation Tool */}
-                      <div className="p-4 border border-border rounded-xl hover:border-primary/30 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 flex items-center justify-center">
-                              <Image className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                              <h3 className="font-medium text-foreground">Islamic Image Generation</h3>
-                              <p className="text-sm text-muted-foreground">
-                                Generate beautiful Islamic-themed images with AI
-                              </p>
-                            </div>
-                          </div>
-                          <Button
-                            disabled
-                            variant="outline"
-                            size="sm"
-                          >
-                            Coming Soon
-                          </Button>
-                        </div>
-                      </div>
-
-                      {/* Qibla Compass Tool */}
-                      <div className="p-4 border border-border rounded-xl hover:border-primary/30 transition-colors">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-gradient-to-r from-blue-500 to-cyan-500 flex items-center justify-center">
-                              <Compass className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                              <h3 className="font-medium text-foreground">Qibla Compass</h3>
-                              <p className="text-sm text-muted-foreground">
-                                Find the direction to Mecca for prayer
-                              </p>
-                            </div>
-                          </div>
-                          <Button
-                            disabled
-                            variant="outline"
-                            size="sm"
-                          >
-                            Coming Soon
-                          </Button>
-                        </div>
-                      </div>
-
                       {/* Future tools can be added here */}
                       <div className="p-4 border border-dashed border-border rounded-xl opacity-50">
                         <div className="flex items-center justify-between">
@@ -606,18 +553,6 @@ const Settings = () => {
             </div>
           </div>
         </main>
-
-        {/* Image Generation Modal */}
-        <ImageGeneration 
-          isOpen={showImageGeneration} 
-          onClose={() => setShowImageGeneration(false)} 
-        />
-        
-        {/* Qibla Compass Modal */}
-        <QiblaCompass 
-          isOpen={showQiblaCompass} 
-          onClose={() => setShowQiblaCompass(false)} 
-        />
       </div>
     </>
   );

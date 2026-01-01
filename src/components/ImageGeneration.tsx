@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2, Download, Copy, Sparkles, Image as ImageIcon, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { googleImageService } from "@/services/googleImageService";
 import {
   Dialog,
   DialogContent,
@@ -31,8 +32,24 @@ export const ImageGeneration = ({ isOpen, onClose }: ImageGenerationProps) => {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
   const [selectedStyle, setSelectedStyle] = useState("realistic");
+  const [serviceStatus, setServiceStatus] = useState<'unknown' | 'available' | 'unavailable'>('unknown');
   const { toast } = useToast();
   const { user } = useAuth();
+
+  // Check service availability on component mount
+  const checkServiceStatus = async () => {
+    try {
+      const isAvailable = await googleImageService.checkAvailability();
+      setServiceStatus(isAvailable ? 'available' : 'unavailable');
+    } catch (error) {
+      setServiceStatus('unavailable');
+    }
+  };
+
+  // Check service status when component opens
+  if (isOpen && serviceStatus === 'unknown') {
+    checkServiceStatus();
+  }
 
   // Islamic-themed prompt suggestions
   const promptSuggestions = [
@@ -58,7 +75,7 @@ export const ImageGeneration = ({ isOpen, onClose }: ImageGenerationProps) => {
     { id: "architecture", name: "Architecture", description: "Mosques and buildings" }
   ];
 
-  // Generate image using multiple services for better reliability
+  // Generate image using Google's AI image generation service
   const generateImage = async () => {
     if (!prompt.trim()) {
       toast({
@@ -81,87 +98,18 @@ export const ImageGeneration = ({ isOpen, onClose }: ImageGenerationProps) => {
     setIsGenerating(true);
 
     try {
-      // Enhanced prompt with Islamic context and style
-      const islamicContext = "Islamic art style, respectful Islamic imagery, halal content, beautiful, artistic, high quality, detailed";
-      const styleModifiers = {
-        realistic: "photorealistic, detailed, professional photography",
-        artistic: "artistic, stylized, painterly, beautiful art",
-        calligraphy: "Arabic calligraphy, Islamic typography, elegant script",
-        geometric: "Islamic geometric patterns, arabesque, symmetrical",
-        architecture: "Islamic architecture, mosque, traditional building"
-      };
+      console.log('Starting image generation with prompt:', prompt);
       
-      const enhancedPrompt = `${prompt}, ${islamicContext}, ${styleModifiers[selectedStyle] || styleModifiers.realistic}`;
+      // Use Google Image Service for image generation
+      const imageUrl = await googleImageService.generateImage({
+        prompt: prompt,
+        style: selectedStyle,
+        width: 512,
+        height: 512,
+        quality: 'high'
+      });
 
-      // Try multiple image generation services
-      const imageServices = [
-        {
-          name: 'Pollinations AI (Flux)',
-          url: `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=512&height=512&seed=${Date.now()}&model=flux&enhance=true`
-        },
-        {
-          name: 'Pollinations AI (Turbo)',
-          url: `https://image.pollinations.ai/prompt/${encodeURIComponent(enhancedPrompt)}?width=512&height=512&seed=${Date.now()}&model=turbo&enhance=true`
-        },
-        {
-          name: 'Hugging Face (Stable Diffusion)',
-          url: `https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-2-1`,
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            inputs: enhancedPrompt,
-            parameters: {
-              width: 512,
-              height: 512,
-              num_inference_steps: 20
-            }
-          })
-        }
-      ];
-
-      let imageUrl = null;
-      let serviceName = null;
-
-      // Try Pollinations AI services first (GET requests)
-      for (let i = 0; i < 2; i++) {
-        const service = imageServices[i];
-        try {
-          // Test if the image loads successfully
-          const img = new Image();
-          img.crossOrigin = "anonymous";
-          
-          await new Promise((resolve, reject) => {
-            const timeout = setTimeout(() => reject(new Error('Timeout')), 15000);
-            img.onload = () => {
-              clearTimeout(timeout);
-              resolve(true);
-            };
-            img.onerror = () => {
-              clearTimeout(timeout);
-              reject(new Error('Image load failed'));
-            };
-            img.src = service.url;
-          });
-
-          imageUrl = service.url;
-          serviceName = service.name;
-          break;
-        } catch (error) {
-          console.error(`Service ${service.name} failed:`, error);
-          continue;
-        }
-      }
-
-      // If Pollinations fails, try a simple placeholder with Islamic theme
-      if (!imageUrl) {
-        // Use a themed placeholder
-        const themes = ['mosque', 'islamic-pattern', 'calligraphy', 'geometric', 'architecture'];
-        const randomTheme = themes[Math.floor(Math.random() * themes.length)];
-        imageUrl = `https://picsum.photos/512/512?random=${Date.now()}&blur=1`;
-        serviceName = 'Placeholder (Demo Mode)';
-      }
+      console.log('Image generated successfully:', imageUrl);
 
       const newImage: GeneratedImage = {
         id: Date.now().toString(),
@@ -175,28 +123,26 @@ export const ImageGeneration = ({ isOpen, onClose }: ImageGenerationProps) => {
 
       toast({
         title: "Image generated successfully",
-        description: `Generated using ${serviceName}`,
+        description: "Your Islamic-themed image has been created",
       });
 
     } catch (error) {
       console.error('Image generation error:', error);
       
-      // Final fallback
-      const fallbackUrl = `https://via.placeholder.com/512x512/1a365d/ffffff?text=Islamic+AI+Image`;
-      
-      const newImage: GeneratedImage = {
+      // Create a fallback image even on error
+      const fallbackImage: GeneratedImage = {
         id: Date.now().toString(),
-        url: fallbackUrl,
+        url: `https://via.placeholder.com/512x512/1a365d/ffffff?text=Islamic+AI+Image+%28${selectedStyle}%29`,
         prompt: prompt,
         timestamp: new Date()
       };
 
-      setGeneratedImages(prev => [newImage, ...prev]);
+      setGeneratedImages(prev => [fallbackImage, ...prev]);
       setPrompt("");
-
+      
       toast({
-        title: "Using placeholder image",
-        description: "Image generation service unavailable. Try again later.",
+        title: "Image created",
+        description: "Using placeholder image. Try again for AI-generated content.",
         variant: "default",
       });
     } finally {
@@ -253,6 +199,11 @@ export const ImageGeneration = ({ isOpen, onClose }: ImageGenerationProps) => {
     setPrompt(suggestion);
   };
 
+  const testGeneration = async () => {
+    setPrompt("Beautiful Islamic mosque at sunset");
+    await generateImage();
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -266,6 +217,30 @@ export const ImageGeneration = ({ isOpen, onClose }: ImageGenerationProps) => {
         </DialogHeader>
         
         <div className="space-y-6 p-4">
+          {/* Service Status */}
+          <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <div className={`w-2 h-2 rounded-full ${
+                serviceStatus === 'available' ? 'bg-green-500' : 
+                serviceStatus === 'unavailable' ? 'bg-red-500' : 'bg-yellow-500'
+              }`} />
+              <span className="text-sm text-muted-foreground">
+                Service Status: {
+                  serviceStatus === 'available' ? 'Online' : 
+                  serviceStatus === 'unavailable' ? 'Offline' : 'Checking...'
+                }
+              </span>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={checkServiceStatus}
+              className="text-xs"
+            >
+              Test Service
+            </Button>
+          </div>
+
           {/* Style Selection */}
           <div className="space-y-2">
             <label className="text-sm font-medium">Art Style</label>
@@ -300,24 +275,37 @@ export const ImageGeneration = ({ isOpen, onClose }: ImageGenerationProps) => {
           </div>
 
           {/* Generate Button */}
-          <Button
-            onClick={generateImage}
-            disabled={isGenerating || !prompt.trim()}
-            className="w-full"
-            size="lg"
-          >
-            {isGenerating ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Generating Image...
-              </>
-            ) : (
-              <>
-                <Sparkles className="w-4 h-4 mr-2" />
-                Generate Islamic Image
-              </>
+          <div className="flex gap-2">
+            <Button
+              onClick={generateImage}
+              disabled={isGenerating || !prompt.trim()}
+              className="flex-1"
+              size="lg"
+            >
+              {isGenerating ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Generating Image...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Generate Islamic Image
+                </>
+              )}
+            </Button>
+            
+            {!prompt.trim() && (
+              <Button
+                onClick={testGeneration}
+                disabled={isGenerating}
+                variant="outline"
+                size="lg"
+              >
+                Quick Test
+              </Button>
             )}
-          </Button>
+          </div>
 
           {/* Prompt Suggestions */}
           <div className="space-y-2">

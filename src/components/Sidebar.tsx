@@ -320,9 +320,9 @@ export const Sidebar = ({
                       )}
                     </button>
                     
-                    {/* Action Buttons - Show on Hover */}
+                    {/* Action Buttons - Always Visible */}
                     {!isCollapsed && (
-                      <div className="flex items-center gap-1 pr-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                      <div className="flex items-center gap-1 pr-2 flex-shrink-0">
                         {/* Rename Button */}
                         <Button
                           variant="ghost"
@@ -331,43 +331,43 @@ export const Sidebar = ({
                             e.stopPropagation();
                             startEditing(conv.id, conv.title);
                           }}
-                          className="h-6 w-6 text-slate-500 hover:text-emerald-600 hover:bg-emerald-500/10 transition-colors duration-200 flex-shrink-0"
+                          className="h-8 w-8 text-slate-400 hover:text-emerald-600 hover:bg-emerald-500/10 transition-colors duration-200 flex-shrink-0"
                           title="Rename conversation"
                         >
-                          <Edit3 className="w-3 h-3" />
+                          <Edit3 className="w-4 h-4" />
                         </Button>
                         
-                        {/* Delete Button */}
+                        {/* Delete Button - Always Visible */}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={(e) => e.stopPropagation()}
-                              className="h-6 w-6 text-slate-500 hover:text-red-600 hover:bg-red-500/10 transition-colors duration-200 flex-shrink-0"
+                              className="h-8 w-8 text-red-400 hover:text-red-600 hover:bg-red-500/10 transition-colors duration-200 flex-shrink-0 border border-red-200 hover:border-red-300"
                               title="Delete conversation"
                             >
-                              <Trash2 className="w-3 h-3" />
+                              <Trash2 className="w-4 h-4" />
                             </Button>
                           </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete Conversation</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Are you sure you want to delete "{conv.title}"? This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => deleteConversation(conv.id)}
-                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                            >
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Delete Conversation</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                Are you sure you want to delete "{conv.title}"? This action cannot be undone.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={() => deleteConversation(conv.id)}
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                     </div>
                     )}
                   </div>

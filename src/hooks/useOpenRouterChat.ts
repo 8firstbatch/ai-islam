@@ -226,14 +226,15 @@ export const useOpenRouterChat = () => {
           }
         );
       } else if (selectedModel === "google/gemini-2.5-pro") {
-        // Use Thinking AI service for Thinking model
-        await thinkingAIService.sendMessage(
+        // Use OpenRouter service for Pro model with Pro API key
+        await openRouterService.sendMessage(
           chatMessages,
           {
-            model: 'gemini-2.5-pro',
+            model: 'google/gemini-2.5-pro',
             stream: true,
             onChunk: updateAssistant,
             signal: controller.signal,
+            userId: user?.id,
           }
         );
       } else {
@@ -245,6 +246,7 @@ export const useOpenRouterChat = () => {
             stream: true,
             onChunk: updateAssistant,
             signal: controller.signal,
+            userId: user?.id,
           }
         );
       }

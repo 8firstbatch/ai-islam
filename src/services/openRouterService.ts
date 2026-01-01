@@ -23,7 +23,7 @@ export class OpenRouterService {
 
   constructor() {
     this.apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-    this.proApiKey = "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";
+    this.proApiKey = "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";
     if (!this.apiKey) {
       console.warn('OpenRouter API key not found. Please set VITE_OPENROUTER_API_KEY in your .env file');
     }
@@ -58,18 +58,22 @@ export class OpenRouterService {
       stream?: boolean;
       onChunk?: (chunk: string) => void;
       signal?: AbortSignal;
+      userId?: string;
     } = {}
   ): Promise<string> {
-    if (!this.apiKey) {
-      throw new Error('OpenRouter API key not configured. Please add VITE_OPENROUTER_API_KEY to your .env file');
-    }
-
     const {
       model = 'openai/gpt-4o-mini', // Default to a cost-effective model
       stream = true,
       onChunk,
-      signal
+      signal,
+      userId
     } = options;
+
+    const effectiveApiKey = await this.getEffectiveApiKey(userId);
+    
+    if (!effectiveApiKey) {
+      throw new Error('OpenRouter API key not configured. Please add VITE_OPENROUTER_API_KEY to your .env file');
+    }
 
     // Check if user message contains language instruction
     const lastUserMessage = messages[messages.length - 1];
@@ -117,7 +121,7 @@ For non-Islamic questions, provide helpful responses while maintaining Islamic v
       const response = await fetch(`${this.baseURL}/chat/completions`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`,
+          'Authorization': `Bearer ${effectiveApiKey}`,
           'Content-Type': 'application/json',
           'HTTP-Referer': window.location.origin,
           'X-Title': 'AI Islam - Islamic AI Assistant'
@@ -208,11 +212,13 @@ For non-Islamic questions, provide helpful responses while maintaining Islamic v
   }
 
   // Get available models (optional - for future use)
-  async getModels(): Promise<any[]> {
+  async getModels(userId?: string): Promise<any[]> {
     try {
+      const effectiveApiKey = await this.getEffectiveApiKey(userId);
+      
       const response = await fetch(`${this.baseURL}/models`, {
         headers: {
-          'Authorization': `Bearer ${this.apiKey}`
+          'Authorization': `Bearer ${effectiveApiKey}`
         }
       });
 
