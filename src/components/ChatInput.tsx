@@ -176,11 +176,11 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
             <span className="text-xs sm:text-sm font-bold tracking-wider">{currentLanguage}</span>
           </Button>
 
-          {/* Text Input with Tool Tag and Voice Button */}
+          {/* Text Input with Tool Tag */}
           <div className="relative flex-1">
             {/* Selected Tool Tag */}
             {selectedTool && (
-              <div className="absolute left-12 top-3 z-10 flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1 text-sm">
+              <div className="absolute left-3 top-3 z-10 flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1 text-sm">
                 <div className="w-4 h-4 rounded-sm bg-primary/20 flex items-center justify-center">
                   <Wrench className="w-2.5 h-2.5 text-primary" />
                 </div>
@@ -196,22 +196,6 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
                 )}
               </div>
             )}
-
-            {/* Voice Button - Inside Input Left */}
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onMicrophoneClick}
-              disabled={isLoading}
-              className={`absolute left-2 top-1/2 -translate-y-1/2 z-10 h-8 w-8 rounded-full transition-all duration-200 hover:scale-105 ${
-                isListening 
-                  ? 'text-red-500 animate-pulse' 
-                  : 'text-foreground hover:text-primary-foreground hover:bg-emerald-500 dark:text-white dark:hover:text-white'
-              }`}
-              title={isListening ? "Listening... Click to stop" : "Voice Input"}
-            >
-              <Mic className="w-4 h-4" />
-            </Button>
             
             <Textarea
               value={input}
@@ -219,13 +203,13 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
               onKeyDown={handleKeyDown}
               placeholder={selectedTool ? "Ask about this tool..." : "Ask AI Islam"}
               className={`min-h-[52px] max-h-32 resize-none bg-background border-border focus:ring-2 focus:ring-primary/20 rounded-3xl transition-all duration-300 ${
-                selectedTool ? 'pt-12 pl-12 pr-16' : 'pl-12 pr-16'
+                selectedTool ? 'pt-12 pl-3 pr-16' : 'pl-3 pr-16'
               }`}
               disabled={isLoading}
             />
             
             {/* Tools Button - Inside Input Right */}
-            {onOpenTools && !selectedTool && (
+            {onOpenTools && !selectedTool && !input.trim() && (
               <Button
                 variant="ghost"
                 onClick={onOpenTools}
@@ -239,24 +223,34 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
             )}
           </div>
 
-          {/* Send/Stop Button */}
+          {/* Send Button (when typing) or Mic Button (when empty) */}
           <Button
-            onClick={isLoading ? onStop : handleSend}
-            disabled={!isLoading && !hasContent}
+            onClick={input.trim() || selectedImages.length > 0 || selectedTool ? (isLoading ? onStop : handleSend) : onMicrophoneClick}
+            disabled={isLoading && !(input.trim() || selectedImages.length > 0 || selectedTool)}
             size="icon"
             className={`h-[52px] w-[52px] rounded-3xl transition-all duration-300 shadow-soft ${
-              isLoading 
-                ? 'bg-red-500 hover:bg-red-600 text-white' 
-                : 'bg-gradient-emerald hover:opacity-90'
-            } ${
-              hasContent && !isLoading ? 'hover:scale-110 animate-glow-pulse' : ''
+              input.trim() || selectedImages.length > 0 || selectedTool
+                ? isLoading 
+                  ? 'bg-red-500 hover:bg-red-600 text-white' 
+                  : 'bg-gradient-emerald hover:opacity-90 hover:scale-110 animate-glow-pulse'
+                : isListening 
+                  ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
+                  : 'bg-muted hover:bg-gradient-emerald text-muted-foreground hover:text-white hover:scale-105 transition-all duration-300 ease-in-out'
             }`}
-            title={isLoading ? "Stop generation" : "Send message"}
+            title={
+              input.trim() || selectedImages.length > 0 || selectedTool
+                ? isLoading ? "Stop generation" : "Send message"
+                : isListening ? "Listening... Click to stop" : "Voice Input"
+            }
           >
-            {isLoading ? (
-              <Square className="w-5 h-5" />
+            {input.trim() || selectedImages.length > 0 || selectedTool ? (
+              isLoading ? (
+                <Square className="w-5 h-5" />
+              ) : (
+                <Send className="w-5 h-5" />
+              )
             ) : (
-              <Send className="w-5 h-5" />
+              <Mic className="w-5 h-5" />
             )}
           </Button>
         </div>

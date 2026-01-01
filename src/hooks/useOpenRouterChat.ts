@@ -215,7 +215,7 @@ export const useOpenRouterChat = () => {
 
       // Use appropriate AI service based on selected model
       if (selectedModel === "google/gemini-2.5-flash") {
-        // Use Google AI service for Smart model
+        // Use Google AI service for Thinking model
         await googleAIService.sendMessage(
           chatMessages,
           {

@@ -470,7 +470,7 @@ const Settings = () => {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="google/gemini-2.5-flash">Smart</SelectItem>
+                            <SelectItem value="google/gemini-2.5-flash">Thinking</SelectItem>
                             <SelectItem value="pro-model-coming-soon" disabled>
                               <div className="flex items-center gap-2">
                                 <span className="text-muted-foreground">Pro Model</span>
