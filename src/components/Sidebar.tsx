@@ -337,14 +337,14 @@ export const Sidebar = ({
                           <Edit3 className="w-4 h-4" />
                         </Button>
                         
-                        {/* Delete Button - Always Visible */}
+                        {/* Delete Button - Neutral with Red Hover */}
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
                               onClick={(e) => e.stopPropagation()}
-                              className="h-8 w-8 text-red-400 hover:text-red-600 hover:bg-red-500/10 transition-colors duration-200 flex-shrink-0 border border-red-200 hover:border-red-300"
+                              className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-500/10 transition-colors duration-200 flex-shrink-0"
                               title="Delete conversation"
                             >
                               <Trash2 className="w-4 h-4" />
