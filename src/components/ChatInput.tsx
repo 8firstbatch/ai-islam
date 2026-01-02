@@ -170,7 +170,7 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
             size="sm"
             onClick={onMLMClick}
             disabled={isLoading}
-            className="h-[44px] px-3 sm:px-4 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-all duration-200 rounded-2xl border border-emerald-500/30 hover:border-emerald-500/50 flex items-center gap-2 font-semibold active:scale-[1.2] active:bg-emerald-100 dark:active:bg-emerald-900"
+            className="h-[52px] px-3 sm:px-4 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-all duration-200 rounded-3xl border border-emerald-500/30 hover:border-emerald-500/50 flex items-center gap-2 font-semibold active:scale-[1.2] active:bg-emerald-100 dark:active:bg-emerald-900"
             title="Multi-Language Mode - Click to change language"
           >
             <span className="text-xs sm:text-sm font-bold tracking-wider">{currentLanguage}</span>
