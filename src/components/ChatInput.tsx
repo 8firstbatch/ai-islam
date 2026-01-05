@@ -13,12 +13,10 @@ interface ChatInputProps {
   onRemoveTool?: () => void;
   isLoading: boolean;
   onMicrophoneClick?: () => void;
-  onMLMClick?: () => void;
-  currentLanguage?: string;
   isListening?: boolean;
 }
 
-export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveTool, isLoading, onMicrophoneClick, onMLMClick, currentLanguage = "ENG", isListening = false }: ChatInputProps) => {
+export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveTool, isLoading, onMicrophoneClick, isListening = false }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -105,8 +103,6 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
     setSelectedImages(prev => [...prev, ...validImages]);
   };
 
-  const hasContent = input.trim() || selectedImages.length > 0 || selectedTool;
-
   // Cleanup object URLs on unmount
   useEffect(() => {
     return () => {
@@ -118,7 +114,7 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
 
   return (
     <div 
-      className={`border-t border-border bg-card/80 backdrop-blur-sm p-4 transition-all duration-300 relative ${
+      className={`border-t border-border bg-card/80 backdrop-blur-sm p-3 sm:p-4 transition-all duration-300 relative ${
         isDragOver ? 'bg-primary/10 border-primary animate-glow-pulse' : ''
       }`}
       onDragOver={handleDragOver}
@@ -128,34 +124,34 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
       {isDragOver && (
         <div className="absolute inset-0 bg-primary/20 border-2 border-dashed border-primary rounded-lg flex items-center justify-center z-10 animate-scale-in">
           <div className="text-center animate-bounce-gentle">
-            <Image className="w-12 h-12 mx-auto mb-2 text-primary" />
-            <p className="text-primary font-medium">Drop images here to upload</p>
+            <Image className="w-8 h-8 sm:w-12 sm:h-12 mx-auto mb-2 text-primary" />
+            <p className="text-primary font-medium text-sm sm:text-base">Drop images here to upload</p>
           </div>
         </div>
       )}
       
-      <div className="max-w-4xl mx-auto space-y-3">
+      <div className="max-w-4xl mx-auto space-y-2 sm:space-y-3">
         {/* Attachments Preview */}
         {selectedImages.length > 0 && (
-          <div className="flex flex-wrap gap-2 animate-slide-in-left">
+          <div className="flex flex-wrap gap-1.5 sm:gap-2 animate-slide-in-left">
             {/* Image Previews */}
             {selectedImages.map((file, index) => (
               <div key={index} className="relative group animate-scale-in" style={{ animationDelay: `${index * 100}ms` }}>
-                <div className="w-16 h-16 rounded-lg border border-border overflow-hidden bg-muted transition-all duration-300 hover:scale-110 hover:shadow-lg">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg border border-border overflow-hidden bg-muted transition-all duration-300 hover:scale-110 hover:shadow-lg">
                   <img
                     src={URL.createObjectURL(file)}
                     alt={`Upload ${index + 1}`}
                     className="w-full h-full object-cover"
                   />
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs p-1 rounded-b-lg opacity-0 group-hover:opacity-100 transition-all duration-300">
+                <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-xs p-0.5 sm:p-1 rounded-b-lg opacity-0 group-hover:opacity-100 transition-all duration-300">
                   {formatFileSize(file.size)}
                 </div>
                 <button
                   onClick={() => removeImage(index)}
-                  className="absolute -top-2 -right-2 w-5 h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+                  className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-4 h-4 sm:w-5 sm:h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 </button>
               </div>
             ))}
@@ -163,35 +159,23 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
         )}
 
         {/* Input Area */}
-        <div className="flex gap-2 items-end">
-          {/* MLM Button */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={onMLMClick}
-            disabled={isLoading}
-            className="h-[52px] px-3 sm:px-4 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950 transition-all duration-200 rounded-3xl border border-emerald-500/30 hover:border-emerald-500/50 flex items-center gap-2 font-semibold active:scale-[1.2] active:bg-emerald-100 dark:active:bg-emerald-900"
-            title="Multi-Language Mode - Click to change language"
-          >
-            <span className="text-xs sm:text-sm font-bold tracking-wider">{currentLanguage}</span>
-          </Button>
-
+        <div className="flex gap-1.5 sm:gap-2 items-end">
           {/* Text Input with Tool Tag */}
           <div className="relative flex-1">
             {/* Selected Tool Tag */}
             {selectedTool && (
-              <div className="absolute left-3 top-3 z-10 flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1 text-sm">
-                <div className="w-4 h-4 rounded-sm bg-primary/20 flex items-center justify-center">
-                  <Wrench className="w-2.5 h-2.5 text-primary" />
+              <div className="absolute left-2 sm:left-3 top-2 sm:top-3 z-10 flex items-center gap-1.5 sm:gap-2 bg-primary/10 border border-primary/20 rounded-full px-2 sm:px-3 py-0.5 sm:py-1 text-xs sm:text-sm">
+                <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-sm bg-primary/20 flex items-center justify-center">
+                  <Wrench className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-primary" />
                 </div>
-                <span className="text-primary font-medium">{selectedTool}</span>
+                <span className="text-primary font-medium truncate max-w-[120px] sm:max-w-none">{selectedTool}</span>
                 {onRemoveTool && (
                   <button
                     onClick={onRemoveTool}
-                    className="w-4 h-4 rounded-full bg-primary/20 hover:bg-primary/30 flex items-center justify-center transition-colors"
+                    className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-primary/20 hover:bg-primary/30 flex items-center justify-center transition-colors"
                     title="Remove tool"
                   >
-                    <X className="w-2.5 h-2.5 text-primary" />
+                    <X className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-primary" />
                   </button>
                 )}
               </div>
@@ -202,8 +186,8 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={selectedTool ? "Ask about this tool..." : "Ask anything"}
-              className={`min-h-[52px] max-h-32 resize-none bg-background border-border focus:ring-2 focus:ring-primary/20 rounded-3xl transition-all duration-300 ${
-                selectedTool ? 'pt-12 pl-3 pr-16' : 'pl-3 pr-16'
+              className={`min-h-[44px] sm:min-h-[52px] max-h-32 resize-none bg-background border-border focus:ring-2 focus:ring-primary/20 rounded-2xl sm:rounded-3xl transition-all duration-300 text-sm sm:text-base ${
+                selectedTool ? 'pt-8 sm:pt-12 pl-2 sm:pl-3 pr-12 sm:pr-16' : 'pl-2 sm:pl-3 pr-12 sm:pr-16'
               }`}
               disabled={isLoading}
             />
@@ -214,11 +198,11 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
                 variant="ghost"
                 onClick={onOpenTools}
                 disabled={isLoading}
-                className="absolute right-2 bottom-3 h-8 px-3 text-xs text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-300 flex items-center gap-1.5 rounded-2xl"
+                className="absolute right-1.5 sm:right-2 bottom-2 sm:bottom-3 h-6 sm:h-8 px-2 sm:px-3 text-xs text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-300 flex items-center gap-1 sm:gap-1.5 rounded-xl sm:rounded-2xl"
                 title="Open Islamic Tools"
               >
-                <Wrench className="w-3 h-3" />
-                Tools
+                <Wrench className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                <span className="hidden sm:inline">Tools</span>
               </Button>
             )}
           </div>
@@ -228,7 +212,7 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
             onClick={input.trim() || selectedImages.length > 0 || selectedTool ? (isLoading ? onStop : handleSend) : onMicrophoneClick}
             disabled={isLoading && !(input.trim() || selectedImages.length > 0 || selectedTool)}
             size="icon"
-            className={`h-[52px] w-[52px] rounded-3xl transition-all duration-300 shadow-soft ${
+            className={`h-[44px] w-[44px] sm:h-[52px] sm:w-[52px] rounded-2xl sm:rounded-3xl transition-all duration-300 shadow-soft ${
               input.trim() || selectedImages.length > 0 || selectedTool
                 ? isLoading 
                   ? 'bg-red-500 hover:bg-red-600 text-white' 
@@ -245,12 +229,12 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
           >
             {input.trim() || selectedImages.length > 0 || selectedTool ? (
               isLoading ? (
-                <Square className="w-5 h-5" />
+                <Square className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
-                <Send className="w-5 h-5" />
+                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
               )
             ) : (
-              <Mic className="w-5 h-5" />
+              <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
             )}
           </Button>
         </div>

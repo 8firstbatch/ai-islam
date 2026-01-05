@@ -481,36 +481,36 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
   return (
     <div
       className={cn(
-        "group flex gap-3 animate-slide-up relative",
+        "group flex gap-2 sm:gap-3 animate-slide-up relative",
         isUser ? "flex-row-reverse" : "flex-row"
       )}
     >
       {/* Avatar */}
       <div className="flex-shrink-0">
         {isUser ? (
-          <Avatar className="w-10 h-10">
+          <Avatar className="w-8 h-8 sm:w-10 sm:h-10">
             <AvatarImage src={userProfile?.avatar_url || ""} />
-            <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+            <AvatarFallback className="bg-primary text-primary-foreground text-xs sm:text-sm">
               {userProfile?.display_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
         ) : (
-          <div className="w-10 h-10 rounded-full bg-gradient-emerald text-primary-foreground shadow-soft flex items-center justify-center">
-            <Sparkles className="w-5 h-5" />
+          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-emerald text-primary-foreground shadow-soft flex items-center justify-center">
+            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
           </div>
         )}
       </div>
 
       {/* Message content */}
-      <div className="flex flex-col max-w-[80%] relative">
+      <div className="flex flex-col max-w-[85%] sm:max-w-[80%] relative min-w-0">
         {/* User name (only for user messages) */}
         {isUser && (
-          <div className={cn("mb-1 text-xs text-muted-foreground flex items-center gap-2", isUser ? "justify-end" : "justify-start")}>
-            <span>{userProfile?.display_name || user?.email?.split("@")[0] || "You"}</span>
+          <div className={cn("mb-1 text-xs text-muted-foreground flex items-center gap-1 sm:gap-2", isUser ? "justify-end" : "justify-start")}>
+            <span className="truncate">{userProfile?.display_name || user?.email?.split("@")[0] || "You"}</span>
             {message.language && message.language !== 'en' && (
-              <Badge variant="outline" className="text-xs flex items-center gap-1">
-                <Globe className="w-3 h-3" />
-                {getLanguageName(message.language)}
+              <Badge variant="outline" className="text-xs flex items-center gap-1 flex-shrink-0">
+                <Globe className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+                <span className="hidden sm:inline">{getLanguageName(message.language)}</span>
               </Badge>
             )}
           </div>
@@ -518,17 +518,18 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
         
         {/* AI language indicator */}
         {!isUser && message.language && message.language !== 'en' && (
-          <div className="mb-1 text-xs text-muted-foreground flex items-center gap-2">
+          <div className="mb-1 text-xs text-muted-foreground flex items-center gap-1 sm:gap-2">
             <Badge variant="outline" className="text-xs flex items-center gap-1">
-              <Globe className="w-3 h-3" />
-              Responding in {getLanguageName(message.language)}
+              <Globe className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
+              <span className="hidden sm:inline">Responding in {getLanguageName(message.language)}</span>
+              <span className="sm:hidden">{getLanguageName(message.language)}</span>
             </Badge>
           </div>
         )}
         
         <div
           className={cn(
-            "rounded-2xl px-4 py-3 shadow-soft relative",
+            "rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-soft relative",
             isUser
               ? "bg-primary text-primary-foreground rounded-br-md"
               : "bg-card text-card-foreground rounded-bl-md border border-border"
@@ -543,18 +544,18 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
                 onChange={(e) => setEditContent(e.target.value)}
                 onKeyDown={handleKeyDown}
                 className={cn(
-                  "w-full text-sm leading-relaxed resize-none bg-transparent border-none outline-none",
+                  "w-full text-sm leading-relaxed resize-none bg-transparent border-none outline-none selectable-text",
                   isUser ? "text-primary-foreground" : "text-card-foreground"
                 )}
                 rows={Math.max(2, editContent.split('\n').length)}
               />
-              <div className="flex gap-2 justify-end">
+              <div className="flex gap-1 sm:gap-2 justify-end">
                 <Button
                   size="sm"
                   variant="ghost"
                   onClick={handleCancelEdit}
                   className={cn(
-                    "h-6 px-2 text-xs",
+                    "h-6 sm:h-7 px-2 text-xs",
                     isUser 
                       ? "hover:bg-primary-foreground/20 text-primary-foreground" 
                       : "hover:bg-muted"
@@ -566,7 +567,7 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
                   size="sm"
                   onClick={handleSaveEdit}
                   className={cn(
-                    "h-6 px-2 text-xs",
+                    "h-6 sm:h-7 px-2 text-xs",
                     isUser 
                       ? "bg-primary-foreground text-primary hover:bg-primary-foreground/90" 
                       : "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -577,7 +578,7 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
               </div>
             </div>
           ) : (
-            <p className="text-sm leading-relaxed whitespace-pre-wrap">
+            <p className="text-sm leading-relaxed whitespace-pre-wrap selectable-text">
               {isUser ? message.content : formatAIResponse(message.content)}
             </p>
           )}
@@ -585,7 +586,7 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
           {!isEditing && (
             <span
               className={cn(
-                "text-xs mt-2 block opacity-60",
+                "text-xs mt-1 sm:mt-2 block opacity-60",
                 isUser ? "text-right" : "text-left"
               )}
             >
@@ -600,7 +601,7 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
         {/* Bottom action buttons - positioned outside message bubble */}
         {!isEditing && (
           <div className={cn(
-            "flex gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200",
+            "flex gap-1 sm:gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200",
             isUser ? "justify-start" : "justify-end"
           )}>
             {/* Context Menu Button */}
@@ -609,19 +610,19 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 rounded-full text-muted-foreground hover:text-foreground transition-all duration-300"
+                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full text-muted-foreground hover:text-foreground transition-all duration-300"
                 >
-                  <MoreVertical className="w-4 h-4" />
+                  <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align={isUser ? "start" : "end"} className="w-32">
-                <DropdownMenuItem onClick={handleCopy} className="cursor-pointer">
-                  <Copy className="w-4 h-4 mr-2" />
+              <DropdownMenuContent align={isUser ? "start" : "end"} className="w-28 sm:w-32">
+                <DropdownMenuItem onClick={handleCopy} className="cursor-pointer text-xs sm:text-sm">
+                  <Copy className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                   Copy
                 </DropdownMenuItem>
                 {isUser && (
-                  <DropdownMenuItem onClick={handleEdit} className="cursor-pointer">
-                    <Edit3 className="w-4 h-4 mr-2" />
+                  <DropdownMenuItem onClick={handleEdit} className="cursor-pointer text-xs sm:text-sm">
+                    <Edit3 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                     Edit
                   </DropdownMenuItem>
                 )}
@@ -634,15 +635,15 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
                 variant="ghost"
                 size="icon"
                 onClick={handleSpeak}
-                className={`h-8 w-8 rounded-full text-amber-500 hover:text-amber-600 transition-all duration-300 ${
+                className={`h-7 w-7 sm:h-8 sm:w-8 rounded-full text-amber-500 hover:text-amber-600 transition-all duration-300 ${
                   isSpeaking ? 'animate-pulse' : ''
                 }`}
                 title={isSpeaking ? "Stop speaking" : "Listen to message"}
               >
                 {isSpeaking ? (
-                  <VolumeX className="w-4 h-4" />
+                  <VolumeX className="w-3 h-3 sm:w-4 sm:h-4" />
                 ) : (
-                  <Volume2 className="w-4 h-4" />
+                  <Volume2 className="w-3 h-3 sm:w-4 sm:h-4" />
                 )}
               </Button>
             )}

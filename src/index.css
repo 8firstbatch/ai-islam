@@ -166,6 +166,50 @@
     
     /* Make all text bolder by default */
     font-weight: 500;
+    
+    /* Mobile optimizations */
+    -webkit-tap-highlight-color: transparent;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+
+  /* Allow text selection for content areas */
+  [contenteditable], input, textarea, .selectable-text {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    -ms-user-select: text;
+    user-select: text;
+  }
+
+  /* Mobile-specific touch optimizations */
+  @media (max-width: 768px) {
+    body {
+      font-size: 16px; /* Prevent zoom on iOS */
+      -webkit-text-size-adjust: 100%;
+      -ms-text-size-adjust: 100%;
+    }
+    
+    /* Larger touch targets on mobile */
+    button, [role="button"], input[type="button"], input[type="submit"] {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    /* Improve scrolling on mobile */
+    .scroll-container {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+    }
+  }
+
+  /* Tablet optimizations */
+  @media (min-width: 768px) and (max-width: 1024px) {
+    body {
+      font-size: 15px;
+    }
   }
 
   #root {
@@ -303,6 +347,83 @@
 
   .font-semibold-override {
     font-weight: 600 !important;
+  }
+
+  /* Mobile-first responsive utilities */
+  .mobile-hidden {
+    @media (max-width: 640px) {
+      display: none !important;
+    }
+  }
+
+  .mobile-only {
+    @media (min-width: 641px) {
+      display: none !important;
+    }
+  }
+
+  .tablet-hidden {
+    @media (min-width: 641px) and (max-width: 1024px) {
+      display: none !important;
+    }
+  }
+
+  .tablet-only {
+    @media (max-width: 640px), (min-width: 1025px) {
+      display: none !important;
+    }
+  }
+
+  .desktop-hidden {
+    @media (min-width: 1025px) {
+      display: none !important;
+    }
+  }
+
+  .desktop-only {
+    @media (max-width: 1024px) {
+      display: none !important;
+    }
+  }
+
+  /* Touch-friendly spacing */
+  .touch-spacing {
+    @media (max-width: 768px) {
+      padding: 0.75rem;
+      margin: 0.5rem 0;
+    }
+  }
+
+  /* Responsive text sizes */
+  .text-responsive-xs {
+    font-size: 0.75rem;
+    @media (min-width: 640px) {
+      font-size: 0.875rem;
+    }
+  }
+
+  .text-responsive-sm {
+    font-size: 0.875rem;
+    @media (min-width: 640px) {
+      font-size: 1rem;
+    }
+  }
+
+  .text-responsive-base {
+    font-size: 1rem;
+    @media (min-width: 640px) {
+      font-size: 1.125rem;
+    }
+  }
+
+  .text-responsive-lg {
+    font-size: 1.125rem;
+    @media (min-width: 640px) {
+      font-size: 1.25rem;
+    }
+    @media (min-width: 768px) {
+      font-size: 1.5rem;
+    }
   }
 
   /* 120fps Performance Utilities */

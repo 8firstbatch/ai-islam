@@ -170,24 +170,24 @@ export const Sidebar = ({
   return (
     <aside
       className={`h-screen bg-sidebar border-r border-sidebar-border flex flex-col transition-all duration-500 ease-in-out overflow-hidden ${
-        isCollapsed ? "w-16" : "w-72"
+        isCollapsed ? "w-16" : "w-72 sm:w-80"
       }`}
       onClick={isCollapsed ? onToggleCollapse : undefined}
     >
       {/* Header */}
-      <div className="p-4 border-b border-sidebar-border animate-slide-in-left">
+      <div className="p-3 sm:p-4 border-b border-sidebar-border animate-slide-in-left">
         <div className="flex items-center justify-between mb-2">
           {!isCollapsed && (
-            <h2 className="font-sans text-lg text-sidebar-foreground font-bold animate-fade-in">Chats</h2>
+            <h2 className="font-sans text-base sm:text-lg text-sidebar-foreground font-bold animate-fade-in">Chats</h2>
           )}
           {!isCollapsed && (
             <Button
               variant="ghost"
               size="icon"
               onClick={onToggleCollapse}
-              className="text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-300 hover:scale-110"
+              className="text-sidebar-foreground hover:bg-sidebar-accent transition-all duration-300 hover:scale-110 h-8 w-8 sm:h-10 sm:w-10"
             >
-              <Menu className="w-4 h-4" />
+              <Menu className="w-3 h-3 sm:w-4 sm:h-4" />
             </Button>
           )}
         </div>
@@ -200,24 +200,24 @@ export const Sidebar = ({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="w-full text-xs text-muted-foreground hover:text-destructive transition-all duration-300 hover:scale-105"
+                  className="w-full text-xs text-muted-foreground hover:text-destructive transition-all duration-300 hover:scale-105 h-7 sm:h-8"
                 >
-                  <Trash className="w-3 h-3 mr-2" />
-                  Clear All Chats
+                  <Trash className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1 sm:mr-2" />
+                  <span className="text-xs">Clear All Chats</span>
                 </Button>
               </AlertDialogTrigger>
-              <AlertDialogContent className="animate-scale-in">
+              <AlertDialogContent className="animate-scale-in mx-4 sm:mx-0">
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Delete All Conversations</AlertDialogTitle>
-                  <AlertDialogDescription>
+                  <AlertDialogTitle className="text-base sm:text-lg">Delete All Conversations</AlertDialogTitle>
+                  <AlertDialogDescription className="text-sm">
                     Are you sure you want to delete all conversations? This action cannot be undone and will permanently remove all your chat history.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+                  <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
                   <AlertDialogAction
                     onClick={deleteAllConversations}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-300"
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-all duration-300 w-full sm:w-auto"
                   >
                     Delete All
                   </AlertDialogAction>
@@ -229,37 +229,37 @@ export const Sidebar = ({
       </div>
 
       {/* Actions */}
-      <div className={`p-3 space-y-2 ${isCollapsed ? "px-2" : ""}`}>
+      <div className={`p-2 sm:p-3 space-y-2 ${isCollapsed ? "px-2" : ""}`}>
         <Button
           onClick={onNewChat}
-          className={`bg-gradient-emerald hover:opacity-90 transition-all duration-300 hover:scale-105 animate-glow-pulse ${
-            isCollapsed ? "w-10 h-10 p-0" : "w-full"
+          className={`bg-gradient-emerald hover:opacity-90 transition-all duration-300 hover:scale-105 animate-glow-pulse text-sm ${
+            isCollapsed ? "w-10 h-10 p-0" : "w-full h-9 sm:h-10"
           }`}
           title="New Chat"
         >
-          <Plus className="w-4 h-4" />
-          {!isCollapsed && <span className="ml-2">New Chat</span>}
+          <Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+          {!isCollapsed && <span className="ml-1 sm:ml-2">New Chat</span>}
         </Button>
       </div>
 
       {/* Conversations List */}
-      <ScrollArea className="flex-1 px-3">
+      <ScrollArea className="flex-1 px-2 sm:px-3">
         {loading ? (
           <div className="flex items-center justify-center py-8">
-            <div className="w-5 h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+            <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
           </div>
         ) : conversations.length === 0 ? (
           !isCollapsed && (
-            <p className="text-sm text-muted-foreground text-center py-8">
+            <p className="text-xs sm:text-sm text-muted-foreground text-center py-8">
               No conversations yet
             </p>
           )
         ) : (
-          <div className="space-y-1 py-2">
+          <div className="space-y-1 py-2" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
             {conversations.map((conv, index) => (
               <div
                 key={conv.id}
-                className={`group flex items-center gap-2 rounded-lg border transition-all duration-300 hover:scale-[1.02] animate-slide-in-left min-w-0 ${
+                className={`group flex items-center gap-1 sm:gap-2 rounded-lg border transition-all duration-300 hover:scale-[1.02] animate-slide-in-left min-w-0 ${
                   currentConversationId === conv.id
                     ? "bg-gradient-to-r from-emerald-500/20 to-emerald-600/10 border-emerald-500/30 shadow-md"
                     : "border-transparent hover:bg-gradient-to-r hover:from-primary/10 hover:to-primary/5 hover:border-primary/20"
@@ -268,8 +268,8 @@ export const Sidebar = ({
               >
                 {editingConversationId === conv.id ? (
                   // Editing mode
-                  <div className="flex-1 flex items-center gap-2 p-2">
-                    <MessageSquare className="w-4 h-4 text-sidebar-foreground shrink-0" />
+                  <div className="flex-1 flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2">
+                    <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 text-sidebar-foreground shrink-0" />
                     <Input
                       value={editingTitle}
                       onChange={(e) => setEditingTitle(e.target.value)}
@@ -281,7 +281,7 @@ export const Sidebar = ({
                         }
                       }}
                       onBlur={() => renameConversation(conv.id, editingTitle)}
-                      className="flex-1 h-7 text-sm"
+                      className="flex-1 h-6 sm:h-7 text-xs sm:text-sm"
                       autoFocus
                     />
                   </div>
@@ -290,24 +290,24 @@ export const Sidebar = ({
                   <div className="flex items-center w-full min-w-0">
                     <button
                       onClick={() => onSelectConversation(conv.id)}
-                      className={`flex-1 flex items-center gap-2 p-2 text-left min-w-0 ${
+                      className={`flex-1 flex items-center gap-1 sm:gap-2 p-1.5 sm:p-2 text-left min-w-0 ${
                         isCollapsed ? "justify-center" : ""
                       }`}
                       title={conv.title}
                     >
-                      <MessageSquare className={`w-4 h-4 shrink-0 ${
+                      <MessageSquare className={`w-3 h-3 sm:w-4 sm:h-4 shrink-0 ${
                         currentConversationId === conv.id 
                           ? "text-emerald-600 dark:text-emerald-400" 
                           : "text-sidebar-foreground"
                       }`} />
                       {!isCollapsed && (
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm truncate font-medium ${
+                          <p className={`text-xs sm:text-sm truncate font-medium ${
                             currentConversationId === conv.id 
                               ? "text-emerald-700 dark:text-emerald-300" 
                               : "text-sidebar-foreground"
                           }`}>
-                            {truncateTitle(conv.title)}
+                            {truncateTitle(conv.title, window.innerWidth < 640 ? 15 : 20)}
                           </p>
                           <p className={`text-xs ${
                             currentConversationId === conv.id 
@@ -322,7 +322,7 @@ export const Sidebar = ({
                     
                     {/* Action Buttons - Always Visible */}
                     {!isCollapsed && (
-                      <div className="flex items-center gap-1 pr-2 flex-shrink-0">
+                      <div className="flex items-center gap-0.5 sm:gap-1 pr-1 sm:pr-2 flex-shrink-0">
                         {/* Rename Button */}
                         <Button
                           variant="ghost"
@@ -331,10 +331,10 @@ export const Sidebar = ({
                             e.stopPropagation();
                             startEditing(conv.id, conv.title);
                           }}
-                          className="h-8 w-8 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/10 transition-colors duration-200 flex-shrink-0"
+                          className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/10 transition-colors duration-200 flex-shrink-0"
                           title="Rename conversation"
                         >
-                          <Edit3 className="w-4 h-4" />
+                          <Edit3 className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
                         </Button>
                         
                         {/* Delete Button - Neutral with Red Hover */}
@@ -344,24 +344,24 @@ export const Sidebar = ({
                               variant="ghost"
                               size="icon"
                               onClick={(e) => e.stopPropagation()}
-                              className="h-8 w-8 text-slate-400 hover:text-red-600 hover:bg-red-500/10 transition-colors duration-200 flex-shrink-0"
+                              className="h-6 w-6 sm:h-8 sm:w-8 text-slate-400 hover:text-red-600 hover:bg-red-500/10 transition-colors duration-200 flex-shrink-0"
                               title="Delete conversation"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-2.5 h-2.5 sm:w-4 sm:h-4" />
                             </Button>
                           </AlertDialogTrigger>
-                          <AlertDialogContent>
+                          <AlertDialogContent className="mx-4 sm:mx-0">
                             <AlertDialogHeader>
-                              <AlertDialogTitle>Delete Conversation</AlertDialogTitle>
-                              <AlertDialogDescription>
+                              <AlertDialogTitle className="text-base sm:text-lg">Delete Conversation</AlertDialogTitle>
+                              <AlertDialogDescription className="text-sm">
                                 Are you sure you want to delete "{conv.title}"? This action cannot be undone.
                               </AlertDialogDescription>
                             </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+                              <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
                               <AlertDialogAction
                                 onClick={() => deleteConversation(conv.id)}
-                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 w-full sm:w-auto"
                               >
                                 Delete
                               </AlertDialogAction>
@@ -379,38 +379,38 @@ export const Sidebar = ({
       </ScrollArea>
 
       {/* User Section */}
-      <div className="p-3 border-t border-sidebar-border space-y-2">
+      <div className="p-2 sm:p-3 border-t border-sidebar-border space-y-2">
         <Button
           variant="ghost"
           onClick={() => navigate("/settings")}
-          className={`text-sidebar-foreground hover:bg-sidebar-accent ${
-            isCollapsed ? "w-10 h-10 p-0" : "w-full justify-start"
+          className={`text-sidebar-foreground hover:bg-sidebar-accent text-sm ${
+            isCollapsed ? "w-10 h-10 p-0" : "w-full justify-start h-8 sm:h-10"
           }`}
           title="Settings"
         >
-          <Settings className="w-4 h-4" />
-          {!isCollapsed && <span className="ml-2">Settings</span>}
+          <Settings className="w-3 h-3 sm:w-4 sm:h-4" />
+          {!isCollapsed && <span className="ml-1 sm:ml-2">Settings</span>}
         </Button>
 
         <div
-          className={`flex items-center gap-3 p-2 rounded-lg bg-sidebar-accent/50 ${
+          className={`flex items-center gap-2 sm:gap-3 p-1.5 sm:p-2 rounded-lg bg-sidebar-accent/50 ${
             isCollapsed ? "justify-center" : ""
           }`}
         >
-          <Avatar className="w-8 h-8">
+          <Avatar className="w-6 h-6 sm:w-8 sm:h-8">
             <AvatarImage 
               src={getEffectiveProfileImage(user, profile) || ""} 
               alt={getEffectiveDisplayName(user, profile)}
               referrerPolicy="no-referrer"
             />
-            <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+            <AvatarFallback className="bg-primary text-primary-foreground text-xs sm:text-sm">
               {getEffectiveDisplayName(user, profile)[0]?.toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
           {!isCollapsed && (
             <>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-sidebar-foreground truncate">
+                <p className="text-xs sm:text-sm font-medium text-sidebar-foreground truncate">
                   {getEffectiveDisplayName(user, profile)}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
@@ -421,10 +421,10 @@ export const Sidebar = ({
                 variant="ghost"
                 size="icon"
                 onClick={handleSignOut}
-                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                className="h-6 w-6 sm:h-8 sm:w-8 text-muted-foreground hover:text-destructive"
                 title="Sign out"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3 h-3 sm:w-4 sm:h-4" />
               </Button>
             </>
           )}

@@ -75,24 +75,6 @@ export class OpenRouterService {
       throw new Error('OpenRouter API key not configured. Please add VITE_OPENROUTER_API_KEY to your .env file');
     }
 
-    // Check if user message contains language instruction
-    const lastUserMessage = messages[messages.length - 1];
-    const hasLanguageInstruction = lastUserMessage?.content.includes('IMPORTANT: You MUST respond');
-    
-    // Extract and enhance language instruction if present
-    let languageInstruction = '';
-    if (hasLanguageInstruction) {
-      if (lastUserMessage.content.includes('Arabic language')) {
-        languageInstruction = `\n\nCRITICAL LANGUAGE REQUIREMENT: You MUST respond entirely in Arabic language (العربية). The user has selected Arabic mode. Write your entire response in Arabic script. Do NOT include any greetings like "Assalamualaikum" or "Bismillah" - start directly with your main response content in Arabic.`;
-      } else if (lastUserMessage.content.includes('Manglish')) {
-        languageInstruction = `\n\nCRITICAL LANGUAGE REQUIREMENT: You MUST respond in Manglish (Malayalam-English mix). The user has selected Manglish mode. Use a natural mix of Malayalam and English words as commonly spoken by Malayalam speakers. Write Malayalam words in English script (transliteration). Do NOT include greetings - start directly with your main response content.`;
-      } else if (lastUserMessage.content.includes('Malayalam language')) {
-        languageInstruction = `\n\nCRITICAL LANGUAGE REQUIREMENT: You MUST respond entirely in Malayalam language (മലയാളം). The user has selected Malayalam mode. Write your complete response in Malayalam script using proper Malayalam Unicode characters. Do NOT include any English words or greetings like "Assalamualaikum" - start directly with your main response content in Malayalam script only.`;
-      } else if (lastUserMessage.content.includes('English language')) {
-        languageInstruction = `\n\nCRITICAL LANGUAGE REQUIREMENT: You MUST respond entirely in English language. The user has selected English mode. Do NOT include greetings like "Assalamualaikum" or "Bismillah" - start directly with your main response content in clear English.`;
-      }
-    }
-
     // Add Islamic context to the system message
     const systemMessage: OpenRouterMessage = {
       role: 'system',
@@ -105,6 +87,7 @@ Your responses should be:
 - Include relevant Quranic verses or Hadith when appropriate
 - Acknowledge when you're uncertain and suggest consulting Islamic scholars
 - Avoid giving fatwa (religious rulings) on complex matters - instead guide users to qualified scholars
+- Automatically detect the user's language and respond in the same language they used
 
 When discussing Islamic topics:
 - Cite sources when possible (Quran chapter:verse, Hadith collections)
@@ -112,7 +95,15 @@ When discussing Islamic topics:
 - Be sensitive to different schools of Islamic thought
 - Encourage seeking knowledge and spiritual growth
 
-For non-Islamic questions, provide helpful responses while maintaining Islamic values and ethics.${languageInstruction}`
+Language Detection:
+- Automatically detect if the user is writing in English, Arabic, Malayalam, or Manglish (Malayalam-English mix)
+- Respond in the same language the user used in their message
+- For Arabic: Use proper Arabic script (العربية)
+- For Malayalam: Use Malayalam script (മലയാളം)
+- For Manglish: Use natural Malayalam-English mix with Malayalam words in English script
+- For English: Use clear, proper English
+
+For non-Islamic questions, provide helpful responses while maintaining Islamic values and ethics.`
     };
 
     const requestMessages = [systemMessage, ...messages];

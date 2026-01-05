@@ -19,7 +19,6 @@ import { WelcomeScreen } from "@/components/WelcomeScreen";
 import { Sidebar } from "@/components/Sidebar";
 import { QuranSearch } from "@/components/QuranSearch";
 import { HadithSearch } from "@/components/HadithSearch";
-import { PrayerTimes } from "@/components/PrayerTimes";
 import { IslamicCalendar } from "@/components/IslamicCalendar";
 import { ToolsSearch } from "@/components/ToolsSearch";
 import { LoginPrompt } from "@/components/LoginPrompt";
@@ -43,14 +42,12 @@ const Index = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showQuranSearch, setShowQuranSearch] = useState(false);
   const [showHadithSearch, setShowHadithSearch] = useState(false);
-  const [showPrayerTimes, setShowPrayerTimes] = useState(false);
   const [showIslamicCalendar, setShowIslamicCalendar] = useState(false);
   const [showToolsSearch, setShowToolsSearch] = useState(false);
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [guestContinued, setGuestContinued] = useState(false);
-  const [currentLanguage, setCurrentLanguage] = useState("ENG");
   const [isListening, setIsListening] = useState(false);
 
   // Test Supabase connection on mount
@@ -81,8 +78,8 @@ const Index = () => {
       return;
     }
     
-    // Send message using OpenRouter with current language
-    sendMessage(content, attachments, currentLanguage);
+    // Send message using OpenRouter - AI will auto-detect language
+    sendMessage(content, attachments);
   };
 
   const handleContinueAsGuest = () => {
@@ -122,16 +119,7 @@ const Index = () => {
     // Configure speech recognition
     recognition.continuous = false;
     recognition.interimResults = false;
-    recognition.lang = 'en-US'; // Default to English, can be changed based on selected language
-
-    // Set language based on current MLM selection
-    if (currentLanguage === 'ARB') {
-      recognition.lang = 'ar-SA'; // Arabic
-    } else if (currentLanguage === 'MLM' || currentLanguage === 'MNG') {
-      recognition.lang = 'ml-IN'; // Malayalam
-    } else {
-      recognition.lang = 'en-US'; // English
-    }
+    recognition.lang = 'en-US'; // Default to English - AI will auto-detect and respond in appropriate language
 
     // Handle when speech recognition starts
     recognition.onstart = () => {
@@ -189,26 +177,6 @@ const Index = () => {
       console.error('Failed to start speech recognition:', error);
       setIsListening(false);
     }
-  };
-
-  const handleMLMClick = () => {
-    // Language cycling: ENG -> ARB -> MNG -> MLM -> ENG
-    const languages = ["ENG", "ARB", "MNG", "MLM"];
-    const currentIndex = languages.indexOf(currentLanguage);
-    const nextIndex = (currentIndex + 1) % languages.length;
-    const nextLanguage = languages[nextIndex];
-    
-    setCurrentLanguage(nextLanguage);
-    
-    // Show language change feedback
-    const languageNames = {
-      "ENG": "English",
-      "ARB": "Arabic (العربية)", 
-      "MNG": "Manglish (Malayalam-English)",
-      "MLM": "Malayalam (മലയാളം)"
-    };
-    
-    console.log(`Language changed to: ${languageNames[nextLanguage as keyof typeof languageNames]}`);
   };
 
   return (
@@ -363,8 +331,6 @@ const Index = () => {
               onRemoveTool={handleRemoveTool}
               isLoading={isLoading}
               onMicrophoneClick={handleMicrophoneClick}
-              onMLMClick={handleMLMClick}
-              currentLanguage={currentLanguage}
               isListening={isListening}
             />
           </div>
@@ -378,12 +344,10 @@ const Index = () => {
         onClose={() => setShowToolsSearch(false)}
         onOpenQuranSearch={() => setShowQuranSearch(true)}
         onOpenHadithSearch={() => setShowHadithSearch(true)}
-        onOpenPrayerTimes={() => setShowPrayerTimes(true)}
         onOpenIslamicCalendar={() => setShowIslamicCalendar(true)}
       />
       <QuranSearch isOpen={showQuranSearch} onClose={() => setShowQuranSearch(false)} onInsertVerse={handleInsertVerse} />
       <HadithSearch isOpen={showHadithSearch} onClose={() => setShowHadithSearch(false)} onInsertHadith={handleInsertHadith} />
-      <PrayerTimes isOpen={showPrayerTimes} onClose={() => setShowPrayerTimes(false)} />
       <IslamicCalendar isOpen={showIslamicCalendar} onClose={() => setShowIslamicCalendar(false)} />
       <LoginPrompt 
         isOpen={showLoginPrompt} 

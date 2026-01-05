@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Search, Book, Clock, Calendar, BookMarked, ChevronUp, ChevronDown } from "lucide-react";
+import { X, Search, Book, Calendar, BookMarked, ChevronUp, ChevronDown } from "lucide-react";
 
 interface Tool {
   id: string;
@@ -17,7 +17,6 @@ interface ToolsSearchProps {
   onClose: () => void;
   onOpenQuranSearch: () => void;
   onOpenHadithSearch: () => void;
-  onOpenPrayerTimes: () => void;
   onOpenIslamicCalendar: () => void;
 }
 
@@ -26,7 +25,6 @@ export const ToolsSearch = ({
   onClose,
   onOpenQuranSearch,
   onOpenHadithSearch,
-  onOpenPrayerTimes,
   onOpenIslamicCalendar,
 }: ToolsSearchProps) => {
   const [query, setQuery] = useState("");
@@ -51,16 +49,6 @@ export const ToolsSearch = ({
       icon: <BookMarked className="w-5 h-5" />,
       action: () => {
         onOpenHadithSearch();
-        onClose();
-      },
-    },
-    {
-      id: "prayer-times",
-      name: "Prayer Times",
-      description: "View daily prayer schedules",
-      icon: <Clock className="w-5 h-5" />,
-      action: () => {
-        onOpenPrayerTimes();
         onClose();
       },
     },
@@ -191,7 +179,6 @@ export const ToolsSearch = ({
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                       tool.id === 'quran-search' ? 'bg-emerald-500/20 text-emerald-600' :
                       tool.id === 'hadith-search' ? 'bg-blue-500/20 text-blue-600' :
-                      tool.id === 'prayer-times' ? 'bg-purple-500/20 text-purple-600' :
                       'bg-amber-500/20 text-amber-600'
                     }`}>
                       {tool.icon}

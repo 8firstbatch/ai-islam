@@ -109,7 +109,7 @@ export const useOpenRouterChat = () => {
   }, [abortController, toast]);
 
   // Send a message using OpenRouter
-  const sendMessage = useCallback(async (content: string, attachments?: { images?: File[] }, selectedLanguage?: string) => {
+  const sendMessage = useCallback(async (content: string, attachments?: { images?: File[] }) => {
     if (!content.trim() || isLoading) return;
 
     const userMessage: Message = {
@@ -173,24 +173,10 @@ export const useOpenRouterChat = () => {
         content: m.content,
       }));
 
-      // Prepare the message content with language instruction
-      let messageContent = content.trim();
-      
-      // Add strong language instruction based on selected language
-      if (selectedLanguage === "ARB") {
-        messageContent = `${content.trim()}\n\nIMPORTANT: You MUST respond entirely in Arabic language (العربية). Do not use English except for technical terms that have no Arabic equivalent.`;
-      } else if (selectedLanguage === "MNG") {
-        messageContent = `${content.trim()}\n\nIMPORTANT: You MUST respond in Manglish (Malayalam-English mix). Use a natural mix of Malayalam and English words as commonly spoken by Malayalam speakers. Write Malayalam words in English script (transliteration).`;
-      } else if (selectedLanguage === "MLM") {
-        messageContent = `${content.trim()}\n\nIMPORTANT: You MUST respond entirely in Malayalam language (മലയാളം). Write your complete response in Malayalam script. Use proper Malayalam Islamic terminology and greetings.`;
-      } else if (selectedLanguage === "ENG") {
-        messageContent = `${content.trim()}\n\nIMPORTANT: You MUST respond entirely in English language.`;
-      }
-
-      // Add the new user message with language instruction
+      // Add the new user message (AI will auto-detect language)
       chatMessages.push({
         role: "user",
-        content: messageContent,
+        content: content.trim(),
       });
 
       // Handle image attachments if present
