@@ -486,23 +486,22 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
       )}
     >
       {/* Avatar */}
-      <div className="flex-shrink-0">
-        {isUser ? (
+      {isUser && (
+        <div className="flex-shrink-0">
           <Avatar className="w-8 h-8 sm:w-10 sm:h-10">
             <AvatarImage src={userProfile?.avatar_url || ""} />
             <AvatarFallback className="bg-primary text-primary-foreground text-xs sm:text-sm">
               {userProfile?.display_name?.[0]?.toUpperCase() || user?.email?.[0]?.toUpperCase() || "U"}
             </AvatarFallback>
           </Avatar>
-        ) : (
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-emerald text-primary-foreground shadow-soft flex items-center justify-center">
-            <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />
-          </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Message content */}
-      <div className="flex flex-col max-w-[85%] sm:max-w-[80%] relative min-w-0">
+      <div className={cn(
+        "flex flex-col relative min-w-0",
+        isUser ? "max-w-[85%] sm:max-w-[80%]" : "max-w-full"
+      )}>
         {/* User name (only for user messages) */}
         {isUser && (
           <div className={cn("mb-1 text-xs text-muted-foreground flex items-center gap-1 sm:gap-2", isUser ? "justify-end" : "justify-start")}>
@@ -532,7 +531,7 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
             "rounded-2xl px-3 py-2 sm:px-4 sm:py-3 shadow-soft relative",
             isUser
               ? "bg-primary text-primary-foreground rounded-br-md"
-              : "bg-card text-card-foreground rounded-bl-md border border-border"
+              : "bg-card text-card-foreground rounded-bl-md"
           )}
         >
           {/* Message Content */}
@@ -581,20 +580,6 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
             <p className="text-sm leading-relaxed whitespace-pre-wrap selectable-text">
               {isUser ? message.content : formatAIResponse(message.content)}
             </p>
-          )}
-
-          {!isEditing && (
-            <span
-              className={cn(
-                "text-xs mt-1 sm:mt-2 block opacity-60",
-                isUser ? "text-right" : "text-left"
-              )}
-            >
-              {message.timestamp.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}
-            </span>
           )}
         </div>
 
