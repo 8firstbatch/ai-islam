@@ -16,8 +16,8 @@ export class GoogleAIService {
   private baseURL = 'https://generativelanguage.googleapis.com/v1beta';
 
   constructor() {
-    // Use the provided Google API key for Thinking model
-    this.apiKey = "AIzaSyDUvEI-2HfB5MlpGpo4-1-0QSB4DFa1xp8";
+    // Use the provided Google API key for AI chatting
+    this.apiKey = "AIzaSyDPi5SZ2ftJYUwgoMMY85t_QNVJB8_qDm8";
   }
 
   async sendMessage(
