@@ -17,7 +17,7 @@ export class GoogleAIService {
 
   constructor() {
     // Use the provided Google API key for AI chatting
-    this.apiKey = "AIzaSyBgINlLN5h3vsyDsmpkWMzu1p2xUmC3UnE";
+    this.apiKey = "AIzaSyApeYABSY4KjF5LgX_RaNKLPy9-DV3LCVo";
   }
 
   async sendMessage(

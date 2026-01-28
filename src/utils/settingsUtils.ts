@@ -10,6 +10,16 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
   try {
     console.log('Loading settings for user:', userId);
     
+    // Return defaults immediately if no userId
+    if (!userId) {
+      console.log('No userId provided, returning defaults');
+      return {
+        ai_model: "google/gemini-2.5-flash",
+        ai_response_style: "balanced",
+        is_pro_enabled: false
+      };
+    }
+    
     // Try to load from database first
     let { data, error } = await supabase
       .from("user_settings")
@@ -20,7 +30,17 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
     if (error) {
       console.log('Database load error:', error);
       
-      // If database fails, try localStorage as fallback
+      // If it's a "not found" error, that's okay - user hasn't saved settings yet
+      if (error.code === 'PGRST116') {
+        console.log('User settings not found in database, returning defaults');
+        return {
+          ai_model: "google/gemini-2.5-flash",
+          ai_response_style: "balanced",
+          is_pro_enabled: false
+        };
+      }
+      
+      // For other database errors, try localStorage as fallback
       console.log('Falling back to localStorage');
       const localSettings = localStorage.getItem(`user_settings_${userId}`);
       if (localSettings) {
@@ -48,7 +68,11 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
       ai_model: data.ai_model || "google/gemini-2.5-flash",
       ai_response_style: data.ai_response_style || "balanced",
       is_pro_enabled: (data as any).is_pro_enabled || false
-    } : null;
+    } : {
+      ai_model: "google/gemini-2.5-flash",
+      ai_response_style: "balanced",
+      is_pro_enabled: false
+    };
   } catch (error) {
     console.error('Unexpected error loading settings:', error);
     // Return defaults on any error

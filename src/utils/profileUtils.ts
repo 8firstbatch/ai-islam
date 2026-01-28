@@ -5,18 +5,33 @@ import { getUserProfileImage, getUserDisplayName } from "./authUtils";
  * Sync Google profile data to user's profile in database
  */
 export const syncGoogleProfileData = async (user: any) => {
-  if (!user) return;
+  if (!user) {
+    console.log('No user provided to syncGoogleProfileData');
+    return;
+  }
 
   try {
     const profileImage = getUserProfileImage(user);
     const displayName = getUserDisplayName(user);
 
+    console.log('Syncing Google profile data:', {
+      userId: user.id,
+      displayName,
+      hasProfileImage: !!profileImage
+    });
+
     // Check if profile already exists
-    const { data: existingProfile } = await supabase
+    const { data: existingProfile, error: fetchError } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_id", user.id)
       .single();
+
+    if (fetchError && fetchError.code !== 'PGRST116') {
+      // If it's not a "not found" error, log it but don't throw
+      console.error("Error fetching existing profile:", fetchError);
+      return;
+    }
 
     if (existingProfile) {
       // Update existing profile only if it doesn't have an avatar or display name
@@ -31,23 +46,36 @@ export const syncGoogleProfileData = async (user: any) => {
       }
 
       if (Object.keys(updates).length > 0) {
-        await supabase
+        const { error: updateError } = await supabase
           .from("profiles")
           .update(updates)
           .eq("user_id", user.id);
+        
+        if (updateError) {
+          console.error("Error updating profile:", updateError);
+        } else {
+          console.log("Profile updated successfully");
+        }
       }
     } else {
       // Create new profile with Google data
-      await supabase
+      const { error: insertError } = await supabase
         .from("profiles")
         .insert({
           user_id: user.id,
           display_name: displayName,
           avatar_url: profileImage,
         });
+      
+      if (insertError) {
+        console.error("Error creating profile:", insertError);
+      } else {
+        console.log("Profile created successfully");
+      }
     }
   } catch (error) {
     console.error("Error syncing Google profile data:", error);
+    // Don't throw the error - just log it
   }
 };
 
