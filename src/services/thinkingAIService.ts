@@ -17,7 +17,7 @@ export class ThinkingAIService {
 
   constructor() {
     // Use the provided API key for Thinking model
-    this.apiKey = "34bce17539af4927bccf987adefe4aa4";
+    this.apiKey = "AIzaSyAhFVZA6LYiikPrUBiBB0f7kf879VceoEA";
   }
 
   async sendMessage(
