@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Search, Book, Calendar, BookMarked, ChevronUp, ChevronDown } from "lucide-react";
+import { X, Search, Book, Calendar, BookMarked, Volume2, ChevronUp, ChevronDown } from "lucide-react";
 
 interface Tool {
   id: string;
@@ -17,6 +17,7 @@ interface ToolsSearchProps {
   onOpenQuranSearch: () => void;
   onOpenHadithSearch: () => void;
   onOpenIslamicCalendar: () => void;
+  onOpenQuranReciting: () => void;
 }
 
 export const ToolsSearch = ({
@@ -25,6 +26,7 @@ export const ToolsSearch = ({
   onOpenQuranSearch,
   onOpenHadithSearch,
   onOpenIslamicCalendar,
+  onOpenQuranReciting,
 }: ToolsSearchProps) => {
   const [selectedIndex, setSelectedIndex] = useState(0);
 
@@ -50,6 +52,17 @@ export const ToolsSearch = ({
       action: () => {
         console.log("Opening Hadith Search");
         onOpenHadithSearch();
+        onClose();
+      },
+    },
+    {
+      id: "quran-reciting",
+      name: "Quran Recitation",
+      description: "Listen to beautiful Quran recitations",
+      icon: <Volume2 className="w-5 h-5" />,
+      action: () => {
+        console.log("Opening Quran Recitation");
+        onOpenQuranReciting();
         onClose();
       },
     },
@@ -156,6 +169,7 @@ export const ToolsSearch = ({
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
                     tool.id === 'quran-search' ? 'bg-emerald-500/20 text-emerald-600' :
                     tool.id === 'hadith-search' ? 'bg-blue-500/20 text-blue-600' :
+                    tool.id === 'quran-reciting' ? 'bg-purple-500/20 text-purple-600' :
                     'bg-amber-500/20 text-amber-600'
                   }`}>
                     {tool.icon}

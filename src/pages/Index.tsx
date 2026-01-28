@@ -21,6 +21,7 @@ import { QuranSearch } from "@/components/QuranSearch";
 import { HadithSearch } from "@/components/HadithSearch";
 import { IslamicCalendar } from "@/components/IslamicCalendar";
 import { ToolsSearch } from "@/components/ToolsSearch";
+import { QuranReciting } from "@/components/QuranReciting";
 import { LoginPrompt } from "@/components/LoginPrompt";
 import { Footer } from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
@@ -44,6 +45,7 @@ const Index = () => {
   const [showHadithSearch, setShowHadithSearch] = useState(false);
   const [showIslamicCalendar, setShowIslamicCalendar] = useState(false);
   const [showToolsSearch, setShowToolsSearch] = useState(false);
+  const [showQuranReciting, setShowQuranReciting] = useState(false);
   const [selectedTool, setSelectedTool] = useState<string | null>(null);
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -345,10 +347,12 @@ const Index = () => {
         onOpenQuranSearch={() => setShowQuranSearch(true)}
         onOpenHadithSearch={() => setShowHadithSearch(true)}
         onOpenIslamicCalendar={() => setShowIslamicCalendar(true)}
+        onOpenQuranReciting={() => setShowQuranReciting(true)}
       />
       <QuranSearch isOpen={showQuranSearch} onClose={() => setShowQuranSearch(false)} onInsertVerse={handleInsertVerse} />
       <HadithSearch isOpen={showHadithSearch} onClose={() => setShowHadithSearch(false)} onInsertHadith={handleInsertHadith} />
       <IslamicCalendar isOpen={showIslamicCalendar} onClose={() => setShowIslamicCalendar(false)} />
+      <QuranReciting isOpen={showQuranReciting} onClose={() => setShowQuranReciting(false)} />
       <LoginPrompt 
         isOpen={showLoginPrompt} 
         onClose={() => setShowLoginPrompt(false)} 

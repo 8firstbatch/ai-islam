@@ -17,7 +17,7 @@ export class GoogleAIService {
 
   constructor() {
     // Use the provided Google API key for AI chatting
-    this.apiKey = "AIzaSyApeYABSY4KjF5LgX_RaNKLPy9-DV3LCVo";
+    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   }
 
   async sendMessage(

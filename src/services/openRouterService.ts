@@ -37,11 +37,12 @@ export class OpenRouterService {
     try {
       const { data } = await supabase
         .from("user_settings")
-        .select("is_pro_enabled")
+        .select("*")
         .eq("user_id", userId)
         .single();
 
-      if (data?.is_pro_enabled) {
+      // Check if is_pro_enabled column exists and is true
+      if (data && 'is_pro_enabled' in data && data.is_pro_enabled) {
         return this.proApiKey;
       }
     } catch (error) {
