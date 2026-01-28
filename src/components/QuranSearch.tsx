@@ -715,7 +715,7 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
                   className={`p-4 rounded-xl border transition-all duration-200 ${
                     index === selectedResultIndex
                       ? "bg-primary/10 border-primary shadow-md ring-2 ring-primary/20"
-                      : "bg-muted/50 border-border hover:border-primary/30"
+                      : "bg-muted/50 border-border"
                   }`}
                 >
                   <div className="flex items-start justify-between gap-4 mb-3">

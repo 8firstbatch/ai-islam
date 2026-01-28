@@ -137,7 +137,7 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
             {/* Image Previews */}
             {selectedImages.map((file, index) => (
               <div key={index} className="relative group animate-scale-in" style={{ animationDelay: `${index * 100}ms` }}>
-                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg border border-border overflow-hidden bg-muted transition-all duration-300 hover:scale-110 hover:shadow-lg">
+                <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg border border-border overflow-hidden bg-muted transition-all duration-300">
                   <img
                     src={URL.createObjectURL(file)}
                     alt={`Upload ${index + 1}`}
@@ -149,7 +149,7 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
                 </div>
                 <button
                   onClick={() => removeImage(index)}
-                  className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-4 h-4 sm:w-5 sm:h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
+                  className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 w-4 h-4 sm:w-5 sm:h-5 bg-destructive text-destructive-foreground rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300"
                 >
                   <X className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
                 </button>
@@ -172,7 +172,7 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
                 {onRemoveTool && (
                   <button
                     onClick={onRemoveTool}
-                    className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-primary/20 hover:bg-primary/30 flex items-center justify-center transition-colors"
+                    className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-primary/20 flex items-center justify-center transition-colors"
                     title="Remove tool"
                   >
                     <X className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-primary" />
@@ -186,10 +186,15 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={selectedTool ? "Ask about this tool..." : "Ask anything"}
-              className={`min-h-[44px] sm:min-h-[52px] max-h-32 resize-none bg-background border-border focus:ring-2 focus:ring-primary/20 rounded-2xl sm:rounded-3xl transition-all duration-300 text-sm sm:text-base ${
+              className={`min-h-[44px] sm:min-h-[52px] max-h-32 resize-none bg-background border-border rounded-2xl sm:rounded-3xl transition-all duration-300 text-sm sm:text-base focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-border focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border hover:border-border active:border-border ${
                 selectedTool ? 'pt-8 sm:pt-12 pl-2 sm:pl-3 pr-12 sm:pr-16' : 'pl-2 sm:pl-3 pr-12 sm:pr-16'
               }`}
               disabled={isLoading}
+              style={{ 
+                outline: 'none', 
+                boxShadow: 'none',
+                border: '1px solid hsl(var(--border))'
+              }}
             />
             
             {/* Tools Button - Inside Input Right */}
@@ -198,7 +203,7 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
                 variant="ghost"
                 onClick={onOpenTools}
                 disabled={isLoading}
-                className="absolute right-1.5 sm:right-2 bottom-2 sm:bottom-3 h-6 sm:h-8 px-2 sm:px-3 text-xs text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-300 flex items-center gap-1 sm:gap-1.5 rounded-xl sm:rounded-2xl"
+                className="absolute right-1.5 sm:right-2 bottom-2 sm:bottom-3 h-6 sm:h-8 px-2 sm:px-3 text-xs text-muted-foreground transition-all duration-300 flex items-center gap-1 sm:gap-1.5 rounded-xl sm:rounded-2xl"
                 title="Open Islamic Tools"
               >
                 <Wrench className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
@@ -215,11 +220,11 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
             className={`h-[44px] w-[44px] sm:h-[52px] sm:w-[52px] rounded-2xl sm:rounded-3xl transition-all duration-300 shadow-soft ${
               input.trim() || selectedImages.length > 0 || selectedTool
                 ? isLoading 
-                  ? 'bg-red-500 hover:bg-red-600 text-white' 
-                  : 'bg-gradient-emerald hover:opacity-90 hover:scale-110 animate-glow-pulse'
+                  ? 'bg-red-500 text-white' 
+                  : 'bg-gradient-emerald animate-glow-pulse'
                 : isListening 
-                  ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse' 
-                  : 'bg-muted hover:bg-gradient-emerald text-muted-foreground hover:text-white hover:scale-105 transition-all duration-300 ease-in-out'
+                  ? 'bg-red-500 text-white animate-pulse' 
+                  : 'bg-muted text-muted-foreground'
             }`}
             title={
               input.trim() || selectedImages.length > 0 || selectedTool

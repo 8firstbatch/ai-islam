@@ -663,7 +663,7 @@ export const HadithSearch = ({ isOpen, onClose, onInsertHadith }: HadithSearchPr
                     className={`border-l-4 border-l-emerald-500 transition-all duration-200 ${
                       index === selectedResultIndex
                         ? "bg-primary/10 border-primary shadow-md ring-2 ring-primary/20"
-                        : "hover:border-primary/30"
+                        : ""
                     }`}
                   >
                     <CardHeader className="pb-3">

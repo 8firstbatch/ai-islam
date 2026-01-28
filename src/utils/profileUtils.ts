@@ -109,18 +109,24 @@ export const updateUserProfile = async (userId: string, updates: {
   avatar_url?: string;
 }) => {
   try {
+    // Use upsert with the correct conflict resolution
     const { data, error } = await supabase
       .from("profiles")
       .upsert({
         user_id: userId,
         ...updates,
       }, {
-        onConflict: 'user_id'
+        onConflict: 'user_id',
+        ignoreDuplicates: false
       })
       .select()
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Supabase error details:", error);
+      throw error;
+    }
+    
     return data;
   } catch (error) {
     console.error("Error updating user profile:", error);

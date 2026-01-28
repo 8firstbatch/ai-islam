@@ -102,19 +102,37 @@ const Settings = () => {
     setUploading(true);
 
     try {
+      console.log('Uploading avatar:', { fileName: file.name, fileSize: file.size, fileType: file.type });
+      
       const base64Image = await uploadProfileImage(user.id, file);
       setAvatarUrl(base64Image);
       
-      await updateUserProfile(user.id, {
+      console.log('Avatar uploaded, updating profile...');
+      
+      const result = await updateUserProfile(user.id, {
         avatar_url: base64Image,
         display_name: displayName
       });
 
+      console.log('Profile updated with new avatar:', result);
+      
+      // Reload profile to reflect changes
+      await loadProfile();
+
       toast({ title: "Profile image updated successfully!" });
     } catch (error) {
+      console.error('Avatar upload error:', error);
+      
+      let errorMessage = "Please try again";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null && 'message' in error) {
+        errorMessage = String(error.message);
+      }
+      
       toast({
         title: "Upload failed",
-        description: error instanceof Error ? error.message : "Please try again",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -158,17 +176,32 @@ const Settings = () => {
     setSaving(true);
 
     try {
-      await updateUserProfile(user.id, {
+      console.log('Saving profile:', { userId: user.id, displayName, avatarUrl: avatarUrl ? 'present' : 'empty' });
+      
+      const result = await updateUserProfile(user.id, {
         display_name: displayName,
         avatar_url: avatarUrl
       });
 
+      console.log('Profile save result:', result);
+      
+      // Reload profile to reflect changes
+      await loadProfile();
+      
       toast({ title: "Profile saved successfully!" });
     } catch (error) {
       console.error('Profile save error:', error);
+      
+      let errorMessage = "Please try again";
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === 'object' && error !== null && 'message' in error) {
+        errorMessage = String(error.message);
+      }
+      
       toast({
-        title: "Failed to save",
-        description: "Please try again",
+        title: "Failed to save profile",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
