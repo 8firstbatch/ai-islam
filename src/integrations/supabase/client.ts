@@ -10,14 +10,18 @@ console.log('Supabase Configuration:');
 console.log('- URL:', SUPABASE_URL);
 console.log('- Key exists:', !!SUPABASE_PUBLISHABLE_KEY);
 console.log('- Key format valid:', SUPABASE_PUBLISHABLE_KEY?.startsWith('eyJ'));
+console.log('- Environment:', import.meta.env.MODE);
+console.log('- Production:', import.meta.env.PROD);
 
 if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
-  console.error('⚠️ Missing Supabase configuration. Please check your .env file.');
+  console.error('⚠️ Missing Supabase configuration. Please check your environment variables.');
+  console.error('- SUPABASE_URL missing:', !SUPABASE_URL);
+  console.error('- SUPABASE_PUBLISHABLE_KEY missing:', !SUPABASE_PUBLISHABLE_KEY);
 }
 
 // Check for placeholder key
 if (SUPABASE_PUBLISHABLE_KEY === 'YOUR_ACTUAL_ANON_KEY_HERE' || SUPABASE_PUBLISHABLE_KEY?.includes('PLACEHOLDER')) {
-  console.error('🔧 Supabase key is still a placeholder. Please update your .env file with the real key from your Supabase dashboard.');
+  console.error('🔧 Supabase key is still a placeholder. Please update your environment variables.');
 }
 
 // Import the supabase client like this:

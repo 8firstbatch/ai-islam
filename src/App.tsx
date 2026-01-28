@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { logEnvironmentStatus } from "@/utils/envValidation";
 import LoadingScreen from "@/components/LoadingScreen";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -20,6 +21,9 @@ const App = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    // Validate environment variables on startup
+    logEnvironmentStatus();
+    
     // Simulate initial loading time
     const timer = setTimeout(() => {
       setIsLoading(false);
