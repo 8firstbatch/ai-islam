@@ -23,7 +23,7 @@ export class OpenRouterService {
 
   constructor() {
     this.apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-    this.proApiKey = "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";
+    this.proApiKey = import.meta.env.VITE_OPENROUTER_PRO_API_KEY || this.apiKey; // Use pro key if available, fallback to regular key
     if (!this.apiKey) {
       console.warn('OpenRouter API key not found. Please set VITE_OPENROUTER_API_KEY in your .env file');
     }
