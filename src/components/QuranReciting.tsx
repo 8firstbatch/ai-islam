@@ -37,23 +37,23 @@ interface QuranRecitingProps {
 
 type RecitationType = "surah" | "juz";
 
-// Available Quran reciters with multiple audio sources
+// Available Quran reciters with everyayah.com compatible folder names
 const availableReciters: Reciter[] = [
-  { id: "alafasy", name: "Mishary Rashid Al-Afasy", arabicName: "مشاري راشد العفاسي", folder: "mishary_rashid_alafasy", bitrate: "128kbps" },
-  { id: "husary", name: "Mahmoud Khalil Al-Husary", arabicName: "محمود خليل الحصري", folder: "mahmoud_khalil_al-hussary", bitrate: "128kbps" },
-  { id: "sudais", name: "Abdul Rahman Al-Sudais", arabicName: "عبد الرحمن السديس", folder: "abdurrahmaan_as-sudais", bitrate: "192kbps" },
-  { id: "shuraim", name: "Saud Al-Shuraim", arabicName: "سعود الشريم", folder: "sa_ood_ash-shuraym", bitrate: "128kbps" },
-  { id: "maher", name: "Maher Al-Muaiqly", arabicName: "ماهر المعيقلي", folder: "maher_al_mueaqly", bitrate: "128kbps" },
-  { id: "minshawi", name: "Mohamed Siddiq Al-Minshawi", arabicName: "محمد صديق المنشاوي", folder: "muhammad_siddeeq_al-minshawee", bitrate: "128kbps" },
-  { id: "ajmi", name: "Ahmed ibn Ali Al-Ajmi", arabicName: "أحمد بن علي العجمي", folder: "ahmed_ibn_ali_al-ajamy", bitrate: "128kbps" },
-  { id: "ghamdi", name: "Saad Al-Ghamdi", arabicName: "سعد الغامدي", folder: "sa_d_al-ghaamidi", bitrate: "128kbps" },
-  { id: "basfar", name: "Abdullah Basfar", arabicName: "عبد الله بصفر", folder: "abdullah_basfar", bitrate: "192kbps" },
-  { id: "rifai", name: "Hani Ar-Rifai", arabicName: "هاني الرفاعي", folder: "hani_ar-rifai", bitrate: "192kbps" },
-  { id: "shatri", name: "Abu Bakr Al-Shatri", arabicName: "أبو بكر الشاطري", folder: "abu_bakr_al-shatri", bitrate: "128kbps" },
-  { id: "tablawi", name: "Muhammad At-Tablawi", arabicName: "محمد الطبلاوي", folder: "muhammad_at-tablawi", bitrate: "128kbps" },
-  { id: "huthaify", name: "Ali Al-Huthaify", arabicName: "علي الحذيفي", folder: "ali_abdur-rahman_al-huthaify", bitrate: "128kbps" },
-  { id: "qasim", name: "AbdulMuhsin Al-Qasim", arabicName: "عبد المحسن القاسم", folder: "abdulmuhsin_al-qasim", bitrate: "128kbps" },
-  { id: "thubaity", name: "Ali Abdur-Rahman Ath-Thubaity", arabicName: "علي عبد الرحمن الثبيتي", folder: "abdulbari_ath-thubaity", bitrate: "128kbps" },
+  { id: "alafasy", name: "Mishary Rashid Al-Afasy", arabicName: "مشاري راشد العفاسي", folder: "Alafasy_128kbps", bitrate: "128kbps" },
+  { id: "husary", name: "Mahmoud Khalil Al-Husary", arabicName: "محمود خليل الحصري", folder: "Husary_128kbps", bitrate: "128kbps" },
+  { id: "sudais", name: "Abdul Rahman Al-Sudais", arabicName: "عبد الرحمن السديس", folder: "Sudais_128kbps", bitrate: "128kbps" },
+  { id: "shuraim", name: "Saud Al-Shuraim", arabicName: "سعود الشريم", folder: "Shuraim_128kbps", bitrate: "128kbps" },
+  { id: "maher", name: "Maher Al-Muaiqly", arabicName: "ماهر المعيقلي", folder: "MaherAlMuaiqly128kbps", bitrate: "128kbps" },
+  { id: "minshawi", name: "Mohamed Siddiq Al-Minshawi", arabicName: "محمد صديق المنشاوي", folder: "Minshawi_Murattal_128kbps", bitrate: "128kbps" },
+  { id: "ajmi", name: "Ahmed ibn Ali Al-Ajmi", arabicName: "أحمد بن علي العجمي", folder: "Ajmi_128kbps", bitrate: "128kbps" },
+  { id: "ghamdi", name: "Saad Al-Ghamdi", arabicName: "سعد الغامدي", folder: "Ghamdi_40kbps", bitrate: "40kbps" },
+  { id: "basfar", name: "Abdullah Basfar", arabicName: "عبد الله بصفر", folder: "basfar", bitrate: "128kbps" },
+  { id: "rifai", name: "Hani Ar-Rifai", arabicName: "هاني الرفاعي", folder: "Rifai_192kbps", bitrate: "192kbps" },
+  { id: "shatri", name: "Abu Bakr Al-Shatri", arabicName: "أبو بكر الشاطري", folder: "Shatri_128kbps", bitrate: "128kbps" },
+  { id: "tablawi", name: "Muhammad At-Tablawi", arabicName: "محمد الطبلاوي", folder: "Tablawi_128kbps", bitrate: "128kbps" },
+  { id: "huthaify", name: "Ali Al-Huthaify", arabicName: "علي الحذيفي", folder: "Huthaify_128kbps", bitrate: "128kbps" },
+  { id: "qasim", name: "AbdulMuhsin Al-Qasim", arabicName: "عبد المحسن القاسم", folder: "Qasim_192kbps", bitrate: "192kbps" },
+  { id: "thubaity", name: "Ali Abdur-Rahman Ath-Thubaity", arabicName: "علي عبد الرحمن الثبيتي", folder: "Thubaity_128kbps", bitrate: "128kbps" },
 ];
 
 // List of all 30 Juz (Para)
@@ -266,70 +266,107 @@ export const QuranReciting = ({ isOpen, onClose }: QuranRecitingProps) => {
       
       if (recitationType === "surah") {
         const surahNum = String(selectedSurah).padStart(3, "0");
-        // Multiple reliable audio sources for Surah recitation
+        // Prioritize everyayah.com as the primary source
         audioSources = [
+          `https://www.everyayah.com/data/${reciter.folder}/${surahNum}.mp3`,
+          `https://everyayah.com/data/${reciter.folder}/${surahNum}.mp3`,
           `https://download.quranicaudio.com/quran/${reciter.folder}/${surahNum}.mp3`,
           `https://server8.mp3quran.net/afs/${reciter.folder}/${surahNum}.mp3`,
           `https://server6.mp3quran.net/qtm/${reciter.folder}/${surahNum}.mp3`,
-          `https://www.everyayah.com/data/${reciter.folder}/${surahNum}.mp3`,
-          `https://audio.qurancentral.com/download/${reciter.folder}/${surahNum}.mp3`,
         ];
       } else {
-        // Juz recitation sources
-        const juzNum = String(selectedJuz).padStart(3, "0");
+        // Juz recitation sources - everyayah.com first
+        const juzNum = String(selectedJuz).padStart(2, "0");
         audioSources = [
-          `https://download.quranicaudio.com/quran/${reciter.folder}/Para${juzNum}.mp3`,
-          `https://server8.mp3quran.net/afs/${reciter.folder}/Para${juzNum}.mp3`,
-          `https://server6.mp3quran.net/qtm/${reciter.folder}/Para${juzNum}.mp3`,
-          `https://www.everyayah.com/data/${reciter.folder}/Para${juzNum}.mp3`,
+          `https://www.everyayah.com/data/${reciter.folder}/Juz${juzNum}.mp3`,
+          `https://everyayah.com/data/${reciter.folder}/Juz${juzNum}.mp3`,
+          `https://download.quranicaudio.com/quran/${reciter.folder}/Para${String(selectedJuz).padStart(3, "0")}.mp3`,
+          `https://server8.mp3quran.net/afs/${reciter.folder}/Para${String(selectedJuz).padStart(3, "0")}.mp3`,
+          `https://server6.mp3quran.net/qtm/${reciter.folder}/Para${String(selectedJuz).padStart(3, "0")}.mp3`,
         ];
       }
 
-      // Try each audio source until one works
+      // Try each audio source until one works with improved error handling
       const tryAudioSource = async (sourceIndex: number): Promise<void> => {
         if (sourceIndex >= audioSources.length) {
           throw new Error("All audio sources failed");
         }
 
         const audioUrl = audioSources[sourceIndex];
-        console.log(`Trying audio source ${sourceIndex + 1}:`, audioUrl);
+        console.log(`Trying audio source ${sourceIndex + 1}/${audioSources.length}:`, audioUrl);
 
         if (audioRef.current) {
           audioRef.current.pause();
+          audioRef.current = null;
         }
 
-        const audio = new Audio(audioUrl);
-        audioRef.current = audio;
+        const audio = new Audio();
+        audio.crossOrigin = "anonymous"; // Enable CORS
+        audio.preload = "metadata";
         audio.volume = isMuted ? 0 : volume;
 
         return new Promise((resolve, reject) => {
-          audio.onloadeddata = () => {
-            console.log(`Audio source ${sourceIndex + 1} loaded successfully`);
+          let timeoutId: NodeJS.Timeout;
+          let resolved = false;
+
+          const cleanup = () => {
+            if (timeoutId) clearTimeout(timeoutId);
+            audio.onloadeddata = null;
+            audio.onerror = null;
+            audio.oncanplaythrough = null;
+          };
+
+          const resolveOnce = () => {
+            if (resolved) return;
+            resolved = true;
+            cleanup();
+            audioRef.current = audio;
             setIsLoading(false);
             setIsPlaying(true);
-            audio.play();
+            
+            // Show success message
+            toast({
+              title: "Audio Loaded",
+              description: `Playing ${recitationType === "surah" ? `Surah ${selectedSurah}` : `Juz ${selectedJuz}`} by ${reciter.name}`,
+              variant: "default",
+            });
+            
+            audio.play().catch(console.error);
             resolve();
           };
 
-          audio.onerror = () => {
+          const tryNext = () => {
+            if (resolved) return;
+            resolved = true;
+            cleanup();
             console.log(`Audio source ${sourceIndex + 1} failed, trying next...`);
-            // Try next source
             tryAudioSource(sourceIndex + 1).then(resolve).catch(reject);
+          };
+
+          // Success handlers
+          audio.onloadeddata = resolveOnce;
+          audio.oncanplaythrough = resolveOnce;
+
+          // Error handler
+          audio.onerror = (e) => {
+            console.log(`Audio error for source ${sourceIndex + 1}:`, e);
+            tryNext();
           };
 
           audio.onended = () => {
             setIsPlaying(false);
           };
 
-          // Set a timeout to try next source if loading takes too long
-          setTimeout(() => {
-            if (audio.readyState === 0) {
-              console.log(`Audio source ${sourceIndex + 1} timeout, trying next...`);
-              audio.onerror = null;
-              tryAudioSource(sourceIndex + 1).then(resolve).catch(reject);
+          // Shorter timeout for faster fallback (3 seconds instead of 5)
+          timeoutId = setTimeout(() => {
+            if (!resolved && audio.readyState < 2) {
+              console.log(`Audio source ${sourceIndex + 1} timeout (3s), trying next...`);
+              tryNext();
             }
-          }, 5000);
+          }, 3000);
 
+          // Start loading
+          audio.src = audioUrl;
           audio.load();
         });
       };
@@ -339,9 +376,14 @@ export const QuranReciting = ({ isOpen, onClose }: QuranRecitingProps) => {
     } catch (error) {
       setIsLoading(false);
       console.error("All audio sources failed:", error);
+      
+      // More helpful error message
+      const reciterName = reciter.name;
+      const contentType = recitationType === "surah" ? `Surah ${selectedSurah}` : `Juz ${selectedJuz}`;
+      
       toast({
-        title: "Audio Error",
-        description: `Recitation by ${reciter.name} is not available for this ${recitationType}. Please try another reciter.`,
+        title: "Audio Not Available",
+        description: `${contentType} by ${reciterName} is currently unavailable. Please try a different reciter or check your internet connection.`,
         variant: "destructive",
       });
     }

@@ -76,10 +76,22 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
         .select("theme")
         .eq("user_id", user.id)
         .single()
-        .then(({ data }) => {
+        .then(({ data, error }) => {
+          if (error) {
+            if (error.code === 'PGRST116') {
+              console.log('User settings not found for theme, using default');
+            } else {
+              console.error('Error loading theme:', error);
+            }
+            return;
+          }
+          
           if (data?.theme) {
             setThemeState(data.theme as Theme);
           }
+        })
+        .catch((error) => {
+          console.error('Unexpected error loading theme:', error);
         });
     }
   }, [user]);
@@ -88,10 +100,22 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
     setThemeState(newTheme);
     
     if (user) {
-      await supabase
-        .from("user_settings")
-        .update({ theme: newTheme })
-        .eq("user_id", user.id);
+      try {
+        const { error } = await supabase
+          .from("user_settings")
+          .upsert({ 
+            user_id: user.id, 
+            theme: newTheme 
+          }, {
+            onConflict: 'user_id'
+          });
+          
+        if (error) {
+          console.error('Error saving theme:', error);
+        }
+      } catch (error) {
+        console.error('Unexpected error saving theme:', error);
+      }
     }
   };
 

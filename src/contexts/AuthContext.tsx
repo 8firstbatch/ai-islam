@@ -30,11 +30,19 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           setSession(session);
           setUser(session?.user ?? null);
           
-          // If user just signed in, sync their profile data
+          // If user just signed in, sync their profile data and ensure user records exist
           if (event === 'SIGNED_IN' && session?.user) {
-            // Import here to avoid circular dependency
-            const { syncGoogleProfileData } = await import('@/utils/profileUtils');
-            await syncGoogleProfileData(session.user);
+            try {
+              // Import here to avoid circular dependency
+              const { syncGoogleProfileData } = await import('@/utils/profileUtils');
+              await syncGoogleProfileData(session.user);
+              
+              // Ensure user_settings record exists
+              await ensureUserSettingsExist(session.user.id);
+            } catch (error) {
+              console.error('Error syncing user data:', error);
+              // Don't throw - just log the error
+            }
           }
         } catch (error) {
           console.error('Error handling auth state change:', error);
@@ -62,6 +70,41 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       subscription.unsubscribe();
     };
   }, []);
+
+  // Helper function to ensure user_settings record exists
+  const ensureUserSettingsExist = async (userId: string) => {
+    try {
+      // Check if user_settings exists
+      const { data, error } = await supabase
+        .from("user_settings")
+        .select("id")
+        .eq("user_id", userId)
+        .single();
+
+      if (error && error.code === 'PGRST116') {
+        // User settings don't exist, create them
+        const { error: insertError } = await supabase
+          .from("user_settings")
+          .insert({
+            user_id: userId,
+            theme: 'light',
+            ai_model: 'google/gemini-2.5-flash',
+            ai_response_style: 'balanced',
+            is_pro_enabled: false
+          });
+
+        if (insertError) {
+          console.error('Error creating user_settings:', insertError);
+        } else {
+          console.log('User settings created successfully');
+        }
+      } else if (error) {
+        console.error('Error checking user_settings:', error);
+      }
+    } catch (error) {
+      console.error('Error ensuring user_settings exist:', error);
+    }
+  };
 
   const signOut = async () => {
     await supabase.auth.signOut();

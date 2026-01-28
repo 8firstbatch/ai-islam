@@ -45,8 +45,20 @@ export const useConversations = () => {
         .select("ai_model, ai_response_style")
         .eq("user_id", user.id)
         .single()
-        .then(({ data }) => {
+        .then(({ data, error }) => {
+          if (error) {
+            if (error.code === 'PGRST116') {
+              console.log('User settings not found for conversations, using defaults');
+            } else {
+              console.error('Error loading user settings for conversations:', error);
+            }
+            return;
+          }
+          
           if (data) setUserSettings(data);
+        })
+        .catch((error) => {
+          console.error('Unexpected error loading user settings:', error);
         });
     }
   }, [user]);

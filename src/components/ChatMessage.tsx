@@ -583,39 +583,22 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
           )}
         </div>
 
-        {/* Bottom action buttons - positioned outside message bubble */}
-        {!isEditing && (
-          <div className={cn(
-            "flex gap-1 sm:gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200",
-            isUser ? "justify-start" : "justify-end"
-          )}>
-            {/* Context Menu Button */}
-            <DropdownMenu open={showMenu} onOpenChange={setShowMenu}>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full text-muted-foreground hover:text-foreground transition-all duration-300"
-                >
-                  <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align={isUser ? "start" : "end"} className="w-28 sm:w-32">
-                <DropdownMenuItem onClick={handleCopy} className="cursor-pointer text-xs sm:text-sm">
-                  <Copy className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                  Copy
-                </DropdownMenuItem>
-                {isUser && (
-                  <DropdownMenuItem onClick={handleEdit} className="cursor-pointer text-xs sm:text-sm">
-                    <Edit3 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
-                    Edit
-                  </DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
+        {/* Action buttons - only show after AI replies */}
+        {!isEditing && !isUser && (
+          <div className="flex gap-1 sm:gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 justify-end">
+            {/* Copy button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleCopy}
+              className="h-7 w-7 sm:h-8 sm:w-8 rounded-full text-muted-foreground hover:text-foreground transition-all duration-300"
+              title="Copy message"
+            >
+              <Copy className="w-3 h-3 sm:w-4 sm:h-4" />
+            </Button>
 
-            {/* Text-to-Speech button for AI messages */}
-            {!isUser && speechSynthesis && (
+            {/* Text-to-Speech button */}
+            {speechSynthesis && (
               <Button
                 variant="ghost"
                 size="icon"
@@ -632,6 +615,52 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
                 )}
               </Button>
             )}
+
+            {/* More options menu */}
+            <DropdownMenu open={showMenu} onOpenChange={setShowMenu}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full text-muted-foreground hover:text-foreground transition-all duration-300"
+                >
+                  <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-28 sm:w-32">
+                <DropdownMenuItem onClick={handleCopy} className="cursor-pointer text-xs sm:text-sm">
+                  <Copy className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  Copy
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        )}
+
+        {/* User message edit functionality - only show for user messages */}
+        {!isEditing && isUser && (
+          <div className="flex gap-1 sm:gap-2 mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200 justify-start">
+            <DropdownMenu open={showMenu} onOpenChange={setShowMenu}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-7 w-7 sm:h-8 sm:w-8 rounded-full text-muted-foreground hover:text-foreground transition-all duration-300"
+                >
+                  <MoreVertical className="w-3 h-3 sm:w-4 sm:h-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-28 sm:w-32">
+                <DropdownMenuItem onClick={handleCopy} className="cursor-pointer text-xs sm:text-sm">
+                  <Copy className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  Copy
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleEdit} className="cursor-pointer text-xs sm:text-sm">
+                  <Edit3 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                  Edit
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         )}
       </div>

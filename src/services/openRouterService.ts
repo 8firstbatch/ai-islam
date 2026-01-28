@@ -45,8 +45,12 @@ export class OpenRouterService {
       if (data && 'is_pro_enabled' in data && data.is_pro_enabled) {
         return this.proApiKey;
       }
-    } catch (error) {
-      console.warn('Failed to check Pro status, using default API key');
+    } catch (error: any) {
+      console.warn('Failed to check Pro status:', error?.message || error);
+      // If it's a user not found error, that's okay - user might not have settings yet
+      if (error?.code === 'PGRST116') {
+        console.log('User settings not found, using default API key');
+      }
     }
 
     return this.apiKey;
