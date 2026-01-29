@@ -122,8 +122,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             user_id: user.id,
             theme: 'light',
             ai_model: 'google/gemini-2.5-flash',
-            ai_response_style: 'balanced',
-            is_pro_enabled: false
+            ai_response_style: 'balanced'
           });
 
         if (settingsInsertError) {

@@ -23,7 +23,7 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
     // Try to load from database first
     let { data, error } = await supabase
       .from("user_settings")
-      .select("ai_model, ai_response_style, is_pro_enabled")
+      .select("ai_model, ai_response_style")
       .eq("user_id", userId)
       .single();
 
@@ -67,7 +67,7 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
     return data ? {
       ai_model: data.ai_model || "google/gemini-2.5-flash",
       ai_response_style: data.ai_response_style || "balanced",
-      is_pro_enabled: (data as any).is_pro_enabled || false
+      is_pro_enabled: false // Default to false since column doesn't exist
     } : {
       ai_model: "google/gemini-2.5-flash",
       ai_response_style: "balanced",
@@ -91,14 +91,13 @@ export const saveUserSettings = async (
   try {
     console.log('Attempting to save settings:', { userId, settings });
     
-    // Try to save to database first
+    // Try to save to database first (without is_pro_enabled since column doesn't exist)
     const { error } = await supabase
       .from("user_settings")
       .upsert({
         user_id: userId,
         ai_model: settings.ai_model,
         ai_response_style: settings.ai_response_style,
-        is_pro_enabled: settings.is_pro_enabled || false,
       }, {
         onConflict: 'user_id'
       });
