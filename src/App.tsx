@@ -8,6 +8,8 @@ import { HelmetProvider } from "react-helmet-async";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { logEnvironmentStatus } from "@/utils/envValidation";
+import { testProductionReadiness } from "@/utils/productionTest";
+import { runDebugTest } from "@/utils/debugTest";
 import LoadingScreen from "@/components/LoadingScreen";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
@@ -23,6 +25,8 @@ const App = () => {
   useEffect(() => {
     // Validate environment variables on startup
     logEnvironmentStatus();
+    testProductionReadiness();
+    runDebugTest();
     
     // Simulate initial loading time
     const timer = setTimeout(() => {

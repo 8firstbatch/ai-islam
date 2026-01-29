@@ -23,36 +23,25 @@ export class OpenRouterService {
 
   constructor() {
     this.apiKey = import.meta.env.VITE_OPENROUTER_API_KEY;
-    this.proApiKey = import.meta.env.VITE_OPENROUTER_PRO_API_KEY || this.apiKey; // Use pro key if available, fallback to regular key
-    if (!this.apiKey) {
-      console.warn('OpenRouter API key not found. Please set VITE_OPENROUTER_API_KEY in your .env file');
+    this.proApiKey = import.meta.env.VITE_OPENROUTER_PRO_API_KEY || this.apiKey;
+    
+    // Validate API key format and provide helpful feedback
+    if (!this.apiKey || this.apiKey.includes('your_openrouter_api_key_here')) {
+      console.error('❌ OpenRouter API key not configured. Please set VITE_OPENROUTER_API_KEY in your environment variables');
+    } else if (!this.apiKey.startsWith('sk-or-v1-')) {
+      console.error('❌ Invalid OpenRouter API key format. Key should start with "sk-or-v1-"');
+    } else {
+      console.log('✅ OpenRouter API key configured successfully');
     }
   }
 
   private async getEffectiveApiKey(userId?: string): Promise<string> {
-    if (!userId) {
-      return this.apiKey;
+    // For now, always use the regular API key to avoid database issues
+    // Pro key logic can be implemented later when user_settings are stable
+    if (!this.apiKey || this.apiKey.includes('your_openrouter_api_key_here')) {
+      throw new Error('OpenRouter API key not configured. Please add VITE_OPENROUTER_API_KEY to your environment variables');
     }
-
-    try {
-      const { data } = await supabase
-        .from("user_settings")
-        .select("*")
-        .eq("user_id", userId)
-        .single();
-
-      // Check if is_pro_enabled column exists and is true
-      if (data && 'is_pro_enabled' in data && data.is_pro_enabled) {
-        return this.proApiKey;
-      }
-    } catch (error: any) {
-      console.warn('Failed to check Pro status:', error?.message || error);
-      // If it's a user not found error, that's okay - user might not have settings yet
-      if (error?.code === 'PGRST116') {
-        console.log('User settings not found, using default API key');
-      }
-    }
-
+    
     return this.apiKey;
   }
 
@@ -133,8 +122,25 @@ For non-Islamic questions, provide helpful responses while maintaining Islamic v
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('OpenRouter API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+
+        // Provide specific error messages based on status code
+        if (response.status === 401) {
+          throw new Error('OpenRouter API key is invalid or expired. Please check your VITE_OPENROUTER_API_KEY environment variable');
+        } else if (response.status === 402) {
+          throw new Error('OpenRouter account has insufficient credits. Please add credits to your OpenRouter account');
+        } else if (response.status === 429) {
+          throw new Error('OpenRouter rate limit exceeded. Please try again in a few moments');
+        } else if (response.status === 400) {
+          throw new Error(`OpenRouter API request error: ${errorText}`);
+        } else {
+          throw new Error(`OpenRouter API error (${response.status}): ${errorText}`);
+        }
       }
 
       if (stream) {

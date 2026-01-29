@@ -17,7 +17,16 @@ export class GoogleAIService {
 
   constructor() {
     // Use the provided Google API key for AI chatting
-    this.apiKey = "AIzaSyAhFVZA6LYiikPrUBiBB0f7kf879VceoEA";
+    this.apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+    
+    // Validate API key
+    if (!this.apiKey || this.apiKey.includes('YOUR_NEW_GEMINI_API_KEY_HERE')) {
+      console.error('❌ Gemini API key not configured. Please set VITE_GEMINI_API_KEY in your environment variables');
+    } else if (!this.apiKey.startsWith('AIzaSy')) {
+      console.error('❌ Invalid Gemini API key format. Key should start with "AIzaSy"');
+    } else {
+      console.log('✅ Gemini API key configured successfully');
+    }
   }
 
   async sendMessage(
@@ -52,6 +61,10 @@ export class GoogleAIService {
     }
 
     try {
+      if (!this.apiKey) {
+        throw new Error('Gemini API key not configured. Please set VITE_GEMINI_API_KEY in your environment variables');
+      }
+
       const url = `${this.baseURL}/models/${model}:generateContent?key=${this.apiKey}`;
       
       const requestBody: any = {
@@ -100,8 +113,24 @@ For non-Islamic questions, provide helpful responses while maintaining Islamic v
       });
 
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error?.message || `HTTP ${response.status}: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('Google AI API Error:', {
+          status: response.status,
+          statusText: response.statusText,
+          body: errorText
+        });
+
+        if (response.status === 400) {
+          throw new Error('Google AI API request error. Please check your request format');
+        } else if (response.status === 401) {
+          throw new Error('Google AI API key is invalid or expired. Please check your VITE_GEMINI_API_KEY');
+        } else if (response.status === 403) {
+          throw new Error('Google AI API access forbidden. Please check your API key permissions');
+        } else if (response.status === 429) {
+          throw new Error('Google AI API rate limit exceeded. Please try again later');
+        } else {
+          throw new Error(`Google AI API error (${response.status}): ${errorText}`);
+        }
       }
 
       const data: GoogleAIResponse = await response.json();
