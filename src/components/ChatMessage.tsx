@@ -64,7 +64,11 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
       // Remove markdown italic (*text* or _text_)
       .replace(/\*(.*?)\*/g, '$1')
       .replace(/_(.*?)_/g, '$1')
-      // Remove markdown code blocks (`text`)
+      // Remove markdown code blocks (`text` and ```text```)
+      .replace(/```[\s\S]*?```/g, (match) => {
+        // Extract content between code blocks and clean it
+        return match.replace(/```[\w]*\n?/g, '').replace(/```/g, '');
+      })
       .replace(/`(.*?)`/g, '$1')
       // Remove markdown headers (# ## ###)
       .replace(/^#{1,6}\s+/gm, '')
@@ -76,8 +80,14 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
       .replace(/^\s*[-*+]\s+/gm, '') // List bullets
       .replace(/^\s*\d+\.\s+/gm, '') // Numbered lists
       .replace(/^\s*>\s+/gm, '') // Blockquotes
-      // Clean up extra whitespace
+      // Remove horizontal rules
+      .replace(/^[-*_]{3,}$/gm, '')
+      // Remove table formatting
+      .replace(/\|/g, ' ')
+      .replace(/^[-\s:]+$/gm, '')
+      // Clean up extra whitespace and line breaks
       .replace(/\n{3,}/g, '\n\n')
+      .replace(/\s{2,}/g, ' ')
       .trim();
   };
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -217,11 +227,8 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
       await new Promise(resolve => setTimeout(resolve, 100));
 
       // Clean the message content for better speech
-      const messageContent = isUser ? message.content : formatAIResponse(message.content);
+      const messageContent = isUser ? message.content : cleanAIResponse(formatAIResponse(message.content));
       const cleanContent = messageContent
-        .replace(/\*\*(.*?)\*\*/g, '$1') // Remove markdown bold
-        .replace(/\*(.*?)\*/g, '$1') // Remove markdown italic
-        .replace(/`(.*?)`/g, '$1') // Remove code blocks
         .replace(/\n+/g, '. ') // Replace line breaks with periods
         .replace(/\s+/g, ' ') // Normalize whitespace
         .trim();
@@ -578,7 +585,7 @@ export const ChatMessage = ({ message, onEdit }: ChatMessageProps) => {
             </div>
           ) : (
             <p className="text-sm leading-relaxed whitespace-pre-wrap selectable-text">
-              {isUser ? message.content : formatAIResponse(message.content)}
+              {isUser ? message.content : cleanAIResponse(formatAIResponse(message.content))}
             </p>
           )}
         </div>

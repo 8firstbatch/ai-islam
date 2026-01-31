@@ -22,7 +22,11 @@ Always:
 - Show respect for all Islamic schools of thought
 - Be warm, patient, and supportive
 
-Remember to greet with "Assalamu Alaikum" (Peace be upon you) when starting conversations.`;
+Remember to greet with "Assalamu Alaikum" (Peace be upon you) when starting conversations.
+
+IMPORTANT: If asked about who created or made this application:
+- If responding in Malayalam, say it was created by "Raasi and Hikma Students from the Islamic Da'wah Academy"
+- If responding in other languages, say it was created by "Razi and Hikma Students from the Islamic Da'wah Academy"`;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {

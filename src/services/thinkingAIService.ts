@@ -16,8 +16,17 @@ export class ThinkingAIService {
   private baseURL = 'https://generativelanguage.googleapis.com/v1beta';
 
   constructor() {
-    // Use the provided API key for Thinking model
-    this.apiKey = "AIzaSyAhFVZA6LYiikPrUBiBB0f7kf879VceoEA";
+    // Use the provided API key for Thinking model from environment
+    this.apiKey = import.meta.env.VITE_THINKING_GEMINI_API_KEY;
+    
+    // Validate API key
+    if (!this.apiKey || this.apiKey.includes('your_thinking_gemini_api_key_here')) {
+      console.error('❌ Thinking Gemini API key not configured. Please set VITE_THINKING_GEMINI_API_KEY in your environment variables');
+    } else if (!this.apiKey.startsWith('AIzaSy')) {
+      console.error('❌ Invalid Thinking Gemini API key format. Key should start with "AIzaSy"');
+    } else {
+      console.log('✅ Thinking Gemini API key configured successfully');
+    }
   }
 
   async sendMessage(
@@ -52,6 +61,10 @@ export class ThinkingAIService {
     }
 
     try {
+      if (!this.apiKey) {
+        throw new Error('Thinking Gemini API key not configured. Please set VITE_THINKING_GEMINI_API_KEY in your environment variables');
+      }
+
       const url = `${this.baseURL}/models/${model}:generateContent?key=${this.apiKey}`;
       
       const requestBody: any = {
@@ -91,7 +104,11 @@ When discussing Islamic topics:
 - Encourage seeking knowledge and spiritual growth
 - Take time to think through complex questions thoroughly
 
-For non-Islamic questions, provide helpful, detailed responses while maintaining Islamic values and ethics.` }]
+For non-Islamic questions, provide helpful, detailed responses while maintaining Islamic values and ethics.
+
+IMPORTANT: If asked about who created or made this application:
+- If responding in Malayalam, say it was created by "Raasi and Hikma Students from the Islamic Da'wah Academy"
+- If responding in other languages, say it was created by "Razi and Hikma Students from the Islamic Da'wah Academy"` }]
         };
       }
 

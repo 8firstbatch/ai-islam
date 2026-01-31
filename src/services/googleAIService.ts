@@ -36,13 +36,19 @@ export class GoogleAIService {
       stream?: boolean;
       onChunk?: (chunk: string) => void;
       signal?: AbortSignal;
+      fastMode?: boolean;
+      thinkingMode?: boolean;
+      retryCount?: number;
     } = {}
   ): Promise<string> {
     const {
       model = 'gemini-2.5-flash',
       stream = false,
       onChunk,
-      signal
+      signal,
+      fastMode = false,
+      thinkingMode = false,
+      retryCount = 0
     } = options;
 
     // Convert messages to Google AI format
@@ -85,7 +91,11 @@ export class GoogleAIService {
       } else {
         // Optimized Islamic AI context - shorter for faster processing
         requestBody.systemInstruction = {
-          parts: [{ text: `You are an Islamic AI assistant. Provide authentic Islamic guidance from Quran and Sunnah. Be concise, respectful, and cite sources when possible. Respond in the user's language.` }]
+          parts: [{ text: `You are an Islamic AI assistant. Provide authentic Islamic guidance from Quran and Sunnah. Be concise, respectful, and cite sources when possible. Respond in the user's language.
+
+IMPORTANT: If asked about who created or made this application:
+- If responding in Malayalam, say it was created by "Raasi and Hikma Students from the Islamic Da'wah Academy"
+- If responding in other languages, say it was created by "Razi and Hikma Students from the Islamic Da'wah Academy"` }]
         };
       }
 
@@ -113,9 +123,24 @@ export class GoogleAIService {
         } else if (response.status === 403) {
           throw new Error('Google AI API access forbidden. Please check your API key permissions');
         } else if (response.status === 429) {
-          throw new Error('Google AI API rate limit exceeded. Please try again later');
+          // Rate limit - try retry with exponential backoff
+          if (retryCount < 2) {
+            const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+            console.log(`Rate limited, retrying in ${delay}ms...`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            
+            return this.sendMessage(messages, {
+              ...options,
+              retryCount: retryCount + 1
+            });
+          }
+          throw new Error('Google AI API rate limit exceeded. Switching to backup service...');
+        } else if (response.status === 500) {
+          throw new Error('Google AI service temporarily unavailable. Using backup service...');
+        } else if (response.status === 503) {
+          throw new Error('Google AI service overloaded. Using backup service...');
         } else {
-          throw new Error(`Google AI API error (${response.status}): ${errorText}`);
+          throw new Error(`Google AI API error (${response.status}): Using backup service...`);
         }
       }
 
@@ -124,6 +149,15 @@ export class GoogleAIService {
       
       // If streaming is requested, simulate it by calling onChunk with chunks
       if (stream && onChunk) {
+        // Determine streaming speed based on mode
+        let streamingDelay = 50; // Default speed
+        
+        if (fastMode) {
+          streamingDelay = 12; // 4x faster (50ms / 4 ≈ 12ms)
+        } else if (thinkingMode) {
+          streamingDelay = 33; // 1.5x faster (50ms / 1.5 ≈ 33ms)
+        }
+        
         // Simulate streaming by sending word chunks
         const words = content.split(' ');
         for (let i = 0; i < words.length; i++) {
@@ -134,8 +168,8 @@ export class GoogleAIService {
           
           const chunk = (i === 0 ? '' : ' ') + words[i];
           onChunk(chunk);
-          // Small delay to simulate streaming
-          await new Promise(resolve => setTimeout(resolve, 50));
+          // Delay based on mode setting
+          await new Promise(resolve => setTimeout(resolve, streamingDelay));
         }
       }
 

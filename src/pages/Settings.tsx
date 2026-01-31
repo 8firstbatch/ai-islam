@@ -258,21 +258,49 @@ const Settings = () => {
   };
 
   const saveAiSettings = async () => {
-    if (!user) return;
+    if (!user) {
+      toast({
+        title: "Authentication required",
+        description: "Please sign in to save settings",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setSaving(true);
-
-    const result = await saveUserSettings(user.id, {
+    console.log('Saving AI settings for user:', user.id, {
       ai_model: aiModel,
       ai_response_style: responseStyle,
       is_pro_enabled: isProEnabled,
     });
 
-    if (result.success) {
-      toast({ title: result.message });
-    } else {
+    try {
+      const result = await saveUserSettings(user.id, {
+        ai_model: aiModel,
+        ai_response_style: responseStyle,
+        is_pro_enabled: isProEnabled,
+      });
+
+      console.log('Save result:', result);
+
+      if (result.success) {
+        toast({ 
+          title: "Settings saved",
+          description: result.message || "AI settings saved successfully!",
+        });
+      } else {
+        console.error('Save failed:', result);
+        toast({
+          title: "Failed to save AI settings",
+          description: result.message || "Unknown error occurred",
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error('Error in saveAiSettings:', error);
       toast({
         title: "Failed to save AI settings",
-        description: result.message,
+        description: error instanceof Error ? error.message : "Unknown error occurred",
         variant: "destructive",
       });
     }
@@ -498,6 +526,7 @@ const Settings = () => {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="openai/gpt-4o-mini">Fast</SelectItem>
                             <SelectItem value="google/gemini-2.5-flash">Thinking</SelectItem>
                             <SelectItem value="google/gemini-2.5-pro">
                               <div className="flex items-center gap-2">
@@ -510,7 +539,7 @@ const Settings = () => {
                           </SelectContent>
                         </Select>
                         <p className="text-xs text-muted-foreground">
-                          Choose the AI model for your conversations
+                          Choose the AI model: Fast (GPT-4o Mini), Thinking (Gemini Flash), or Pro
                         </p>
                       </div>
 

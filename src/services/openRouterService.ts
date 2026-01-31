@@ -53,6 +53,8 @@ export class OpenRouterService {
       onChunk?: (chunk: string) => void;
       signal?: AbortSignal;
       userId?: string;
+      fastMode?: boolean;
+      thinkingMode?: boolean;
     } = {}
   ): Promise<string> {
     const {
@@ -60,7 +62,9 @@ export class OpenRouterService {
       stream = true, // Enable streaming for faster perceived response
       onChunk,
       signal,
-      userId
+      userId,
+      fastMode = false,
+      thinkingMode = false
     } = options;
 
     const effectiveApiKey = await this.getEffectiveApiKey(userId);
@@ -72,7 +76,11 @@ export class OpenRouterService {
     // Optimized Islamic context - shorter for faster processing
     const systemMessage: OpenRouterMessage = {
       role: 'system',
-      content: `You are an Islamic AI assistant. Provide authentic Islamic guidance from Quran and Sunnah. Be concise, respectful, and cite sources when possible. Respond in the user's language.`
+      content: `You are an Islamic AI assistant. Provide authentic Islamic guidance from Quran and Sunnah. Be concise, respectful, and cite sources when possible. Respond in the user's language.
+
+IMPORTANT: If asked about who created or made this application:
+- If responding in Malayalam, say it was created by "Raasi and Hikma Students from the Islamic Da'wah Academy"
+- If responding in other languages, say it was created by "Razi and Hikma Students from the Islamic Da'wah Academy"`
     };
 
     const requestMessages = [systemMessage, ...messages];
@@ -120,7 +128,7 @@ export class OpenRouterService {
       }
 
       if (stream) {
-        return this.handleStreamResponse(response, onChunk);
+        return this.handleStreamResponse(response, onChunk, fastMode, thinkingMode);
       } else {
         const data: OpenRouterResponse = await response.json();
         return data.choices[0]?.message?.content || '';
@@ -136,7 +144,9 @@ export class OpenRouterService {
 
   private async handleStreamResponse(
     response: Response,
-    onChunk?: (chunk: string) => void
+    onChunk?: (chunk: string) => void,
+    fastMode: boolean = false,
+    thinkingMode: boolean = false
   ): Promise<string> {
     if (!response.body) {
       throw new Error('No response body received');
@@ -173,7 +183,20 @@ export class OpenRouterService {
             
             if (contentChunk) {
               fullContent += contentChunk;
-              onChunk?.(contentChunk);
+              if (onChunk) {
+                if (fastMode) {
+                  // In fast mode, send chunks immediately without delay
+                  onChunk(contentChunk);
+                } else if (thinkingMode) {
+                  // In thinking mode, add slight delay for 1.5x speed
+                  onChunk(contentChunk);
+                  await new Promise(resolve => setTimeout(resolve, 7)); // 1.5x speed (10ms / 1.5 ≈ 7ms)
+                } else {
+                  // Normal mode with slight delay for better UX
+                  onChunk(contentChunk);
+                  await new Promise(resolve => setTimeout(resolve, 10));
+                }
+              }
             }
           } catch (parseError) {
             // If we can't parse this chunk, put it back in the buffer

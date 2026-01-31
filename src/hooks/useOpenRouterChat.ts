@@ -24,6 +24,7 @@ export const useOpenRouterChat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
+  const [lastFallbackTime, setLastFallbackTime] = useState<number>(0);
 
   // Create a new conversation
   const createConversation = useCallback(async (title: string): Promise<string | null> => {
@@ -200,19 +201,58 @@ export const useOpenRouterChat = () => {
       const selectedModel = userSettings?.ai_model || "google/gemini-2.5-flash";
 
       // Use appropriate AI service based on selected model - optimized for speed
+      const isFastMode = selectedModel === "openai/gpt-4o-mini";
+      const isThinkingMode = selectedModel === "google/gemini-2.5-flash";
+      
       if (selectedModel === "google/gemini-2.5-flash") {
-        // Use Google AI service - fastest option
-        await googleAIService.sendMessage(
-          chatMessages,
-          {
-            model: 'gemini-2.5-flash',
-            stream: true,
-            onChunk: updateAssistant,
-            signal: controller.signal,
+        try {
+          // Use Google AI service - thinking model at 1.5x speed
+          await googleAIService.sendMessage(
+            chatMessages,
+            {
+              model: 'gemini-2.5-flash',
+              stream: true,
+              onChunk: updateAssistant,
+              signal: controller.signal,
+              fastMode: false,
+              thinkingMode: true, // Enable 1.5x speed for thinking mode
+            }
+          );
+        } catch (error) {
+          // If Google AI fails (rate limit, etc.), fallback to OpenRouter with fast model
+          console.log('Google AI failed, falling back to OpenRouter:', error);
+          
+          // Only show notification for non-rate-limit errors and not too frequently
+          const errorMessage = error instanceof Error ? error.message : '';
+          const now = Date.now();
+          const shouldShowNotification = !errorMessage.includes('rate limit') && 
+                                       !errorMessage.includes('429') && 
+                                       (now - lastFallbackTime > 30000); // 30 seconds cooldown
+          
+          if (shouldShowNotification) {
+            setLastFallbackTime(now);
+            toast({
+              title: "Switching to backup service",
+              description: "Google AI is temporarily unavailable. Using fast mode instead.",
+              variant: "default",
+            });
           }
-        );
+          
+          await openRouterService.sendMessage(
+            chatMessages,
+            {
+              model: 'openai/gpt-4o-mini', // Fallback to fast model
+              stream: true,
+              onChunk: updateAssistant,
+              signal: controller.signal,
+              userId: user?.id,
+              fastMode: true, // Use fast mode as fallback
+              thinkingMode: false,
+            }
+          );
+        }
       } else if (selectedModel === "openai/gpt-4o-mini") {
-        // Use OpenRouter with fast model
+        // Use OpenRouter with fast model at 4x speed
         await openRouterService.sendMessage(
           chatMessages,
           {
@@ -221,20 +261,76 @@ export const useOpenRouterChat = () => {
             onChunk: updateAssistant,
             signal: controller.signal,
             userId: user?.id,
+            fastMode: true, // Enable 4x speed for fast mode
+            thinkingMode: false,
           }
         );
       } else {
-        // Default to fastest available model
-        await openRouterService.sendMessage(
-          chatMessages,
-          {
-            model: 'openai/gpt-4o-mini', // Prioritize speed
-            stream: true,
-            onChunk: updateAssistant,
-            signal: controller.signal,
-            userId: user?.id,
+        // Handle Pro model and other models with fallback
+        try {
+          if (selectedModel === "google/gemini-2.5-pro") {
+            // Try Thinking AI service for Pro model (uses separate API key)
+            await thinkingAIService.sendMessage(
+              chatMessages,
+              {
+                model: 'gemini-2.5-pro',
+                stream: true,
+                onChunk: updateAssistant,
+                signal: controller.signal,
+              }
+            );
+          } else {
+            // Default to OpenRouter with the selected model or fallback to fast
+            await openRouterService.sendMessage(
+              chatMessages,
+              {
+                model: selectedModel.startsWith('google/') ? 'openai/gpt-4o-mini' : selectedModel,
+                stream: true,
+                onChunk: updateAssistant,
+                signal: controller.signal,
+                userId: user?.id,
+                fastMode: selectedModel.startsWith('google/') || selectedModel === 'openai/gpt-4o-mini',
+                thinkingMode: false,
+              }
+            );
           }
-        );
+        } catch (error) {
+          // Fallback for Pro model or other Google models
+          if (selectedModel.startsWith('google/')) {
+            console.log('Google AI Pro model failed, falling back to OpenRouter:', error);
+            
+            const errorMessage = error instanceof Error ? error.message : '';
+            const now = Date.now();
+            const shouldShowNotification = !errorMessage.includes('rate limit') && 
+                                         !errorMessage.includes('429') && 
+                                         (now - lastFallbackTime > 30000); // 30 seconds cooldown
+            
+            if (shouldShowNotification) {
+              setLastFallbackTime(now);
+              toast({
+                title: "Switching to backup service",
+                description: "Google AI Pro is temporarily unavailable. Using fast mode instead.",
+                variant: "default",
+              });
+            }
+            
+            await openRouterService.sendMessage(
+              chatMessages,
+              {
+                model: 'openai/gpt-4o-mini', // Fallback to fast model
+                stream: true,
+                onChunk: updateAssistant,
+                signal: controller.signal,
+                userId: user?.id,
+                fastMode: true,
+                thinkingMode: false,
+              }
+            );
+          } else {
+            // Re-throw error for non-Google models
+            throw error;
+          }
+        }
       }
 
       // Save assistant message if authenticated and we have content

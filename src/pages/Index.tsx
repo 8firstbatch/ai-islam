@@ -27,7 +27,7 @@ import { Footer } from "@/components/Footer";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 
-import { Menu, Square } from "lucide-react";
+import { Menu } from "lucide-react";
 
 
 const Index = () => {
@@ -290,15 +290,6 @@ const Index = () => {
                               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" style={{ animationDelay: "400ms", animationDuration: "1s" }} />
                             </div>
                             <div className="flex-1 h-px bg-gradient-to-r from-emerald-500/50 via-emerald-500/20 to-transparent animate-pulse" />
-                            {/* Stop button hint */}
-                            <button
-                              onClick={stopGeneration}
-                              className="text-xs text-red-500 hover:text-red-600 transition-colors flex items-center gap-1 opacity-70 hover:opacity-100"
-                              title="Click the stop button to cancel"
-                            >
-                              <Square className="w-3 h-3" />
-                              <span className="hidden sm:inline">Stop</span>
-                            </button>
                           </div>
                           
                           {/* AI thinking text with typewriter effect */}
@@ -336,7 +327,6 @@ const Index = () => {
           <div className="flex-shrink-0">
             <ChatInput 
               onSend={handleSendMessage} 
-              onStop={stopGeneration} 
               onOpenTools={() => setShowToolsSearch(true)}
               selectedTool={selectedTool}
               onRemoveTool={handleRemoveTool}

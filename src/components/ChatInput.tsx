@@ -1,5 +1,5 @@
 import { useState, KeyboardEvent, useEffect } from "react";
-import { Send, Image, X, Square, Wrench, Mic } from "lucide-react";
+import { Send, Image, X, Wrench, Mic } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -7,7 +7,6 @@ import { formatFileSize, isValidImageType, isValidImageSize } from "@/utils/file
 
 interface ChatInputProps {
   onSend: (message: string, attachments?: { images?: File[] }) => void;
-  onStop?: () => void;
   onOpenTools?: () => void;
   selectedTool?: string | null;
   onRemoveTool?: () => void;
@@ -16,7 +15,7 @@ interface ChatInputProps {
   isListening?: boolean;
 }
 
-export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveTool, isLoading, onMicrophoneClick, isListening = false }: ChatInputProps) => {
+export const ChatInput = ({ onSend, onOpenTools, selectedTool, onRemoveTool, isLoading, onMicrophoneClick, isListening = false }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -212,33 +211,33 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
             )}
           </div>
 
-          {/* Send Button (when typing) or Mic Button (when empty) */}
+          {/* Action Button - Send/Mic */}
           <Button
-            onClick={input.trim() || selectedImages.length > 0 || selectedTool ? (isLoading ? onStop : handleSend) : onMicrophoneClick}
-            disabled={isLoading && !(input.trim() || selectedImages.length > 0 || selectedTool)}
+            onClick={
+              (input.trim() || selectedImages.length > 0 || selectedTool) 
+                ? handleSend 
+                : onMicrophoneClick
+            }
+            disabled={isLoading}
             size="icon"
             className={`h-[44px] w-[44px] sm:h-[52px] sm:w-[52px] rounded-2xl sm:rounded-3xl transition-all duration-300 shadow-soft button-transition ${
-              input.trim() || selectedImages.length > 0 || selectedTool
-                ? isLoading 
-                  ? 'bg-red-500 hover:bg-red-600 text-white animate-stop-button-pulse' 
-                  : 'bg-gradient-emerald hover:opacity-90 animate-glow-pulse'
+              (input.trim() || selectedImages.length > 0 || selectedTool)
+                ? 'bg-gradient-emerald hover:opacity-90 animate-glow-pulse'
                 : isListening 
                   ? 'bg-red-500 text-white animate-pulse' 
                   : 'bg-muted hover:bg-muted/80 text-muted-foreground'
             }`}
             title={
-              input.trim() || selectedImages.length > 0 || selectedTool
-                ? isLoading ? "Stop AI response" : "Send message"
-                : isListening ? "Listening... Click to stop" : "Voice Input"
+              (input.trim() || selectedImages.length > 0 || selectedTool)
+                ? "Send message"
+                : isListening 
+                  ? "Listening... Click to stop" 
+                  : "Voice Input"
             }
           >
-            <div className={isLoading && (input.trim() || selectedImages.length > 0 || selectedTool) ? 'animate-button-morph' : ''}>
-              {input.trim() || selectedImages.length > 0 || selectedTool ? (
-                isLoading ? (
-                  <Square className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
-                ) : (
-                  <Send className="w-4 h-4 sm:w-5 sm:h-5" />
-                )
+            <div>
+              {(input.trim() || selectedImages.length > 0 || selectedTool) ? (
+                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
                 <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
               )}

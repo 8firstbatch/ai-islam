@@ -95,16 +95,32 @@ export const saveUserSettings = async (
   try {
     console.log('Attempting to save settings:', { userId, settings });
     
-    // Try to save to database first (without is_pro_enabled since column doesn't exist)
-    const { error } = await supabase
+    // First, try to save with is_pro_enabled column
+    let { error } = await supabase
       .from("user_settings")
       .upsert({
         user_id: userId,
         ai_model: settings.ai_model,
         ai_response_style: settings.ai_response_style,
+        is_pro_enabled: settings.is_pro_enabled || false,
       }, {
         onConflict: 'user_id'
       });
+
+    // If error is about missing column, try without is_pro_enabled
+    if (error && error.message.includes('is_pro_enabled')) {
+      console.log('is_pro_enabled column not found, trying without it...');
+      const { error: fallbackError } = await supabase
+        .from("user_settings")
+        .upsert({
+          user_id: userId,
+          ai_model: settings.ai_model,
+          ai_response_style: settings.ai_response_style,
+        }, {
+          onConflict: 'user_id'
+        });
+      error = fallbackError;
+    }
 
     if (error) {
       console.error('Database save error:', error);

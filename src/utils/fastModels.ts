@@ -13,36 +13,28 @@ export interface FastModelConfig {
 
 export const FAST_MODELS: FastModelConfig[] = [
   {
-    id: 'gpt-4o-mini',
-    name: 'GPT-4o Mini',
+    id: 'openai/gpt-4o-mini',
+    name: 'Fast (GPT-4o Mini)',
     provider: 'openrouter',
     model: 'openai/gpt-4o-mini',
     speed: 'fastest',
-    description: 'Fastest OpenAI model, optimized for speed'
+    description: 'Fastest OpenAI model at 4x speed, optimized for rapid responses'
   },
   {
-    id: 'gemini-flash',
-    name: 'Gemini 2.5 Flash',
+    id: 'google/gemini-2.5-flash',
+    name: 'Thinking (Gemini Flash)',
     provider: 'google',
     model: 'gemini-2.5-flash',
-    speed: 'fastest',
-    description: 'Google\'s fastest model, excellent for quick responses'
+    speed: 'fast',
+    description: 'Google\'s thinking model at 1.5x speed with excellent reasoning capabilities'
   },
   {
-    id: 'claude-haiku',
-    name: 'Claude 3.5 Haiku',
-    provider: 'openrouter',
-    model: 'anthropic/claude-3.5-haiku',
-    speed: 'fast',
-    description: 'Anthropic\'s fastest model'
-  },
-  {
-    id: 'llama-3.1-8b',
-    name: 'Llama 3.1 8B',
-    provider: 'openrouter',
-    model: 'meta-llama/llama-3.1-8b-instruct',
-    speed: 'fast',
-    description: 'Fast open-source model'
+    id: 'google/gemini-2.5-pro',
+    name: 'Pro Model (Gemini Pro)',
+    provider: 'google',
+    model: 'gemini-2.5-pro',
+    speed: 'balanced',
+    description: 'Google\'s most capable model for complex tasks'
   }
 ];
 
@@ -62,24 +54,32 @@ export const getOptimizedSettings = (modelId: string) => {
   };
 
   switch (modelId) {
-    case 'gpt-4o-mini':
+    case 'openai/gpt-4o-mini':
       return {
         ...baseSettings,
         top_p: 0.9,
         frequency_penalty: 0.1,
+        // Fast mode settings for 4x speed
+        stream_delay: 0, // No artificial delay
+        chunk_size: 'large', // Larger chunks for faster delivery
       };
     
-    case 'gemini-flash':
+    case 'google/gemini-2.5-flash':
       return {
         ...baseSettings,
         topP: 0.9,
         topK: 40,
+        // Thinking mode settings for 1.5x speed
+        stream_delay: 33, // 1.5x faster than normal (50ms / 1.5 ≈ 33ms)
+        chunk_size: 'medium', // Medium chunks for balanced delivery
       };
-    
-    case 'claude-haiku':
+
+    case 'google/gemini-2.5-pro':
       return {
         ...baseSettings,
-        top_p: 0.9,
+        topP: 0.95,
+        topK: 40,
+        max_tokens: 2500, // Higher for pro model
       };
     
     default:
