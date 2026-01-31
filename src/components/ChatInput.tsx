@@ -1,5 +1,5 @@
 import { useState, KeyboardEvent, useEffect } from "react";
-import { Send, Image, X, Wrench, Mic } from "lucide-react";
+import { Send, Image, X, Wrench, Mic, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -12,10 +12,11 @@ interface ChatInputProps {
   onRemoveTool?: () => void;
   isLoading: boolean;
   onMicrophoneClick?: () => void;
+  onStopGeneration?: () => void;
   isListening?: boolean;
 }
 
-export const ChatInput = ({ onSend, onOpenTools, selectedTool, onRemoveTool, isLoading, onMicrophoneClick, isListening = false }: ChatInputProps) => {
+export const ChatInput = ({ onSend, onOpenTools, selectedTool, onRemoveTool, isLoading, onMicrophoneClick, onStopGeneration, isListening = false }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -211,33 +212,41 @@ export const ChatInput = ({ onSend, onOpenTools, selectedTool, onRemoveTool, isL
             )}
           </div>
 
-          {/* Action Button - Send/Mic */}
+          {/* Action Button - Send/Stop/Mic */}
           <Button
             onClick={
               (input.trim() || selectedImages.length > 0 || selectedTool) 
                 ? handleSend 
-                : onMicrophoneClick
+                : isLoading
+                  ? onStopGeneration
+                  : onMicrophoneClick
             }
-            disabled={isLoading}
+            disabled={isLoading && !(input.trim() || selectedImages.length > 0 || selectedTool) && !onStopGeneration}
             size="icon"
             className={`h-[44px] w-[44px] sm:h-[52px] sm:w-[52px] rounded-2xl sm:rounded-3xl transition-all duration-300 shadow-soft button-transition ${
               (input.trim() || selectedImages.length > 0 || selectedTool)
                 ? 'bg-gradient-emerald hover:opacity-90 animate-glow-pulse'
-                : isListening 
-                  ? 'bg-red-500 text-white animate-pulse' 
-                  : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                : isLoading
+                  ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse'
+                  : isListening 
+                    ? 'bg-red-500 text-white animate-pulse' 
+                    : 'bg-muted hover:bg-muted/80 text-muted-foreground'
             }`}
             title={
               (input.trim() || selectedImages.length > 0 || selectedTool)
                 ? "Send message"
-                : isListening 
-                  ? "Listening... Click to stop" 
-                  : "Voice Input"
+                : isLoading
+                  ? "Stop generation"
+                  : isListening 
+                    ? "Listening... Click to stop" 
+                    : "Voice Input"
             }
           >
             <div>
               {(input.trim() || selectedImages.length > 0 || selectedTool) ? (
                 <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+              ) : isLoading ? (
+                <Square className="w-4 h-4 sm:w-5 sm:h-5" />
               ) : (
                 <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
               )}

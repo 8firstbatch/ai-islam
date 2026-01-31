@@ -199,8 +199,8 @@ aiislam/
    - Create account and get API key
 
 2. **Configure Models**
-   - Default: `openai/gpt-4o-mini`
-   - Available: GPT-4, Claude, Gemini, and more
+   - Default: `google/gemini-2.5-flash`
+   - Available: Gemini Flash, Gemini Pro, and more
 
 ---
 
@@ -213,7 +213,7 @@ aiislam/
 const response = await openRouterService.sendMessage([
   { role: "user", content: "Tell me about prayer in Islam" }
 ], {
-  model: "openai/gpt-4o-mini",
+  model: "google/gemini-2.5-flash",
   language: "arabic" // Responds in Arabic
 });
 ```

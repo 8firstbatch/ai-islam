@@ -60,7 +60,6 @@ export const runSpeedBenchmark = async (): Promise<SpeedTestResult[]> => {
   
   const testModels = [
     { model: 'gemini-2.5-flash', provider: 'google' as const },
-    { model: 'openai/gpt-4o-mini', provider: 'openrouter' as const },
     { model: 'anthropic/claude-3.5-haiku', provider: 'openrouter' as const },
   ];
   

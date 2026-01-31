@@ -332,6 +332,7 @@ const Index = () => {
               onRemoveTool={handleRemoveTool}
               isLoading={isLoading}
               onMicrophoneClick={handleMicrophoneClick}
+              onStopGeneration={stopGeneration}
               isListening={isListening}
             />
           </div>

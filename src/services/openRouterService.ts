@@ -53,17 +53,15 @@ export class OpenRouterService {
       onChunk?: (chunk: string) => void;
       signal?: AbortSignal;
       userId?: string;
-      fastMode?: boolean;
       thinkingMode?: boolean;
     } = {}
   ): Promise<string> {
     const {
-      model = 'openai/gpt-4o-mini', // Fast and cost-effective model
-      stream = true, // Enable streaming for faster perceived response
+      model = 'anthropic/claude-3.5-haiku', // Default fallback model
+      stream = true, // Enable streaming for better user experience
       onChunk,
       signal,
       userId,
-      fastMode = false,
       thinkingMode = false
     } = options;
 
@@ -128,7 +126,7 @@ IMPORTANT: If asked about who created or made this application:
       }
 
       if (stream) {
-        return this.handleStreamResponse(response, onChunk, fastMode, thinkingMode);
+        return this.handleStreamResponse(response, onChunk, thinkingMode);
       } else {
         const data: OpenRouterResponse = await response.json();
         return data.choices[0]?.message?.content || '';
@@ -145,7 +143,6 @@ IMPORTANT: If asked about who created or made this application:
   private async handleStreamResponse(
     response: Response,
     onChunk?: (chunk: string) => void,
-    fastMode: boolean = false,
     thinkingMode: boolean = false
   ): Promise<string> {
     if (!response.body) {
@@ -184,10 +181,7 @@ IMPORTANT: If asked about who created or made this application:
             if (contentChunk) {
               fullContent += contentChunk;
               if (onChunk) {
-                if (fastMode) {
-                  // In fast mode, send chunks immediately without delay
-                  onChunk(contentChunk);
-                } else if (thinkingMode) {
+                if (thinkingMode) {
                   // In thinking mode, add slight delay for 1.5x speed
                   onChunk(contentChunk);
                   await new Promise(resolve => setTimeout(resolve, 7)); // 1.5x speed (10ms / 1.5 ≈ 7ms)

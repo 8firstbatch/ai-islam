@@ -36,7 +36,6 @@ export class GoogleAIService {
       stream?: boolean;
       onChunk?: (chunk: string) => void;
       signal?: AbortSignal;
-      fastMode?: boolean;
       thinkingMode?: boolean;
       retryCount?: number;
     } = {}
@@ -46,7 +45,6 @@ export class GoogleAIService {
       stream = false,
       onChunk,
       signal,
-      fastMode = false,
       thinkingMode = false,
       retryCount = 0
     } = options;
@@ -152,9 +150,7 @@ IMPORTANT: If asked about who created or made this application:
         // Determine streaming speed based on mode
         let streamingDelay = 50; // Default speed
         
-        if (fastMode) {
-          streamingDelay = 12; // 4x faster (50ms / 4 ≈ 12ms)
-        } else if (thinkingMode) {
+        if (thinkingMode) {
           streamingDelay = 33; // 1.5x faster (50ms / 1.5 ≈ 33ms)
         }
         
