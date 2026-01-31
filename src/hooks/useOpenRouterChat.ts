@@ -199,9 +199,9 @@ export const useOpenRouterChat = () => {
       const userSettings = await loadUserSettings(user?.id || '');
       const selectedModel = userSettings?.ai_model || "google/gemini-2.5-flash";
 
-      // Use appropriate AI service based on selected model
+      // Use appropriate AI service based on selected model - optimized for speed
       if (selectedModel === "google/gemini-2.5-flash") {
-        // Use Google AI service for Thinking model
+        // Use Google AI service - fastest option
         await googleAIService.sendMessage(
           chatMessages,
           {
@@ -211,12 +211,12 @@ export const useOpenRouterChat = () => {
             signal: controller.signal,
           }
         );
-      } else if (selectedModel === "google/gemini-2.5-pro") {
-        // Use OpenRouter service for Pro model with Pro API key
+      } else if (selectedModel === "openai/gpt-4o-mini") {
+        // Use OpenRouter with fast model
         await openRouterService.sendMessage(
           chatMessages,
           {
-            model: 'google/gemini-2.5-pro',
+            model: 'openai/gpt-4o-mini', // Fast and efficient
             stream: true,
             onChunk: updateAssistant,
             signal: controller.signal,
@@ -224,11 +224,11 @@ export const useOpenRouterChat = () => {
           }
         );
       } else {
-        // Use OpenRouter service for other models
+        // Default to fastest available model
         await openRouterService.sendMessage(
           chatMessages,
           {
-            model: 'openai/gpt-4o-mini',
+            model: 'openai/gpt-4o-mini', // Prioritize speed
             stream: true,
             onChunk: updateAssistant,
             signal: controller.signal,

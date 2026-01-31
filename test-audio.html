@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quran Audio Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .audio-test {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .status {
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .success { background-color: #d4edda; color: #155724; }
+        .error { background-color: #f8d7da; color: #721c24; }
+        .loading { background-color: #fff3cd; color: #856404; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #6c757d;
+            cursor: not-allowed;
+        }
+        audio {
+            width: 100%;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🎵 Quran Audio Sources Test</h1>
+    <p>This page tests various Quran audio sources to verify they're working correctly.</p>
+
+    <div class="test-section">
+        <h2>🔊 Surah Al-Fatihah (1) - Mishary Al-Afasy</h2>
+        <div id="surah-tests"></div>
+        <button onclick="testAllSurahSources()">Test All Surah Sources</button>
+        <button onclick="stopAllAudio()">Stop All Audio</button>
+    </div>
+
+    <div class="test-section">
+        <h2>📖 Juz 1 - Mishary Al-Afasy</h2>
+        <div id="juz-tests"></div>
+        <button onclick="testAllJuzSources()">Test All Juz Sources</button>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Test Results Summary</h2>
+        <div id="summary"></div>
+    </div>
+
+    <script>
+        const reciterFolder = "mishary_rashid_alafasy";
+        const surahNum = "001";
+        const surahNumInt = 1;
+        const juzNum = "01";
+        const juzNum3 = "001";
+
+        // Surah audio sources (same as in QuranReciting.tsx)
+        const surahSources = [
+            // Most reliable sources first
+            `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${surahNumInt}.mp3`,
+            `https://cdn.islamic.network/quran/audio/64/ar.alafasy/${surahNumInt}.mp3`,
+            `https://download.quranicaudio.com/quran/mishary_rashid_alafasy/${surahNum}.mp3`,
+            `https://server8.mp3quran.net/afs/mishary_rashid_alafasy/${surahNum}.mp3`,
+            `https://server6.mp3quran.net/qtm/mishary_rashid_alafasy/${surahNum}.mp3`,
+            // Try with actual reciter folder
+            `https://cdn.islamic.network/quran/audio/128/${reciterFolder}/${surahNumInt}.mp3`,
+            `https://cdn.islamic.network/quran/audio/64/${reciterFolder}/${surahNumInt}.mp3`,
+            `https://download.quranicaudio.com/quran/${reciterFolder}/${surahNum}.mp3`,
+            `https://server8.mp3quran.net/afs/${reciterFolder}/${surahNum}.mp3`,
+            `https://server6.mp3quran.net/qtm/${reciterFolder}/${surahNum}.mp3`,
+            `https://audio.qurancentral.com/download/${reciterFolder}/${surahNum}.mp3`,
+            `https://cdn.alquran.cloud/media/audio/surah/${reciterFolder}/${surahNumInt}`,
+        ];
+
+        // Juz audio sources (same as in QuranReciting.tsx)
+        const juzSources = [
+            `https://download.quranicaudio.com/quran/${reciterFolder}/Juz${juzNum}.mp3`,
+            `https://download.quranicaudio.com/quran/${reciterFolder}/Para${juzNum3}.mp3`,
+            `https://download.quranicaudio.com/quran/${reciterFolder}/Para${juzNum}.mp3`,
+            `https://server8.mp3quran.net/afs/${reciterFolder}/Para${juzNum3}.mp3`,
+            `https://server6.mp3quran.net/qtm/${reciterFolder}/Para${juzNum3}.mp3`,
+            `https://server8.mp3quran.net/afs/${reciterFolder}/Juz${juzNum}.mp3`,
+            `https://audio.qurancentral.com/download/${reciterFolder}/Juz${juzNum}.mp3`,
+            `https://audio.qurancentral.com/download/${reciterFolder}/Para${juzNum}.mp3`,
+        ];
+
+        let testResults = { working: 0, failed: 0 };
+
+        function createAudioTest(url, container, type) {
+            const div = document.createElement('div');
+            div.className = 'audio-test';
+            div.innerHTML = `
+                <div>
+                    <strong>${type} Source ${container.children.length + 1}:</strong> 
+                    <code>${url}</code>
+                    <span class="status loading" id="status-${container.children.length}">Testing...</span>
+                </div>
+                <audio controls preload="none" id="audio-${container.children.length}">
+                    <source src="${url}" type="audio/mpeg">
+                </audio>
+            `;
+            container.appendChild(div);
+
+            const audio = div.querySelector('audio');
+            const status = div.querySelector('.status');
+            const audioId = container.children.length - 1;
+
+            // Test if audio can load
+            audio.addEventListener('loadeddata', () => {
+                status.textContent = '✅ Working';
+                status.className = 'status success';
+                testResults.working++;
+                updateSummary();
+            });
+
+            audio.addEventListener('error', () => {
+                status.textContent = '❌ Failed';
+                status.className = 'status error';
+                testResults.failed++;
+                updateSummary();
+            });
+
+            audio.addEventListener('loadstart', () => {
+                status.textContent = '⏳ Loading...';
+                status.className = 'status loading';
+            });
+
+            // Start loading
+            audio.load();
+        }
+
+        function testAllSurahSources() {
+            const container = document.getElementById('surah-tests');
+            container.innerHTML = '';
+            testResults = { working: 0, failed: 0 };
+            
+            surahSources.forEach(url => {
+                createAudioTest(url, container, 'Surah');
+            });
+        }
+
+        function testAllJuzSources() {
+            const container = document.getElementById('juz-tests');
+            container.innerHTML = '';
+            
+            juzSources.forEach(url => {
+                createAudioTest(url, container, 'Juz');
+            });
+        }
+
+        function stopAllAudio() {
+            document.querySelectorAll('audio').forEach(audio => {
+                audio.pause();
+                audio.currentTime = 0;
+            });
+        }
+
+        function updateSummary() {
+            const summary = document.getElementById('summary');
+            const total = testResults.working + testResults.failed;
+            const percentage = total > 0 ? Math.round((testResults.working / total) * 100) : 0;
+            
+            summary.innerHTML = `
+                <p><strong>Working Sources:</strong> ${testResults.working}</p>
+                <p><strong>Failed Sources:</strong> ${testResults.failed}</p>
+                <p><strong>Success Rate:</strong> ${percentage}%</p>
+                ${testResults.working > 0 ? '<p style="color: green;">✅ At least one source is working!</p>' : ''}
+                ${testResults.working === 0 && testResults.failed > 0 ? '<p style="color: red;">❌ No sources are working. Check your internet connection.</p>' : ''}
+            `;
+        }
+
+        // Auto-start testing when page loads
+        window.addEventListener('load', () => {
+            testAllSurahSources();
+            setTimeout(() => {
+                testAllJuzSources();
+            }, 2000);
+        });
+    </script>
+</body>
+</html>

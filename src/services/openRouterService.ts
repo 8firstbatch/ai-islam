@@ -56,8 +56,8 @@ export class OpenRouterService {
     } = {}
   ): Promise<string> {
     const {
-      model = 'openai/gpt-4o-mini', // Default to a cost-effective model
-      stream = true,
+      model = 'openai/gpt-4o-mini', // Fast and cost-effective model
+      stream = true, // Enable streaming for faster perceived response
       onChunk,
       signal,
       userId
@@ -69,35 +69,10 @@ export class OpenRouterService {
       throw new Error('OpenRouter API key not configured. Please add VITE_OPENROUTER_API_KEY to your .env file');
     }
 
-    // Add Islamic context to the system message
+    // Optimized Islamic context - shorter for faster processing
     const systemMessage: OpenRouterMessage = {
       role: 'system',
-      content: `You are an Islamic AI assistant with deep knowledge of Islam, Quran, Hadith, Islamic jurisprudence (Fiqh), and Islamic history. 
-
-Your responses should be:
-- Rooted in authentic Islamic teachings from Quran and Sunnah
-- Respectful and compassionate
-- Scholarly yet accessible
-- Include relevant Quranic verses or Hadith when appropriate
-- Acknowledge when you're uncertain and suggest consulting Islamic scholars
-- Avoid giving fatwa (religious rulings) on complex matters - instead guide users to qualified scholars
-- Automatically detect the user's language and respond in the same language they used
-
-When discussing Islamic topics:
-- Cite sources when possible (Quran chapter:verse, Hadith collections)
-- Present different scholarly opinions when they exist
-- Be sensitive to different schools of Islamic thought
-- Encourage seeking knowledge and spiritual growth
-
-Language Detection:
-- Automatically detect if the user is writing in English, Arabic, Malayalam, or Manglish (Malayalam-English mix)
-- Respond in the same language the user used in their message
-- For Arabic: Use proper Arabic script (العربية)
-- For Malayalam: Use Malayalam script (മലയാളം)
-- For Manglish: Use natural Malayalam-English mix with Malayalam words in English script
-- For English: Use clear, proper English
-
-For non-Islamic questions, provide helpful responses while maintaining Islamic values and ethics.`
+      content: `You are an Islamic AI assistant. Provide authentic Islamic guidance from Quran and Sunnah. Be concise, respectful, and cite sources when possible. Respond in the user's language.`
     };
 
     const requestMessages = [systemMessage, ...messages];
@@ -116,7 +91,8 @@ For non-Islamic questions, provide helpful responses while maintaining Islamic v
           messages: requestMessages,
           stream,
           temperature: 0.7,
-          max_tokens: 2000
+          max_tokens: 1500, // Reduced for faster responses
+          top_p: 0.9, // Optimize for speed
         }),
         signal
       });

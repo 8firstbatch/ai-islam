@@ -217,30 +217,32 @@ export const ChatInput = ({ onSend, onStop, onOpenTools, selectedTool, onRemoveT
             onClick={input.trim() || selectedImages.length > 0 || selectedTool ? (isLoading ? onStop : handleSend) : onMicrophoneClick}
             disabled={isLoading && !(input.trim() || selectedImages.length > 0 || selectedTool)}
             size="icon"
-            className={`h-[44px] w-[44px] sm:h-[52px] sm:w-[52px] rounded-2xl sm:rounded-3xl transition-all duration-300 shadow-soft ${
+            className={`h-[44px] w-[44px] sm:h-[52px] sm:w-[52px] rounded-2xl sm:rounded-3xl transition-all duration-300 shadow-soft button-transition ${
               input.trim() || selectedImages.length > 0 || selectedTool
                 ? isLoading 
-                  ? 'bg-red-500 text-white' 
-                  : 'bg-gradient-emerald animate-glow-pulse'
+                  ? 'bg-red-500 hover:bg-red-600 text-white animate-stop-button-pulse' 
+                  : 'bg-gradient-emerald hover:opacity-90 animate-glow-pulse'
                 : isListening 
                   ? 'bg-red-500 text-white animate-pulse' 
-                  : 'bg-muted text-muted-foreground'
+                  : 'bg-muted hover:bg-muted/80 text-muted-foreground'
             }`}
             title={
               input.trim() || selectedImages.length > 0 || selectedTool
-                ? isLoading ? "Stop generation" : "Send message"
+                ? isLoading ? "Stop AI response" : "Send message"
                 : isListening ? "Listening... Click to stop" : "Voice Input"
             }
           >
-            {input.trim() || selectedImages.length > 0 || selectedTool ? (
-              isLoading ? (
-                <Square className="w-4 h-4 sm:w-5 sm:h-5" />
+            <div className={isLoading && (input.trim() || selectedImages.length > 0 || selectedTool) ? 'animate-button-morph' : ''}>
+              {input.trim() || selectedImages.length > 0 || selectedTool ? (
+                isLoading ? (
+                  <Square className="w-4 h-4 sm:w-5 sm:h-5 fill-current" />
+                ) : (
+                  <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+                )
               ) : (
-                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
-              )
-            ) : (
-              <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
-            )}
+                <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
+              )}
+            </div>
           </Button>
         </div>
       </div>

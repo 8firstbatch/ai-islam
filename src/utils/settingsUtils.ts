@@ -4,6 +4,7 @@ export interface UserSettings {
   ai_model: string;
   ai_response_style: string;
   is_pro_enabled?: boolean;
+  response_speed?: 'fastest' | 'balanced' | 'detailed'; // New speed setting
 }
 
 export const loadUserSettings = async (userId: string): Promise<UserSettings | null> => {
@@ -36,7 +37,8 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
         return {
           ai_model: "google/gemini-2.5-flash",
           ai_response_style: "balanced",
-          is_pro_enabled: false
+          is_pro_enabled: false,
+          response_speed: "fastest" // Default to fastest
         };
       }
       
@@ -67,11 +69,13 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
     return data ? {
       ai_model: data.ai_model || "google/gemini-2.5-flash",
       ai_response_style: data.ai_response_style || "balanced",
-      is_pro_enabled: false // Default to false since column doesn't exist
+      is_pro_enabled: false, // Default to false since column doesn't exist
+      response_speed: "fastest" // Default to fastest for speed
     } : {
       ai_model: "google/gemini-2.5-flash",
       ai_response_style: "balanced",
-      is_pro_enabled: false
+      is_pro_enabled: false,
+      response_speed: "fastest"
     };
   } catch (error) {
     console.error('Unexpected error loading settings:', error);

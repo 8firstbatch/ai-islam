@@ -35,21 +35,21 @@ interface Reciter {
   status?: 'working' | 'fallback' | 'unavailable';
 }
 
-// Available Quran reciters
+// Available Quran reciters with correct folder names for multiple audio sources
 const availableReciters: Reciter[] = [
-  { id: "alafasy", name: "Mishary Rashid Al-Afasy", arabicName: "مشاري راشد العفاسي", folder: "Alafasy_128kbps", bitrate: "128kbps" },
-  { id: "husary", name: "Mahmoud Khalil Al-Husary", arabicName: "محمود خليل الحصري", folder: "Husary_128kbps", bitrate: "128kbps" },
-  { id: "sudais", name: "Abdul Rahman Al-Sudais", arabicName: "عبد الرحمن السديس", folder: "Abdurrahmaan_As-Sudais_192kbps", bitrate: "192kbps" },
-  { id: "shuraim", name: "Saud Al-Shuraim", arabicName: "سعود الشريم", folder: "Saood_ash-Shuraym_128kbps", bitrate: "128kbps" },
-  { id: "maher", name: "Maher Al-Muaiqly", arabicName: "ماهر المعيقلي", folder: "MaherAlMuaiqly128kbps", bitrate: "128kbps" },
-  { id: "minshawi", name: "Mohamed Siddiq Al-Minshawi", arabicName: "محمد صديق المنشاوي", folder: "Minshawy_Murattal_128kbps", bitrate: "128kbps" },
-  { id: "ajmi", name: "Ahmed ibn Ali Al-Ajmi", arabicName: "أحمد بن علي العجمي", folder: "ahmed_ibn_ali_al_ajamy_128kbps", bitrate: "128kbps" },
-  { id: "ghamdi", name: "Saad Al-Ghamdi", arabicName: "سعد الغامدي", folder: "Ghamadi_40kbps", bitrate: "40kbps" },
-  { id: "basfar", name: "Abdullah Basfar", arabicName: "عبد الله بصفر", folder: "Abdullah_Basfar_192kbps", bitrate: "192kbps" },
-  { id: "rifai", name: "Hani Ar-Rifai", arabicName: "هاني الرفاعي", folder: "Hani_Rifai_192kbps", bitrate: "192kbps" },
-  { id: "abdulbasit", name: "Abdul Basit Abdul Samad", arabicName: "عبد الباسط عبد الصمد", folder: "Abdul_Basit_Murattal_192kbps", bitrate: "192kbps" },
-  { id: "hudhaify", name: "Ali Al-Hudhaify", arabicName: "علي الحذيفي", folder: "Hudhaify_128kbps", bitrate: "128kbps" },
-  { id: "bukhatir", name: "Salah Bukhatir", arabicName: "صلاح بخاطر", folder: "Salaah_AbdulRahman_Bukhatir_128kbps", bitrate: "128kbps" }
+  { id: "alafasy", name: "Mishary Rashid Al-Afasy", arabicName: "مشاري راشد العفاسي", folder: "mishary_rashid_alafasy", bitrate: "128kbps" },
+  { id: "husary", name: "Mahmoud Khalil Al-Husary", arabicName: "محمود خليل الحصري", folder: "mahmoud_khalil_al-hussary", bitrate: "128kbps" },
+  { id: "sudais", name: "Abdul Rahman Al-Sudais", arabicName: "عبد الرحمن السديس", folder: "abdurrahmaan_as-sudais", bitrate: "192kbps" },
+  { id: "shuraim", name: "Saud Al-Shuraim", arabicName: "سعود الشريم", folder: "saood_ash-shuraym", bitrate: "128kbps" },
+  { id: "maher", name: "Maher Al-Muaiqly", arabicName: "ماهر المعيقلي", folder: "maher_al_mueaqly", bitrate: "128kbps" },
+  { id: "minshawi", name: "Mohamed Siddiq Al-Minshawi", arabicName: "محمد صديق المنشاوي", folder: "muhammad_siddeeq_al-minshawee", bitrate: "128kbps" },
+  { id: "ajmi", name: "Ahmed ibn Ali Al-Ajmi", arabicName: "أحمد بن علي العجمي", folder: "ahmed_ibn_ali_al-ajamy", bitrate: "128kbps" },
+  { id: "ghamdi", name: "Saad Al-Ghamdi", arabicName: "سعد الغامدي", folder: "sa_d_al-ghaamidi", bitrate: "128kbps" },
+  { id: "basfar", name: "Abdullah Basfar", arabicName: "عبد الله بصفر", folder: "abdullah_basfar", bitrate: "192kbps" },
+  { id: "rifai", name: "Hani Ar-Rifai", arabicName: "هاني الرفاعي", folder: "hani_ar-rifai", bitrate: "192kbps" },
+  { id: "abdulbasit", name: "Abdul Basit Abdul Samad", arabicName: "عبد الباسط عبد الصمد", folder: "abdul_basit_murattal", bitrate: "192kbps" },
+  { id: "hudhaify", name: "Ali Al-Hudhaify", arabicName: "علي الحذيفي", folder: "hudhaify", bitrate: "128kbps" },
+  { id: "bukhatir", name: "Salah Bukhatir", arabicName: "صلاح بخاطر", folder: "salaah_abdulrahman_bukhatir", bitrate: "128kbps" }
 ];
 
 // Available translations in different languages
@@ -105,7 +105,7 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const { toast } = useToast();
 
-  // Test reciter availability on component mount
+  // Test reciter availability on component mount with enhanced testing
   useEffect(() => {
     const testReciterAvailability = async () => {
       // Test with Al-Fatiha (1:1) as it's available for most reciters
@@ -114,28 +114,49 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
       
       for (const reciter of availableReciters) {
         try {
-          const testUrl = `https://everyayah.com/data/${reciter.folder}/${testSurah}${testAyah}.mp3`;
-          const response = await fetch(testUrl, { method: 'HEAD' });
+          // Test multiple sources for better reliability
+          const testSources = [
+            `https://everyayah.com/data/${reciter.folder}/${testSurah}${testAyah}.mp3`,
+            `https://cdn.islamic.network/quran/audio/128/${reciter.folder}/1/1.mp3`,
+            `https://server8.mp3quran.net/afs/${reciter.folder}/${testSurah}${testAyah}.mp3`,
+          ];
           
-          if (response.ok) {
-            setReciterStatus(prev => ({ ...prev, [reciter.id]: 'working' }));
-          } else {
-            // Try fallback
-            const fallbackFolder = reciter.folder.replace('_128kbps', '_64kbps').replace('_192kbps', '_64kbps');
-            if (fallbackFolder !== reciter.folder) {
-              const fallbackUrl = `https://everyayah.com/data/${fallbackFolder}/${testSurah}${testAyah}.mp3`;
-              const fallbackResponse = await fetch(fallbackUrl, { method: 'HEAD' });
+          let reciterWorking = false;
+          let usingFallback = false;
+          
+          for (let i = 0; i < testSources.length; i++) {
+            try {
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
               
-              if (fallbackResponse.ok) {
-                setReciterStatus(prev => ({ ...prev, [reciter.id]: 'fallback' }));
-              } else {
-                setReciterStatus(prev => ({ ...prev, [reciter.id]: 'unavailable' }));
+              const response = await fetch(testSources[i], { 
+                method: 'HEAD',
+                signal: controller.signal
+              });
+              
+              clearTimeout(timeoutId);
+              
+              if (response.ok) {
+                reciterWorking = true;
+                if (i > 0) usingFallback = true;
+                break;
               }
-            } else {
-              setReciterStatus(prev => ({ ...prev, [reciter.id]: 'unavailable' }));
+            } catch (error) {
+              console.log(`Test failed for ${reciter.name} source ${i + 1}:`, error);
+              continue;
             }
           }
-        } catch {
+          
+          if (reciterWorking) {
+            setReciterStatus(prev => ({ 
+              ...prev, 
+              [reciter.id]: usingFallback ? 'fallback' : 'working' 
+            }));
+          } else {
+            setReciterStatus(prev => ({ ...prev, [reciter.id]: 'unavailable' }));
+          }
+        } catch (error) {
+          console.log(`Overall test failed for ${reciter.name}:`, error);
           setReciterStatus(prev => ({ ...prev, [reciter.id]: 'unavailable' }));
         }
       }
@@ -225,75 +246,148 @@ export const QuranSearch = ({ isOpen, onClose, onInsertVerse }: QuranSearchProps
       const surahNum = String(verse.surah.number).padStart(3, "0");
       const ayahNum = String(verse.number).padStart(3, "0");
       
-      // Construct audio URL based on selected reciter
-      const audioUrl = `https://everyayah.com/data/${reciter.folder}/${surahNum}${ayahNum}.mp3`;
+      // Enhanced audio sources with multiple fallbacks (similar to QuranReciting)
+      const audioSources = [
+        // Primary source - EveryAyah.com
+        `https://everyayah.com/data/${reciter.folder}/${surahNum}${ayahNum}.mp3`,
+        // QuranicAudio.com alternative
+        `https://quranicaudio.com/files/audio/${reciter.folder}/${surahNum}${ayahNum}.mp3`,
+        // Islamic.network CDN - very reliable
+        `https://cdn.islamic.network/quran/audio/128/${reciter.folder}/${verse.surah.number}/${verse.number}.mp3`,
+        `https://cdn.islamic.network/quran/audio/64/${reciter.folder}/${verse.surah.number}/${verse.number}.mp3`,
+        // MP3Quran.net alternatives
+        `https://server8.mp3quran.net/afs/${reciter.folder}/${surahNum}${ayahNum}.mp3`,
+        `https://server6.mp3quran.net/qtm/${reciter.folder}/${surahNum}${ayahNum}.mp3`,
+        // Backup servers
+        `https://audio.qurancentral.com/download/${reciter.folder}/${surahNum}${ayahNum}.mp3`,
+        // Fallback with different folder naming
+        `https://download.quranicaudio.com/quran/${reciter.folder.replace(/_/g, '-')}/${surahNum}${ayahNum}.mp3`,
+      ];
 
-      const audio = new Audio(audioUrl);
-      audioRef.current = audio;
-
-      audio.onloadeddata = () => {
-        setLoadingAudio(null);
-        setPlayingAudio(verseKey);
-        setReciterStatus(prev => ({ ...prev, [selectedReciter]: 'working' }));
-        audio.play();
-      };
-
-      audio.onended = () => {
-        setPlayingAudio(null);
-      };
-
-      audio.onerror = () => {
-        setLoadingAudio(null);
-        
-        // Try fallback with 64kbps version if 128kbps/192kbps fails
-        const fallbackFolder = reciter.folder.replace('_128kbps', '_64kbps').replace('_192kbps', '_64kbps');
-        
-        if (fallbackFolder !== reciter.folder) {
-          // Try fallback
-          const fallbackUrl = `https://everyayah.com/data/${fallbackFolder}/${surahNum}${ayahNum}.mp3`;
-          const fallbackAudio = new Audio(fallbackUrl);
-          audioRef.current = fallbackAudio;
-          
-          fallbackAudio.onloadeddata = () => {
-            setPlayingAudio(verseKey);
-            fallbackAudio.play();
-            // Update status to fallback if it was working
-            setReciterStatus(prev => ({ ...prev, [selectedReciter]: 'fallback' }));
-          };
-          
-          fallbackAudio.onerror = () => {
-            setReciterStatus(prev => ({ ...prev, [selectedReciter]: 'unavailable' }));
-            toast({
-              title: "Audio Error",
-              description: `Recitation by ${reciter.name} is not available for this verse. Please try another reciter.`,
-              variant: "destructive",
-            });
-          };
-          
-          fallbackAudio.onended = () => {
-            setPlayingAudio(null);
-          };
-          
-          fallbackAudio.load();
-        } else {
-          setReciterStatus(prev => ({ ...prev, [selectedReciter]: 'unavailable' }));
-          toast({
-            title: "Audio Error",
-            description: `Recitation by ${reciter.name} is not available for this verse. Please try another reciter.`,
-            variant: "destructive",
-          });
-        }
-      };
-
-      audio.load();
-    } catch {
+      await tryAudioSources(audioSources, verseKey, reciter);
+    } catch (error) {
       setLoadingAudio(null);
+      const reciter = availableReciters.find(r => r.id === selectedReciter) || availableReciters[0];
+      setReciterStatus(prev => ({ ...prev, [selectedReciter]: 'unavailable' }));
       toast({
-        title: "Error",
-        description: "Failed to play recitation.",
+        title: "Audio Error",
+        description: `Recitation by ${reciter.name} is not available for this verse. Please try another reciter.`,
         variant: "destructive",
       });
     }
+  };
+
+  // Enhanced audio loading with multiple source fallbacks
+  const tryAudioSources = async (audioSources: string[], verseKey: string, reciter: Reciter): Promise<void> => {
+    const tryAudioSource = async (sourceIndex: number): Promise<void> => {
+      if (sourceIndex >= audioSources.length) {
+        throw new Error("All audio sources failed");
+      }
+
+      const audioUrl = audioSources[sourceIndex];
+      console.log(`Trying audio source ${sourceIndex + 1}/${audioSources.length}:`, audioUrl);
+
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+
+      const audio = new Audio();
+      audio.crossOrigin = "anonymous"; // Enable CORS
+      audio.preload = "metadata";
+
+      return new Promise((resolve, reject) => {
+        let timeoutId: NodeJS.Timeout;
+        let resolved = false;
+
+        const cleanup = () => {
+          if (timeoutId) clearTimeout(timeoutId);
+          audio.onloadeddata = null;
+          audio.onerror = null;
+          audio.oncanplaythrough = null;
+          audio.onloadedmetadata = null;
+          audio.onabort = null;
+        };
+
+        const resolveOnce = () => {
+          if (resolved) return;
+          resolved = true;
+          cleanup();
+          audioRef.current = audio;
+          setLoadingAudio(null);
+          setPlayingAudio(verseKey);
+          setReciterStatus(prev => ({ 
+            ...prev, 
+            [selectedReciter]: sourceIndex === 0 ? 'working' : 'fallback' 
+          }));
+          
+          // Show success toast for first-time loads or fallback usage
+          if (sourceIndex > 0) {
+            toast({
+              title: "Audio Loaded",
+              description: `Playing verse recitation by ${reciter.name} (using backup source)`,
+              variant: "default",
+            });
+          }
+          
+          audio.play().catch(console.error);
+          resolve();
+        };
+
+        const tryNext = () => {
+          if (resolved) return;
+          resolved = true;
+          cleanup();
+          console.log(`Audio source ${sourceIndex + 1} failed, trying next...`);
+          tryAudioSource(sourceIndex + 1).then(resolve).catch(reject);
+        };
+
+        // Multiple success event handlers for better compatibility
+        audio.onloadeddata = () => {
+          if (audio.duration > 0) resolveOnce();
+        };
+        
+        audio.oncanplaythrough = resolveOnce;
+        
+        audio.onloadedmetadata = () => {
+          if (audio.duration > 0) resolveOnce();
+        };
+
+        // Error handlers
+        audio.onerror = (e) => {
+          console.log(`Audio error for source ${sourceIndex + 1}:`, e);
+          tryNext();
+        };
+
+        audio.onabort = () => {
+          console.log(`Audio aborted for source ${sourceIndex + 1}`);
+          tryNext();
+        };
+
+        audio.onended = () => {
+          setPlayingAudio(null);
+        };
+
+        // Timeout for loading (3 seconds for individual verses)
+        timeoutId = setTimeout(() => {
+          if (!resolved) {
+            console.log(`Audio source ${sourceIndex + 1} timeout (3s), trying next...`);
+            tryNext();
+          }
+        }, 3000);
+
+        // Start loading
+        try {
+          audio.src = audioUrl;
+          audio.load();
+        } catch (error) {
+          console.log(`Failed to load audio source ${sourceIndex + 1}:`, error);
+          tryNext();
+        }
+      });
+    };
+
+    await tryAudioSource(0);
   };
 
   const stopAudio = () => {

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Audio Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ccc; border-radius: 5px; }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        audio { width: 100%; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>🎵 Quick Audio Test</h1>
+    <p>Testing the most reliable Quran audio sources:</p>
+
+    <div class="test" id="test1">
+        <h3>Test 1: Islamic.network CDN (Alafasy - Al-Fatihah)</h3>
+        <p>Status: <span id="status1">Testing...</span></p>
+        <audio controls id="audio1">
+            <source src="https://cdn.islamic.network/quran/audio/128/ar.alafasy/1.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+
+    <div class="test" id="test2">
+        <h3>Test 2: Islamic.network CDN 64kbps (Alafasy - Al-Fatihah)</h3>
+        <p>Status: <span id="status2">Testing...</span></p>
+        <audio controls id="audio2">
+            <source src="https://cdn.islamic.network/quran/audio/64/ar.alafasy/1.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+
+    <div class="test" id="test3">
+        <h3>Test 3: MP3Quran.net Server (Alafasy - Al-Fatihah)</h3>
+        <p>Status: <span id="status3">Testing...</span></p>
+        <audio controls id="audio3">
+            <source src="https://server8.mp3quran.net/afs/mishary_rashid_alafasy/001.mp3" type="audio/mpeg">
+        </audio>
+    </div>
+
+    <script>
+        function testAudio(audioId, statusId, testId) {
+            const audio = document.getElementById(audioId);
+            const status = document.getElementById(statusId);
+            const testDiv = document.getElementById(testId);
+
+            audio.addEventListener('loadeddata', () => {
+                status.textContent = '✅ Working! Duration: ' + Math.round(audio.duration) + 's';
+                testDiv.className = 'test success';
+            });
+
+            audio.addEventListener('error', (e) => {
+                status.textContent = '❌ Failed to load';
+                testDiv.className = 'test error';
+                console.log('Audio error:', e);
+            });
+
+            audio.addEventListener('canplaythrough', () => {
+                if (status.textContent.includes('Testing')) {
+                    status.textContent = '✅ Ready to play! Duration: ' + Math.round(audio.duration) + 's';
+                    testDiv.className = 'test success';
+                }
+            });
+
+            // Start loading
+            audio.load();
+        }
+
+        // Test all audio sources
+        testAudio('audio1', 'status1', 'test1');
+        testAudio('audio2', 'status2', 'test2');
+        testAudio('audio3', 'status3', 'test3');
+
+        // Show results after 10 seconds
+        setTimeout(() => {
+            const workingTests = document.querySelectorAll('.test.success').length;
+            const totalTests = document.querySelectorAll('.test').length;
+            
+            if (workingTests > 0) {
+                document.body.insertAdjacentHTML('beforeend', 
+                    `<div style="background: #d4edda; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                        <h3>✅ Good News!</h3>
+                        <p>${workingTests} out of ${totalTests} audio sources are working. The QuranReciting component should work!</p>
+                    </div>`
+                );
+            } else {
+                document.body.insertAdjacentHTML('beforeend', 
+                    `<div style="background: #f8d7da; padding: 15px; margin: 20px 0; border-radius: 5px;">
+                        <h3>❌ Issue Detected</h3>
+                        <p>None of the audio sources are working. This might be due to:</p>
+                        <ul>
+                            <li>Network connectivity issues</li>
+                            <li>CORS restrictions</li>
+                            <li>Audio server downtime</li>
+                        </ul>
+                        <p>Try refreshing the page or checking your internet connection.</p>
+                    </div>`
+                );
+            }
+        }, 10000);
+    </script>
+</body>
+</html>

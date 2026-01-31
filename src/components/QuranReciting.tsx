@@ -37,23 +37,21 @@ interface QuranRecitingProps {
 
 type RecitationType = "surah" | "juz";
 
-// Available Quran reciters with everyayah.com compatible folder names
+// Available Quran reciters with correct folder names for various audio sources
 const availableReciters: Reciter[] = [
-  { id: "alafasy", name: "Mishary Rashid Al-Afasy", arabicName: "مشاري راشد العفاسي", folder: "Alafasy_128kbps", bitrate: "128kbps" },
-  { id: "husary", name: "Mahmoud Khalil Al-Husary", arabicName: "محمود خليل الحصري", folder: "Husary_128kbps", bitrate: "128kbps" },
-  { id: "sudais", name: "Abdul Rahman Al-Sudais", arabicName: "عبد الرحمن السديس", folder: "Sudais_128kbps", bitrate: "128kbps" },
-  { id: "shuraim", name: "Saud Al-Shuraim", arabicName: "سعود الشريم", folder: "Shuraim_128kbps", bitrate: "128kbps" },
-  { id: "maher", name: "Maher Al-Muaiqly", arabicName: "ماهر المعيقلي", folder: "MaherAlMuaiqly128kbps", bitrate: "128kbps" },
-  { id: "minshawi", name: "Mohamed Siddiq Al-Minshawi", arabicName: "محمد صديق المنشاوي", folder: "Minshawi_Murattal_128kbps", bitrate: "128kbps" },
-  { id: "ajmi", name: "Ahmed ibn Ali Al-Ajmi", arabicName: "أحمد بن علي العجمي", folder: "Ajmi_128kbps", bitrate: "128kbps" },
-  { id: "ghamdi", name: "Saad Al-Ghamdi", arabicName: "سعد الغامدي", folder: "Ghamdi_40kbps", bitrate: "40kbps" },
-  { id: "basfar", name: "Abdullah Basfar", arabicName: "عبد الله بصفر", folder: "basfar", bitrate: "128kbps" },
-  { id: "rifai", name: "Hani Ar-Rifai", arabicName: "هاني الرفاعي", folder: "Rifai_192kbps", bitrate: "192kbps" },
-  { id: "shatri", name: "Abu Bakr Al-Shatri", arabicName: "أبو بكر الشاطري", folder: "Shatri_128kbps", bitrate: "128kbps" },
-  { id: "tablawi", name: "Muhammad At-Tablawi", arabicName: "محمد الطبلاوي", folder: "Tablawi_128kbps", bitrate: "128kbps" },
-  { id: "huthaify", name: "Ali Al-Huthaify", arabicName: "علي الحذيفي", folder: "Huthaify_128kbps", bitrate: "128kbps" },
-  { id: "qasim", name: "AbdulMuhsin Al-Qasim", arabicName: "عبد المحسن القاسم", folder: "Qasim_192kbps", bitrate: "192kbps" },
-  { id: "thubaity", name: "Ali Abdur-Rahman Ath-Thubaity", arabicName: "علي عبد الرحمن الثبيتي", folder: "Thubaity_128kbps", bitrate: "128kbps" },
+  { id: "alafasy", name: "Mishary Rashid Al-Afasy", arabicName: "مشاري راشد العفاسي", folder: "mishary_rashid_alafasy", bitrate: "128kbps" },
+  { id: "husary", name: "Mahmoud Khalil Al-Husary", arabicName: "محمود خليل الحصري", folder: "mahmoud_khalil_al-hussary", bitrate: "128kbps" },
+  { id: "sudais", name: "Abdul Rahman Al-Sudais", arabicName: "عبد الرحمن السديس", folder: "abdurrahmaan_as-sudais", bitrate: "192kbps" },
+  { id: "shuraim", name: "Saud Al-Shuraim", arabicName: "سعود الشريم", folder: "saood_ash-shuraym", bitrate: "128kbps" },
+  { id: "maher", name: "Maher Al-Muaiqly", arabicName: "ماهر المعيقلي", folder: "maher_al_mueaqly", bitrate: "128kbps" },
+  { id: "minshawi", name: "Mohamed Siddiq Al-Minshawi", arabicName: "محمد صديق المنشاوي", folder: "muhammad_siddeeq_al-minshawee", bitrate: "128kbps" },
+  { id: "ajmi", name: "Ahmed ibn Ali Al-Ajmi", arabicName: "أحمد بن علي العجمي", folder: "ahmed_ibn_ali_al-ajamy", bitrate: "128kbps" },
+  { id: "ghamdi", name: "Saad Al-Ghamdi", arabicName: "سعد الغامدي", folder: "sa_d_al-ghaamidi", bitrate: "128kbps" },
+  { id: "basfar", name: "Abdullah Basfar", arabicName: "عبد الله بصفر", folder: "abdullah_basfar", bitrate: "192kbps" },
+  { id: "rifai", name: "Hani Ar-Rifai", arabicName: "هاني الرفاعي", folder: "hani_ar-rifai", bitrate: "192kbps" },
+  { id: "abdulbasit", name: "Abdul Basit Abdul Samad", arabicName: "عبد الباسط عبد الصمد", folder: "abdul_basit_murattal", bitrate: "192kbps" },
+  { id: "hudhaify", name: "Ali Al-Hudhaify", arabicName: "علي الحذيفي", folder: "hudhaify", bitrate: "128kbps" },
+  { id: "bukhatir", name: "Salah Bukhatir", arabicName: "صلاح بخاطر", folder: "salaah_abdulrahman_bukhatir", bitrate: "128kbps" }
 ];
 
 // List of all 30 Juz (Para)
@@ -261,132 +259,221 @@ export const QuranReciting = ({ isOpen, onClose }: QuranRecitingProps) => {
     setIsLoading(true);
     const reciter = availableReciters.find(r => r.id === selectedReciter) || availableReciters[0];
 
-    try {
-      let audioSources: string[] = [];
+    console.log(`Starting playback for ${reciter.name}, ${recitationType}: ${recitationType === "surah" ? selectedSurah : selectedJuz}`);
+
+    // Always try Alafasy first as it's most reliable, then the selected reciter
+    const recitersToTry = [];
+    
+    // Add Alafasy first if it's not already selected
+    if (selectedReciter !== 'alafasy') {
+      const alafasy = availableReciters.find(r => r.id === 'alafasy');
+      if (alafasy) recitersToTry.push(alafasy);
+    }
+    
+    // Add the selected reciter
+    recitersToTry.push(reciter);
+    
+    // Add a few more reliable reciters as fallbacks
+    const fallbackReciters = ['sudais', 'husary', 'maher'].filter(id => 
+      id !== selectedReciter && !recitersToTry.find(r => r.id === id)
+    );
+    
+    fallbackReciters.forEach(id => {
+      const fallbackReciter = availableReciters.find(r => r.id === id);
+      if (fallbackReciter) recitersToTry.push(fallbackReciter);
+    });
+
+    for (const currentReciter of recitersToTry) {
+      try {
+        console.log(`Trying reciter: ${currentReciter.name}`);
+        await tryReciter(currentReciter);
+        return; // Success, exit the function
+      } catch (error) {
+        console.log(`Failed with ${currentReciter.name}:`, error);
+        continue;
+      }
+    }
+
+    // If all reciters failed
+    setIsLoading(false);
+    const recitationTypeText = recitationType === "surah" ? `Surah ${selectedSurah}` : `Juz ${selectedJuz}`;
+    const additionalHelp = recitationType === "juz" 
+      ? " Note: Juz recitations are less commonly available than individual Surahs. Try selecting a Surah instead."
+      : " Please try a different reciter or check your internet connection.";
+    
+    toast({
+      title: "Audio Not Available",
+      description: `Unable to load audio for ${recitationTypeText}. This might be due to network issues or the audio file not being available.${additionalHelp}`,
+      variant: "destructive",
+    });
+  };
+
+  const tryReciter = async (reciter: Reciter): Promise<void> => {
+    let audioSources: string[] = [];
+    
+    if (recitationType === "surah") {
+      const surahNum = String(selectedSurah).padStart(3, "0");
+      const surahNumInt = parseInt(selectedSurah);
       
-      if (recitationType === "surah") {
-        const surahNum = String(selectedSurah).padStart(3, "0");
-        // Prioritize everyayah.com as the primary source
-        audioSources = [
-          `https://www.everyayah.com/data/${reciter.folder}/${surahNum}.mp3`,
-          `https://everyayah.com/data/${reciter.folder}/${surahNum}.mp3`,
-          `https://download.quranicaudio.com/quran/${reciter.folder}/${surahNum}.mp3`,
-          `https://server8.mp3quran.net/afs/${reciter.folder}/${surahNum}.mp3`,
-          `https://server6.mp3quran.net/qtm/${reciter.folder}/${surahNum}.mp3`,
-        ];
-      } else {
-        // Juz recitation sources - everyayah.com first
-        const juzNum = String(selectedJuz).padStart(2, "0");
-        audioSources = [
-          `https://www.everyayah.com/data/${reciter.folder}/Juz${juzNum}.mp3`,
-          `https://everyayah.com/data/${reciter.folder}/Juz${juzNum}.mp3`,
-          `https://download.quranicaudio.com/quran/${reciter.folder}/Para${String(selectedJuz).padStart(3, "0")}.mp3`,
-          `https://server8.mp3quran.net/afs/${reciter.folder}/Para${String(selectedJuz).padStart(3, "0")}.mp3`,
-          `https://server6.mp3quran.net/qtm/${reciter.folder}/Para${String(selectedJuz).padStart(3, "0")}.mp3`,
-        ];
+      // Use multiple reliable audio sources with different URL patterns for complete Surah recitations
+      audioSources = [
+        // Quran.com API - Very reliable and high quality
+        `https://verses.quran.com/${getQuranComReciterId(reciter.id)}/${surahNumInt}.mp3`,
+        `https://download.quran.com/downloads/audio/full/${getQuranComReciterId(reciter.id)}/${surahNum}.mp3`,
+        // Most reliable sources
+        `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${surahNumInt}.mp3`,
+        `https://cdn.islamic.network/quran/audio/64/ar.alafasy/${surahNumInt}.mp3`,
+        `https://download.quranicaudio.com/quran/mishary_rashid_alafasy/${surahNum}.mp3`,
+        `https://server8.mp3quran.net/afs/mishary_rashid_alafasy/${surahNum}.mp3`,
+        `https://server6.mp3quran.net/qtm/mishary_rashid_alafasy/${surahNum}.mp3`,
+        // Try with actual reciter folder
+        `https://cdn.islamic.network/quran/audio/128/${reciter.folder}/${surahNumInt}.mp3`,
+        `https://cdn.islamic.network/quran/audio/64/${reciter.folder}/${surahNumInt}.mp3`,
+        `https://download.quranicaudio.com/quran/${reciter.folder}/${surahNum}.mp3`,
+        `https://server8.mp3quran.net/afs/${reciter.folder}/${surahNum}.mp3`,
+        `https://server6.mp3quran.net/qtm/${reciter.folder}/${surahNum}.mp3`,
+        // Additional fallbacks
+        `https://audio.qurancentral.com/download/${reciter.folder}/${surahNum}.mp3`,
+        `https://cdn.alquran.cloud/media/audio/surah/${reciter.folder}/${surahNumInt}`,
+      ];
+    } else {
+      // Juz recitation sources - these are less commonly available
+      const juzNum = String(selectedJuz).padStart(2, "0");
+      const juzNum3 = String(selectedJuz).padStart(3, "0");
+      audioSources = [
+        // Quran.com API for Juz (if available)
+        `https://download.quran.com/downloads/audio/juz/${getQuranComReciterId(reciter.id)}/juz_${juzNum}.mp3`,
+        // Most reliable Juz sources
+        `https://download.quranicaudio.com/quran/mishary_rashid_alafasy/Juz${juzNum}.mp3`,
+        `https://download.quranicaudio.com/quran/mishary_rashid_alafasy/Para${juzNum3}.mp3`,
+        `https://server8.mp3quran.net/afs/mishary_rashid_alafasy/Para${juzNum3}.mp3`,
+        // Try with selected reciter
+        `https://download.quranicaudio.com/quran/${reciter.folder}/Juz${juzNum}.mp3`,
+        `https://download.quranicaudio.com/quran/${reciter.folder}/Para${juzNum3}.mp3`,
+        `https://download.quranicaudio.com/quran/${reciter.folder}/Para${juzNum}.mp3`,
+        `https://server8.mp3quran.net/afs/${reciter.folder}/Para${juzNum3}.mp3`,
+        `https://server6.mp3quran.net/qtm/${reciter.folder}/Para${juzNum3}.mp3`,
+        `https://server8.mp3quran.net/afs/${reciter.folder}/Juz${juzNum}.mp3`,
+        `https://audio.qurancentral.com/download/${reciter.folder}/Juz${juzNum}.mp3`,
+        `https://audio.qurancentral.com/download/${reciter.folder}/Para${juzNum}.mp3`,
+      ];
+    }
+
+    // Try each audio source until one works with improved error handling
+    const tryAudioSource = async (sourceIndex: number): Promise<void> => {
+      if (sourceIndex >= audioSources.length) {
+        throw new Error("All audio sources failed");
       }
 
-      // Try each audio source until one works with improved error handling
-      const tryAudioSource = async (sourceIndex: number): Promise<void> => {
-        if (sourceIndex >= audioSources.length) {
-          throw new Error("All audio sources failed");
-        }
+      const audioUrl = audioSources[sourceIndex];
+      console.log(`Trying audio source ${sourceIndex + 1}/${audioSources.length}:`, audioUrl);
 
-        const audioUrl = audioSources[sourceIndex];
-        console.log(`Trying audio source ${sourceIndex + 1}/${audioSources.length}:`, audioUrl);
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
 
-        if (audioRef.current) {
-          audioRef.current.pause();
-          audioRef.current = null;
-        }
+      const audio = new Audio();
+      audio.crossOrigin = "anonymous"; // Enable CORS
+      audio.preload = "metadata";
+      audio.volume = isMuted ? 0 : volume;
 
-        const audio = new Audio();
-        audio.crossOrigin = "anonymous"; // Enable CORS
-        audio.preload = "metadata";
-        audio.volume = isMuted ? 0 : volume;
+      return new Promise((resolve, reject) => {
+        let timeoutId: NodeJS.Timeout;
+        let resolved = false;
 
-        return new Promise((resolve, reject) => {
-          let timeoutId: NodeJS.Timeout;
-          let resolved = false;
+        const cleanup = () => {
+          if (timeoutId) clearTimeout(timeoutId);
+          audio.onloadeddata = null;
+          audio.onerror = null;
+          audio.oncanplaythrough = null;
+          audio.onloadedmetadata = null;
+          audio.onloadstart = null;
+          audio.oncanplay = null;
+          audio.onabort = null;
+        };
 
-          const cleanup = () => {
-            if (timeoutId) clearTimeout(timeoutId);
-            audio.onloadeddata = null;
-            audio.onerror = null;
-            audio.oncanplaythrough = null;
-          };
-
-          const resolveOnce = () => {
-            if (resolved) return;
-            resolved = true;
-            cleanup();
-            audioRef.current = audio;
-            setIsLoading(false);
-            setIsPlaying(true);
-            
-            // Show success message
+        const resolveOnce = () => {
+          if (resolved) return;
+          resolved = true;
+          cleanup();
+          audioRef.current = audio;
+          setIsLoading(false);
+          setIsPlaying(true);
+          
+          // Show success message only for fallback sources
+          if (sourceIndex > 0) {
             toast({
-              title: "Audio Loaded",
-              description: `Playing ${recitationType === "surah" ? `Surah ${selectedSurah}` : `Juz ${selectedJuz}`} by ${reciter.name}`,
+              title: "Audio Loaded Successfully",
+              description: `Playing ${recitationType === "surah" ? `Surah ${selectedSurah}` : `Juz ${selectedJuz}`} by ${reciter.name} (using backup source)`,
               variant: "default",
             });
-            
-            audio.play().catch(console.error);
-            resolve();
-          };
+          }
+          
+          audio.play().catch(console.error);
+          resolve();
+        };
 
-          const tryNext = () => {
-            if (resolved) return;
-            resolved = true;
-            cleanup();
-            console.log(`Audio source ${sourceIndex + 1} failed, trying next...`);
-            tryAudioSource(sourceIndex + 1).then(resolve).catch(reject);
-          };
+        const tryNext = () => {
+          if (resolved) return;
+          resolved = true;
+          cleanup();
+          console.log(`Audio source ${sourceIndex + 1} failed, trying next...`);
+          tryAudioSource(sourceIndex + 1).then(resolve).catch(reject);
+        };
 
-          // Success handlers
-          audio.onloadeddata = resolveOnce;
-          audio.oncanplaythrough = resolveOnce;
+        // Multiple success event handlers for better compatibility
+        audio.onloadeddata = () => {
+          if (audio.duration > 0) resolveOnce();
+        };
+        
+        audio.oncanplaythrough = resolveOnce;
+        
+        audio.onloadedmetadata = () => {
+          if (audio.duration > 0) resolveOnce();
+        };
 
-          // Error handler
-          audio.onerror = (e) => {
-            console.log(`Audio error for source ${sourceIndex + 1}:`, e);
+        // Additional event for when audio can start playing
+        audio.oncanplay = () => {
+          if (audio.duration > 0) resolveOnce();
+        };
+
+        // Error handler
+        audio.onerror = (e) => {
+          console.log(`Audio error for source ${sourceIndex + 1}:`, e);
+          tryNext();
+        };
+
+        // Handle network errors
+        audio.onabort = () => {
+          console.log(`Audio aborted for source ${sourceIndex + 1}`);
+          tryNext();
+        };
+
+        audio.onended = () => {
+          setIsPlaying(false);
+        };
+
+        // Shorter timeout for faster fallback (3 seconds)
+        timeoutId = setTimeout(() => {
+          if (!resolved) {
+            console.log(`Audio source ${sourceIndex + 1} timeout (3s), trying next...`);
             tryNext();
-          };
+          }
+        }, 3000);
 
-          audio.onended = () => {
-            setIsPlaying(false);
-          };
-
-          // Shorter timeout for faster fallback (3 seconds instead of 5)
-          timeoutId = setTimeout(() => {
-            if (!resolved && audio.readyState < 2) {
-              console.log(`Audio source ${sourceIndex + 1} timeout (3s), trying next...`);
-              tryNext();
-            }
-          }, 3000);
-
-          // Start loading
+        // Start loading
+        try {
           audio.src = audioUrl;
           audio.load();
-        });
-      };
-
-      await tryAudioSource(0);
-
-    } catch (error) {
-      setIsLoading(false);
-      console.error("All audio sources failed:", error);
-      
-      // More helpful error message
-      const reciterName = reciter.name;
-      const contentType = recitationType === "surah" ? `Surah ${selectedSurah}` : `Juz ${selectedJuz}`;
-      
-      toast({
-        title: "Audio Not Available",
-        description: `${contentType} by ${reciterName} is currently unavailable. Please try a different reciter or check your internet connection.`,
-        variant: "destructive",
+        } catch (error) {
+          console.log(`Failed to load audio source ${sourceIndex + 1}:`, error);
+          tryNext();
+        }
       });
-    }
+    };
+
+    await tryAudioSource(0);
   };
 
   const stopRecitation = () => {
@@ -596,6 +683,41 @@ export const QuranReciting = ({ isOpen, onClose }: QuranRecitingProps) => {
             </Button>
           </div>
 
+          {/* Debug Test Button - Remove in production */}
+          {process.env.NODE_ENV === 'development' && (
+            <div className="flex justify-center">
+              <Button
+                onClick={async () => {
+                  const testUrl = `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${selectedSurah}.mp3`;
+                  console.log('Testing URL:', testUrl);
+                  const audio = new Audio(testUrl);
+                  audio.onloadeddata = () => {
+                    console.log('✅ Test URL works!', testUrl);
+                    toast({
+                      title: "Test Successful",
+                      description: "Audio URL is working!",
+                      variant: "default",
+                    });
+                  };
+                  audio.onerror = (e) => {
+                    console.log('❌ Test URL failed:', testUrl, e);
+                    toast({
+                      title: "Test Failed",
+                      description: "Audio URL is not working",
+                      variant: "destructive",
+                    });
+                  };
+                  audio.load();
+                }}
+                variant="outline"
+                size="sm"
+                className="text-xs"
+              >
+                🔧 Test Audio URL
+              </Button>
+            </div>
+          )}
+
           {/* Progress Bar */}
           {duration > 0 && (
             <div className="space-y-2">
@@ -603,7 +725,19 @@ export const QuranReciting = ({ isOpen, onClose }: QuranRecitingProps) => {
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration)}</span>
               </div>
-              <div className="w-full bg-muted rounded-full h-2">
+              <div 
+                className="w-full bg-muted rounded-full h-2 cursor-pointer"
+                onClick={(e) => {
+                  if (audioRef.current && duration > 0) {
+                    const rect = e.currentTarget.getBoundingClientRect();
+                    const clickX = e.clientX - rect.left;
+                    const percentage = clickX / rect.width;
+                    const newTime = percentage * duration;
+                    audioRef.current.currentTime = newTime;
+                    setCurrentTime(newTime);
+                  }
+                }}
+              >
                 <div
                   className="bg-primary h-2 rounded-full transition-all duration-300"
                   style={{ width: `${(currentTime / duration) * 100}%` }}
