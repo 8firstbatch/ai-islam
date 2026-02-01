@@ -219,7 +219,9 @@ export const ChatInput = ({ onSend, onOpenTools, selectedTool, onRemoveTool, isL
                 ? handleSend 
                 : isLoading
                   ? onStopGeneration
-                  : onMicrophoneClick
+                  : isListening
+                    ? onMicrophoneClick // Stop listening when clicked while listening
+                    : onMicrophoneClick // Start listening when clicked while not listening
             }
             disabled={false}
             size="icon"
@@ -229,8 +231,8 @@ export const ChatInput = ({ onSend, onOpenTools, selectedTool, onRemoveTool, isL
                 : isLoading
                   ? 'bg-red-500 hover:bg-red-600 text-white animate-pulse'
                   : isListening 
-                    ? 'bg-red-500 text-white animate-pulse' 
-                    : 'bg-muted hover:bg-muted/80 text-muted-foreground'
+                    ? 'bg-red-500 text-white animate-pulse shadow-lg shadow-red-500/30' 
+                    : 'bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground'
             }`}
             title={
               (input.trim() || selectedImages.length > 0 || selectedTool)
@@ -238,8 +240,8 @@ export const ChatInput = ({ onSend, onOpenTools, selectedTool, onRemoveTool, isL
                 : isLoading
                   ? "Stop generation"
                   : isListening 
-                    ? "Listening... Click to stop" 
-                    : "Voice Input"
+                    ? "Stop listening (click to stop)" 
+                    : "Start voice input (click to speak)"
             }
           >
             {(input.trim() || selectedImages.length > 0 || selectedTool) ? (

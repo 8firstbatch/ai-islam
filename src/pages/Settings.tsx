@@ -530,17 +530,15 @@ const Settings = () => {
                             <SelectItem value="google/gemini-2.5-flash">Thinking</SelectItem>
                             <SelectItem value="google/gemini-2.5-pro">
                               <div className="flex items-center gap-2">
-                                <span>Pro Model</span>
+                                <span>Plus</span>
                                 <div className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full">
-                                  PRO
+                                  PLUS
                                 </div>
                               </div>
                             </SelectItem>
                           </SelectContent>
                         </Select>
-                        <p className="text-xs text-muted-foreground">
-                          Choose the AI model: Fast (GPT-4o Mini), Thinking (Gemini Flash), or Pro (Gemini Pro)
-                        </p>
+                        
                       </div>
 
                       <div className="space-y-2">

@@ -51,6 +51,7 @@ const Index = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [guestContinued, setGuestContinued] = useState(false);
   const [isListening, setIsListening] = useState(false);
+  const recognitionRef = useRef<any>(null);
 
   // Test Supabase connection on mount
   useEffect(() => {
@@ -107,10 +108,25 @@ const Index = () => {
     setSelectedTool(null);
   };
 
-  const handleMicrophoneClick = () => {
+  const handleMicrophoneClick = async () => {
+    // If currently listening, stop the recognition
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
     // Check if browser supports speech recognition
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      console.log("Speech recognition not supported in this browser");
+      alert("Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.");
+      return;
+    }
+
+    // Request microphone permission first
+    try {
+      await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (permissionError) {
+      console.error('Microphone permission denied:', permissionError);
+      alert("Microphone access is required for voice input. Please allow microphone access and try again.");
       return;
     }
 
@@ -118,66 +134,129 @@ const Index = () => {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
 
-    // Configure speech recognition
+    // Configure speech recognition with better settings
     recognition.continuous = false;
     recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
     recognition.lang = 'en-US'; // Default to English - AI will auto-detect and respond in appropriate language
 
     // Handle when speech recognition starts
     recognition.onstart = () => {
       setIsListening(true);
-      console.log('Speech recognition started - speak now');
+      console.log('🎤 Speech recognition started - speak now');
+      // Show a subtle notification that we're listening
+      const notification = document.createElement('div');
+      notification.id = 'voice-notification';
+      notification.className = 'fixed top-4 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-4 py-2 rounded-full shadow-lg z-50 animate-pulse';
+      notification.textContent = '🎤 Listening... Speak now';
+      document.body.appendChild(notification);
     };
 
     // Handle successful speech recognition
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
-      console.log('Voice input received:', transcript);
+      const confidence = event.results[0][0].confidence;
       
-      // Send the transcribed text as a message
-      if (transcript.trim()) {
+      console.log('🗣️ Voice input received:', transcript, 'Confidence:', confidence);
+      
+      // Remove listening notification
+      const notification = document.getElementById('voice-notification');
+      if (notification) {
+        notification.remove();
+      }
+      
+      // Send the transcribed text as a message if confidence is reasonable
+      if (transcript.trim() && confidence > 0.3) {
         handleSendMessage(transcript.trim());
+      } else if (transcript.trim()) {
+        // Still send if we have text, even with low confidence
+        handleSendMessage(transcript.trim());
+      } else {
+        console.log('No clear speech detected');
+        alert("No clear speech detected. Please try speaking again.");
       }
       setIsListening(false);
     };
 
-    // Handle speech recognition errors
+    // Handle speech recognition errors with better user feedback
     recognition.onerror = (event) => {
-      console.error('Speech recognition error:', event.error);
+      console.error('❌ Speech recognition error:', event.error);
       setIsListening(false);
       
-      let errorMessage = 'Voice recognition failed. ';
+      // Remove listening notification
+      const notification = document.getElementById('voice-notification');
+      if (notification) {
+        notification.remove();
+      }
+      
+      let errorMessage = '';
+      let shouldAlert = true;
       
       switch (event.error) {
         case 'no-speech':
-          errorMessage += 'No speech detected. Please try again.';
+          errorMessage = 'No speech detected. Please try again and speak clearly.';
           break;
         case 'audio-capture':
-          errorMessage += 'Microphone not accessible.';
+          errorMessage = 'Microphone not accessible. Please check your microphone connection.';
           break;
         case 'not-allowed':
-          errorMessage += 'Microphone permission denied.';
+          errorMessage = 'Microphone permission denied. Please allow microphone access in your browser settings.';
+          break;
+        case 'network':
+          errorMessage = 'Network error occurred. Please check your internet connection.';
+          break;
+        case 'service-not-allowed':
+          errorMessage = 'Speech recognition service not allowed. Please try again.';
+          break;
+        case 'bad-grammar':
+          errorMessage = 'Speech recognition grammar error. Please try again.';
+          shouldAlert = false; // Don't alert for grammar errors
+          break;
+        case 'language-not-supported':
+          errorMessage = 'Language not supported. Switching to English.';
           break;
         default:
-          errorMessage += 'Please try again.';
+          errorMessage = `Voice recognition failed (${event.error}). Please try again.`;
       }
       
+      if (shouldAlert && errorMessage) {
+        alert(errorMessage);
+      }
       console.log(errorMessage);
     };
 
     // Handle when speech recognition ends
     recognition.onend = () => {
       setIsListening(false);
-      console.log('Speech recognition ended');
+      console.log('🔇 Speech recognition ended');
+      
+      // Remove listening notification
+      const notification = document.getElementById('voice-notification');
+      if (notification) {
+        notification.remove();
+      }
     };
 
-    // Start speech recognition
+    // Handle speech recognition abort
+    recognition.onabort = () => {
+      setIsListening(false);
+      console.log('🚫 Speech recognition aborted');
+      
+      // Remove listening notification
+      const notification = document.getElementById('voice-notification');
+      if (notification) {
+        notification.remove();
+      }
+    };
+
+    // Start speech recognition with error handling
     try {
       recognition.start();
-      console.log('Starting speech recognition...');
+      console.log('🚀 Starting speech recognition...');
     } catch (error) {
-      console.error('Failed to start speech recognition:', error);
+      console.error('❌ Failed to start speech recognition:', error);
       setIsListening(false);
+      alert("Failed to start voice recognition. Please try again.");
     }
   };
 
