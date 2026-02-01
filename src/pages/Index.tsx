@@ -394,7 +394,7 @@ const Index = () => {
                           {/* AI thinking text with typewriter effect */}
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-sm text-emerald-600 font-medium animate-pulse">
-                              {searchMode ? "Searching the web" : "AI Islam is thinking"}
+                              {searchMode ? "Searching" : "AI Islam is thinking"}
                             </span>
                             <div className="flex gap-1">
                               <span className="text-emerald-500 animate-typing-cursor">.</span>
@@ -402,32 +402,6 @@ const Index = () => {
                               <span className="text-emerald-500 animate-typing-cursor" style={{ animationDelay: "1s" }}>.</span>
                             </div>
                           </div>
-                          
-                          {/* Search websites animation - only show in search mode */}
-                          {searchMode && (
-                            <div className="mb-3 space-y-1">
-                              <div className="text-xs text-emerald-500/80 animate-pulse">
-                                Searching websites:
-                              </div>
-                              <div className="flex flex-wrap gap-1 text-xs">
-                                <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}>
-                                  DuckDuckGo
-                                </span>
-                                <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "200ms" }}>
-                                  IslamQA.info
-                                </span>
-                                <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "400ms" }}>
-                                  Quran.com
-                                </span>
-                                <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "600ms" }}>
-                                  Sunnah.com
-                                </span>
-                                <span className="px-2 py-1 bg-emerald-500/10 text-emerald-400 rounded-full animate-bounce" style={{ animationDelay: "800ms" }}>
-                                  IslamWeb.net
-                                </span>
-                              </div>
-                            </div>
-                          )}
                           
                           {/* Animated progress indicator */}
                           <div className="flex items-center gap-3">
