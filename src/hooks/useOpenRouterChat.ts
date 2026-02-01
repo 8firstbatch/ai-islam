@@ -198,12 +198,7 @@ export const useOpenRouterChat = () => {
 
       // Get user's AI model preference
       const userSettings = await loadUserSettings(user?.id || '');
-      let selectedModel = userSettings?.ai_model || "google/gemini-2.5-flash";
-      
-      // Handle legacy fast model selection by defaulting to thinking model
-      if (selectedModel === "openai/gpt-4o-mini") {
-        selectedModel = "google/gemini-2.5-flash";
-      }
+      const selectedModel = userSettings?.ai_model || "google/gemini-2.5-flash";
 
       // Use appropriate AI service based on selected model
       const isThinkingMode = selectedModel === "google/gemini-2.5-flash";
@@ -222,7 +217,7 @@ export const useOpenRouterChat = () => {
             }
           );
         } catch (error) {
-          // If Google AI fails (rate limit, etc.), fallback to OpenRouter
+          // If Google AI fails (rate limit, etc.), fallback to OpenRouter with fast model
           console.log('Google AI failed, falling back to OpenRouter:', error);
           
           // Only show notification for non-rate-limit errors and not too frequently
@@ -236,7 +231,7 @@ export const useOpenRouterChat = () => {
             setLastFallbackTime(now);
             toast({
               title: "Switching to backup service",
-              description: "Google AI is temporarily unavailable. Using backup service instead.",
+              description: "Google AI is temporarily unavailable. Using fast mode instead.",
               variant: "default",
             });
           }
@@ -244,15 +239,30 @@ export const useOpenRouterChat = () => {
           await openRouterService.sendMessage(
             chatMessages,
             {
-              model: 'anthropic/claude-3.5-haiku', // Fallback model
+              model: 'openai/gpt-4o-mini', // Fallback to fast model
               stream: true,
               onChunk: updateAssistant,
               signal: controller.signal,
               userId: user?.id,
+              fastMode: true, // Use fast mode as fallback
               thinkingMode: false,
             }
           );
         }
+      } else if (selectedModel === "openai/gpt-4o-mini") {
+        // Use OpenRouter with fast model
+        await openRouterService.sendMessage(
+          chatMessages,
+          {
+            model: 'openai/gpt-4o-mini', // Fast and efficient model
+            stream: true,
+            onChunk: updateAssistant,
+            signal: controller.signal,
+            userId: user?.id,
+            fastMode: true, // Enable fast mode
+            thinkingMode: false,
+          }
+        );
       } else {
         // Handle Pro model and other models with fallback
         try {
@@ -268,11 +278,11 @@ export const useOpenRouterChat = () => {
               }
             );
           } else {
-            // Default to OpenRouter with the selected model or fallback
+            // Default to OpenRouter with the selected model or fallback to fast
             await openRouterService.sendMessage(
               chatMessages,
               {
-                model: selectedModel.startsWith('google/') ? 'anthropic/claude-3.5-haiku' : selectedModel,
+                model: selectedModel.startsWith('google/') ? 'openai/gpt-4o-mini' : selectedModel,
                 stream: true,
                 onChunk: updateAssistant,
                 signal: controller.signal,
@@ -296,7 +306,7 @@ export const useOpenRouterChat = () => {
               setLastFallbackTime(now);
               toast({
                 title: "Switching to backup service",
-                description: "Google AI Pro is temporarily unavailable. Using backup service instead.",
+                description: "Google AI Pro is temporarily unavailable. Using fast mode instead.",
                 variant: "default",
               });
             }
@@ -304,11 +314,12 @@ export const useOpenRouterChat = () => {
             await openRouterService.sendMessage(
               chatMessages,
               {
-                model: 'anthropic/claude-3.5-haiku', // Fallback model
+                model: 'openai/gpt-4o-mini', // Fallback to fast model
                 stream: true,
                 onChunk: updateAssistant,
                 signal: controller.signal,
                 userId: user?.id,
+                fastMode: true,
                 thinkingMode: false,
               }
             );

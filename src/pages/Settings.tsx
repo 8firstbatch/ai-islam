@@ -526,6 +526,7 @@ const Settings = () => {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
+                            <SelectItem value="openai/gpt-4o-mini">Fast</SelectItem>
                             <SelectItem value="google/gemini-2.5-flash">Thinking</SelectItem>
                             <SelectItem value="google/gemini-2.5-pro">
                               <div className="flex items-center gap-2">
@@ -538,7 +539,7 @@ const Settings = () => {
                           </SelectContent>
                         </Select>
                         <p className="text-xs text-muted-foreground">
-                          Choose the AI model: Thinking (Gemini Flash) or Pro (Gemini Pro)
+                          Choose the AI model: Fast (GPT-4o Mini), Thinking (Gemini Flash), or Pro (Gemini Pro)
                         </p>
                       </div>
 

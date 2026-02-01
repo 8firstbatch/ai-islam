@@ -53,15 +53,17 @@ export class OpenRouterService {
       onChunk?: (chunk: string) => void;
       signal?: AbortSignal;
       userId?: string;
+      fastMode?: boolean;
       thinkingMode?: boolean;
     } = {}
   ): Promise<string> {
     const {
-      model = 'anthropic/claude-3.5-haiku', // Default fallback model
+      model = 'openai/gpt-4o-mini', // Fast and cost-effective model
       stream = true, // Enable streaming for better user experience
       onChunk,
       signal,
       userId,
+      fastMode = false,
       thinkingMode = false
     } = options;
 
@@ -77,8 +79,8 @@ export class OpenRouterService {
       content: `You are an Islamic AI assistant. Provide authentic Islamic guidance from Quran and Sunnah. Be concise, respectful, and cite sources when possible. Respond in the user's language.
 
 IMPORTANT: If asked about who created or made this application:
-- If responding in Malayalam, say it was created by "Raasi and Hikma Students from the Islamic Da'wah Academy"
-- If responding in other languages, say it was created by "Razi and Hikma Students from the Islamic Da'wah Academy"`
+- If responding in Malayalam, say it was created by " Hikma Students from the Islamic Da'wah Academy"
+- If responding in other languages, say it was created by " Hikma Students from the Islamic Da'wah Academy"`
     };
 
     const requestMessages = [systemMessage, ...messages];
@@ -126,7 +128,7 @@ IMPORTANT: If asked about who created or made this application:
       }
 
       if (stream) {
-        return this.handleStreamResponse(response, onChunk, thinkingMode);
+        return this.handleStreamResponse(response, onChunk, fastMode, thinkingMode);
       } else {
         const data: OpenRouterResponse = await response.json();
         return data.choices[0]?.message?.content || '';
@@ -143,6 +145,7 @@ IMPORTANT: If asked about who created or made this application:
   private async handleStreamResponse(
     response: Response,
     onChunk?: (chunk: string) => void,
+    fastMode: boolean = false,
     thinkingMode: boolean = false
   ): Promise<string> {
     if (!response.body) {
@@ -181,7 +184,10 @@ IMPORTANT: If asked about who created or made this application:
             if (contentChunk) {
               fullContent += contentChunk;
               if (onChunk) {
-                if (thinkingMode) {
+                if (fastMode) {
+                  // In fast mode, send chunks immediately without delay
+                  onChunk(contentChunk);
+                } else if (thinkingMode) {
                   // In thinking mode, add slight delay for 1.5x speed
                   onChunk(contentChunk);
                   await new Promise(resolve => setTimeout(resolve, 7)); // 1.5x speed (10ms / 1.5 ≈ 7ms)
