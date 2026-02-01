@@ -55,6 +55,8 @@ export class OpenRouterService {
       userId?: string;
       fastMode?: boolean;
       thinkingMode?: boolean;
+      searchMode?: boolean;
+      searchData?: string;
     } = {}
   ): Promise<string> {
     const {
@@ -64,7 +66,9 @@ export class OpenRouterService {
       signal,
       userId,
       fastMode = false,
-      thinkingMode = false
+      thinkingMode = false,
+      searchMode = false,
+      searchData = ''
     } = options;
 
     const effectiveApiKey = await this.getEffectiveApiKey(userId);
@@ -73,17 +77,41 @@ export class OpenRouterService {
       throw new Error('OpenRouter API key not configured. Please add VITE_OPENROUTER_API_KEY to your .env file');
     }
 
-    // Optimized Islamic context - shorter for faster processing
-    const systemMessage: OpenRouterMessage = {
-      role: 'system',
-      content: `You are an Islamic AI assistant. Provide authentic Islamic guidance from Quran and Sunnah. Be concise, respectful, and cite sources when possible. Respond in the user's language.
+    // Different system messages based on mode
+    let systemMessage: OpenRouterMessage;
+    
+    if (searchMode && searchData) {
+      systemMessage = {
+        role: 'system',
+        content: 'Use the following web search data to answer accurately. Provide comprehensive answers based on the search results and cite sources when possible.'
+      };
+    } else {
+      systemMessage = {
+        role: 'system',
+        content: `You are an Islamic AI assistant. Provide authentic Islamic guidance from Quran and Sunnah. Be concise, respectful, and cite sources when possible. Respond in the user's language.
 
 IMPORTANT: If asked about who created or made this application:
 - If responding in Malayalam, say it was created by " Hikma Students from the Islamic Da'wah Academy"
 - If responding in other languages, say it was created by " Hikma Students from the Islamic Da'wah Academy"`
-    };
+      };
+    }
 
-    const requestMessages = [systemMessage, ...messages];
+    let requestMessages: OpenRouterMessage[];
+    
+    if (searchMode && searchData && messages.length > 0) {
+      // For search mode, modify the user's message to include search data
+      const userMessage = messages[messages.length - 1];
+      const enhancedUserMessage: OpenRouterMessage = {
+        role: 'user',
+        content: `Question: ${userMessage.content}\n\nWeb data: ${searchData}`
+      };
+      
+      // Replace the last user message with the enhanced one
+      const previousMessages = messages.slice(0, -1);
+      requestMessages = [systemMessage, ...previousMessages, enhancedUserMessage];
+    } else {
+      requestMessages = [systemMessage, ...messages];
+    }
 
     try {
       const response = await fetch(`${this.baseURL}/chat/completions`, {

@@ -1,5 +1,5 @@
 import { useState, KeyboardEvent, useEffect } from "react";
-import { Send, Image, X, Wrench, Mic, Square } from "lucide-react";
+import { Send, Image, X, Wrench, Mic, Square, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
@@ -14,9 +14,10 @@ interface ChatInputProps {
   onMicrophoneClick?: () => void;
   onStopGeneration?: () => void;
   isListening?: boolean;
+  searchMode?: boolean; // Change from aiModel to searchMode
 }
 
-export const ChatInput = ({ onSend, onOpenTools, selectedTool, onRemoveTool, isLoading, onMicrophoneClick, onStopGeneration, isListening = false }: ChatInputProps) => {
+export const ChatInput = ({ onSend, onOpenTools, selectedTool, onRemoveTool, isLoading, onMicrophoneClick, onStopGeneration, isListening = false, searchMode = false }: ChatInputProps) => {
   const [input, setInput] = useState("");
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [isDragOver, setIsDragOver] = useState(false);
@@ -185,9 +186,16 @@ export const ChatInput = ({ onSend, onOpenTools, selectedTool, onRemoveTool, isL
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              placeholder={selectedTool ? "Ask about this tool..." : "Ask anything"}
+              placeholder={
+                searchMode 
+                  ? "Search the web" 
+                  : selectedTool 
+                    ? "Ask about this tool..." 
+                    : "Ask anything"
+              }
               className={`min-h-[44px] sm:min-h-[52px] max-h-32 resize-none bg-background border-border rounded-2xl sm:rounded-3xl transition-all duration-300 text-sm sm:text-base focus:outline-none focus:ring-0 focus:ring-offset-0 focus:border-border focus-visible:outline-none focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:border-border hover:border-border active:border-border ${
-                selectedTool ? 'pt-8 sm:pt-12 pl-2 sm:pl-3 pr-12 sm:pr-16' : 'pl-2 sm:pl-3 pr-12 sm:pr-16'
+                selectedTool ? 'pt-8 sm:pt-12 pl-2 sm:pl-3 pr-12 sm:pr-16' : 
+                'pl-2 sm:pl-3 pr-12 sm:pr-16'
               }`}
               disabled={isLoading}
               style={{ 
@@ -196,6 +204,23 @@ export const ChatInput = ({ onSend, onOpenTools, selectedTool, onRemoveTool, isL
                 border: '1px solid hsl(var(--border))'
               }}
             />
+            
+            {/* Search Icons - when search mode is enabled */}
+            {searchMode && (
+              <div className="absolute left-2 sm:left-3 bottom-1 flex items-center gap-1 text-xs text-muted-foreground group cursor-pointer px-2 py-1 rounded-md hover:bg-muted/50 transition-colors duration-200">
+                <Globe className="w-3 h-3" />
+                <span>Search</span>
+                {/* Hover tooltip */}
+                <div className="absolute bottom-full left-0 mb-2 px-3 py-1 bg-popover text-popover-foreground text-xs rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">×</span>
+                    <span>Search</span>
+                  </div>
+                  {/* Arrow pointing down */}
+                  <div className="absolute top-full left-4 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-popover"></div>
+                </div>
+              </div>
+            )}
             
             {/* Tools Button - Inside Input Right */}
             {onOpenTools && !selectedTool && !input.trim() && (

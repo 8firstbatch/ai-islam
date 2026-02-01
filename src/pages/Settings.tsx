@@ -50,6 +50,7 @@ const Settings = () => {
   const [aiModel, setAiModel] = useState("google/gemini-2.5-flash");
   const [responseStyle, setResponseStyle] = useState("balanced");
   const [isProEnabled, setIsProEnabled] = useState(false);
+  const [searchMode, setSearchMode] = useState(false); // Boolean for search mode
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -92,6 +93,7 @@ const Settings = () => {
       setAiModel(settings.ai_model);
       setResponseStyle(settings.ai_response_style);
       setIsProEnabled(settings.is_pro_enabled || false);
+      setSearchMode(settings.search_mode || false); // Load search mode
     }
   };
 
@@ -279,6 +281,7 @@ const Settings = () => {
         ai_model: aiModel,
         ai_response_style: responseStyle,
         is_pro_enabled: isProEnabled,
+        search_mode: searchMode, // Save search mode
       });
 
       console.log('Save result:', result);
@@ -520,7 +523,7 @@ const Settings = () => {
 
                     <div className="space-y-4">
                       <div className="space-y-2">
-                        <Label>AI Model</Label>
+                        <Label>Models</Label>
                         <Select value={aiModel} onValueChange={setAiModel}>
                           <SelectTrigger>
                             <SelectValue />
@@ -531,9 +534,15 @@ const Settings = () => {
                             <SelectItem value="google/gemini-2.5-pro">
                               <div className="flex items-center gap-2">
                                 <span>Plus</span>
-                                <div className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full">
-                                  PLUS
-                                </div>
+                               
+                              </div>
+                            </SelectItem>
+                            <SelectItem value="pro" disabled>
+                              <div className="flex items-center gap-2">
+                                <span>Pro</span>
+                                <span className="px-2 py-0.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-bold rounded-full">
+                                  Coming Soon
+                                </span>
                               </div>
                             </SelectItem>
                           </SelectContent>
@@ -542,19 +551,18 @@ const Settings = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Response Style</Label>
-                        <Select value={responseStyle} onValueChange={setResponseStyle}>
+                        <Label>Search Mode</Label>
+                        <Select value={searchMode ? "search" : "normal"} onValueChange={(value) => setSearchMode(value === "search")}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="concise">Concise</SelectItem>
-                            <SelectItem value="balanced">Balanced</SelectItem>
-                            <SelectItem value="detailed">Detailed</SelectItem>
+                            <SelectItem value="normal">Normal</SelectItem>
+                            <SelectItem value="search">Search</SelectItem>
                           </SelectContent>
                         </Select>
                         <p className="text-xs text-muted-foreground">
-                          How detailed should the AI responses be
+                          Enable web search to enhance AI responses with current information
                         </p>
                       </div>
                     </div>
@@ -583,7 +591,7 @@ const Settings = () => {
                 {activeTab === "tools" && (
                   <div className="space-y-6">
                     <div>
-                      <h2 className="font-sans text-xl text-foreground mb-1">Islamic Tools</h2>
+                      <h2 className="font-sans text-xl text-foreground mb-1">Islamic Models</h2>
                       <p className="text-sm text-muted-foreground">
                         Access Islamic tools and features
                       </p>
