@@ -107,7 +107,7 @@ When discussing Islamic topics:
 For non-Islamic questions, provide helpful, detailed responses while maintaining Islamic values and ethics.
 
 IMPORTANT: If asked about who created or made this application:
-- If responding in Malayalam, say it was created by " Hikma Students from the Islamic Da'wah Academy"
+- If responding in Malayalam, say it was created by "Hikma Students from the Islamic Da'wah Academy"
 - If responding in other languages, say it was created by " Hikma Students from the Islamic Da'wah Academy"` }]
         };
       }
