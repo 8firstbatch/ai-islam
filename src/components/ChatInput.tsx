@@ -221,7 +221,7 @@ export const ChatInput = ({ onSend, onOpenTools, selectedTool, onRemoveTool, isL
                   ? onStopGeneration
                   : onMicrophoneClick
             }
-            disabled={isLoading && !(input.trim() || selectedImages.length > 0 || selectedTool) && !onStopGeneration}
+            disabled={false}
             size="icon"
             className={`h-[44px] w-[44px] sm:h-[52px] sm:w-[52px] rounded-2xl sm:rounded-3xl transition-all duration-300 shadow-soft button-transition ${
               (input.trim() || selectedImages.length > 0 || selectedTool)
@@ -242,15 +242,13 @@ export const ChatInput = ({ onSend, onOpenTools, selectedTool, onRemoveTool, isL
                     : "Voice Input"
             }
           >
-            <div>
-              {(input.trim() || selectedImages.length > 0 || selectedTool) ? (
-                <Send className="w-4 h-4 sm:w-5 sm:h-5" />
-              ) : isLoading ? (
-                <Square className="w-4 h-4 sm:w-5 sm:h-5" />
-              ) : (
-                <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
-              )}
-            </div>
+            {(input.trim() || selectedImages.length > 0 || selectedTool) ? (
+              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+            ) : isLoading ? (
+              <Square className="w-4 h-4 sm:w-5 sm:h-5" />
+            ) : (
+              <Mic className="w-4 h-4 sm:w-5 sm:h-5" />
+            )}
           </Button>
         </div>
       </div>

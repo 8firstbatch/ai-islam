@@ -28,15 +28,17 @@ export const useConversations = () => {
 
   // Stop the current AI response
   const stopGeneration = useCallback(() => {
+    console.log('Stopping AI generation...');
     if (abortController) {
       abortController.abort();
       setAbortController(null);
-      setIsLoading(false);
-      toast({
-        title: "Response stopped",
-        description: "AI response generation has been cancelled",
-      });
     }
+    // Always reset loading state when stopping
+    setIsLoading(false);
+    toast({
+      title: "Response stopped",
+      description: "AI response generation has been cancelled",
+    });
   }, [abortController, toast]);
   useEffect(() => {
     if (user) {
@@ -254,6 +256,10 @@ export const useConversations = () => {
       
       // Don't show error if request was aborted
       if (error instanceof Error && error.name === 'AbortError') {
+        console.log('Request was aborted by user');
+        // Still need to reset loading state and cleanup
+        setIsLoading(false);
+        setAbortController(null);
         return;
       }
       
