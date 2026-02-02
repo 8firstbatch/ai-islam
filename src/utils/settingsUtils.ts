@@ -4,7 +4,6 @@ export interface UserSettings {
   ai_model: string;
   ai_response_style: string;
   is_pro_enabled?: boolean;
-  search_mode?: boolean; // Add search mode
   response_speed?: 'fastest' | 'balanced' | 'detailed'; // New speed setting
 }
 
@@ -25,7 +24,7 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
     // Try to load from database first
     let { data, error } = await supabase
       .from("user_settings")
-      .select("ai_model, ai_response_style, search_mode, is_pro_enabled")
+      .select("ai_model, ai_response_style")
       .eq("user_id", userId)
       .single();
 
@@ -39,7 +38,6 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
           ai_model: "google/gemini-2.5-flash",
           ai_response_style: "balanced",
           is_pro_enabled: false,
-          search_mode: false, // Default search mode
           response_speed: "fastest" // Default to fastest
         };
       }
@@ -53,8 +51,7 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
           return {
             ai_model: parsed.ai_model || "google/gemini-2.5-flash",
             ai_response_style: parsed.ai_response_style || "balanced",
-            is_pro_enabled: parsed.is_pro_enabled || false,
-            search_mode: parsed.search_mode || false
+            is_pro_enabled: parsed.is_pro_enabled || false
           };
         } catch (parseError) {
           console.error('Error parsing localStorage settings:', parseError);
@@ -65,22 +62,19 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
       return {
         ai_model: "google/gemini-2.5-flash",
         ai_response_style: "balanced",
-        is_pro_enabled: false,
-        search_mode: false
+        is_pro_enabled: false
       };
     }
 
     return data ? {
       ai_model: data.ai_model || "google/gemini-2.5-flash",
       ai_response_style: data.ai_response_style || "balanced",
-      is_pro_enabled: data.is_pro_enabled || false,
-      search_mode: data.search_mode || false, // Load search mode
+      is_pro_enabled: false, // Default to false since column doesn't exist
       response_speed: "fastest" // Default to fastest for speed
     } : {
       ai_model: "google/gemini-2.5-flash",
       ai_response_style: "balanced",
       is_pro_enabled: false,
-      search_mode: false,
       response_speed: "fastest"
     };
   } catch (error) {
@@ -89,8 +83,7 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
     return {
       ai_model: "google/gemini-2.5-flash",
       ai_response_style: "balanced",
-      is_pro_enabled: false,
-      search_mode: false
+      is_pro_enabled: false
     };
   }
 };
@@ -102,7 +95,7 @@ export const saveUserSettings = async (
   try {
     console.log('Attempting to save settings:', { userId, settings });
     
-    // First, try to save with all columns including search_mode
+    // First, try to save with is_pro_enabled column
     let { error } = await supabase
       .from("user_settings")
       .upsert({
@@ -110,14 +103,13 @@ export const saveUserSettings = async (
         ai_model: settings.ai_model,
         ai_response_style: settings.ai_response_style,
         is_pro_enabled: settings.is_pro_enabled || false,
-        search_mode: settings.search_mode || false,
       }, {
         onConflict: 'user_id'
       });
 
-    // If error is about missing columns, try with minimal columns
-    if (error && (error.message.includes('is_pro_enabled') || error.message.includes('search_mode'))) {
-      console.log('Some columns not found, trying with basic columns...');
+    // If error is about missing column, try without is_pro_enabled
+    if (error && error.message.includes('is_pro_enabled')) {
+      console.log('is_pro_enabled column not found, trying without it...');
       const { error: fallbackError } = await supabase
         .from("user_settings")
         .upsert({

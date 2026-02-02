@@ -111,7 +111,7 @@ export const useOpenRouterChat = () => {
   }, [abortController, toast]);
 
   // Send a message using OpenRouter
-  const sendMessage = useCallback(async (content: string, attachments?: { images?: File[] }, searchMode: boolean = false) => {
+  const sendMessage = useCallback(async (content: string, attachments?: { images?: File[] }) => {
     if (!content.trim() || isLoading) return;
 
     const userMessage: Message = {
@@ -169,33 +169,16 @@ export const useOpenRouterChat = () => {
     };
 
     try {
-      // Handle web search if search mode is enabled
-      let webData = "";
-      if (searchMode) {
-        try {
-          const searchRes = await fetch(`https://api.duckduckgo.com/?q=${encodeURIComponent(content.trim())}&format=json`);
-          const searchData = await searchRes.json();
-          webData = searchData.AbstractText || "No web data found.";
-        } catch (searchError) {
-          console.error('Search error:', searchError);
-          webData = "Search temporarily unavailable.";
-        }
-      }
-
       // Prepare messages for OpenRouter (exclude the current user message as it will be added)
       const chatMessages = messages.map((m) => ({
         role: m.role,
         content: m.content,
       }));
 
-      // Add the new user message with search data if available
-      const finalContent = searchMode && webData 
-        ? `Question: ${content.trim()}\n\nWeb data: ${webData}`
-        : content.trim();
-
+      // Add the new user message (AI will auto-detect language)
       chatMessages.push({
         role: "user",
-        content: finalContent,
+        content: content.trim(),
       });
 
       // Handle image attachments if present

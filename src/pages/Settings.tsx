@@ -50,7 +50,6 @@ const Settings = () => {
   const [aiModel, setAiModel] = useState("google/gemini-2.5-flash");
   const [responseStyle, setResponseStyle] = useState("balanced");
   const [isProEnabled, setIsProEnabled] = useState(false);
-  const [searchMode, setSearchMode] = useState(false); // Boolean for search mode
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -93,7 +92,6 @@ const Settings = () => {
       setAiModel(settings.ai_model);
       setResponseStyle(settings.ai_response_style);
       setIsProEnabled(settings.is_pro_enabled || false);
-      setSearchMode(settings.search_mode || false); // Load search mode
     }
   };
 
@@ -281,7 +279,6 @@ const Settings = () => {
         ai_model: aiModel,
         ai_response_style: responseStyle,
         is_pro_enabled: isProEnabled,
-        search_mode: searchMode, // Save search mode
       });
 
       console.log('Save result:', result);
@@ -551,18 +548,19 @@ const Settings = () => {
                       </div>
 
                       <div className="space-y-2">
-                        <Label>Search Mode</Label>
-                        <Select value={searchMode ? "search" : "normal"} onValueChange={(value) => setSearchMode(value === "search")}>
+                        <Label>Response Style</Label>
+                        <Select value={responseStyle} onValueChange={setResponseStyle}>
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="normal">Normal</SelectItem>
-                            <SelectItem value="search">Search</SelectItem>
+                            <SelectItem value="concise">Concise</SelectItem>
+                            <SelectItem value="balanced">Balanced</SelectItem>
+                            <SelectItem value="detailed">Detailed</SelectItem>
                           </SelectContent>
                         </Select>
                         <p className="text-xs text-muted-foreground">
-                          Enable web search to enhance AI responses with current information
+                          How detailed should the AI responses be
                         </p>
                       </div>
                     </div>

@@ -205,6 +205,25 @@ const surahs: Surah[] = [
   { number: 113, name: "الفلق", englishName: "Al-Falaq", numberOfAyahs: 5, revelationType: "Meccan" },
   { number: 114, name: "الناس", englishName: "An-Nas", numberOfAyahs: 6, revelationType: "Meccan" },
 ];
+const getQuranComReciterId = (reciterId: string): number => {
+  const mapping: Record<string, number> = {
+    alafasy: 7,
+    husary: 3,
+    sudais: 2,
+    shuraim: 4,
+    maher: 12,
+    minshawi: 10,
+    ajmi: 24, // Ahmed ibn Ali al-Ajamy is 24 on Quran.com
+    ghamdi: 6,
+    basfar: 19,
+    rifai: 5,
+    abdulbasit: 13,
+    hudhaify: 8,
+    bukhatir: 20
+  };
+  return mapping[reciterId] || 7; // Default to Alafasy
+};
+
 export const QuranReciting = ({ isOpen, onClose }: QuranRecitingProps) => {
   const [selectedReciter, setSelectedReciter] = useState("alafasy");
   const [recitationType, setRecitationType] = useState<RecitationType>("surah");
@@ -263,21 +282,21 @@ export const QuranReciting = ({ isOpen, onClose }: QuranRecitingProps) => {
 
     // Always try Alafasy first as it's most reliable, then the selected reciter
     const recitersToTry = [];
-    
+
     // Add Alafasy first if it's not already selected
     if (selectedReciter !== 'alafasy') {
       const alafasy = availableReciters.find(r => r.id === 'alafasy');
       if (alafasy) recitersToTry.push(alafasy);
     }
-    
+
     // Add the selected reciter
     recitersToTry.push(reciter);
-    
+
     // Add a few more reliable reciters as fallbacks
-    const fallbackReciters = ['sudais', 'husary', 'maher'].filter(id => 
+    const fallbackReciters = ['sudais', 'husary', 'maher'].filter(id =>
       id !== selectedReciter && !recitersToTry.find(r => r.id === id)
     );
-    
+
     fallbackReciters.forEach(id => {
       const fallbackReciter = availableReciters.find(r => r.id === id);
       if (fallbackReciter) recitersToTry.push(fallbackReciter);
@@ -297,10 +316,10 @@ export const QuranReciting = ({ isOpen, onClose }: QuranRecitingProps) => {
     // If all reciters failed
     setIsLoading(false);
     const recitationTypeText = recitationType === "surah" ? `Surah ${selectedSurah}` : `Juz ${selectedJuz}`;
-    const additionalHelp = recitationType === "juz" 
+    const additionalHelp = recitationType === "juz"
       ? " Note: Juz recitations are less commonly available than individual Surahs. Try selecting a Surah instead."
       : " Please try a different reciter or check your internet connection.";
-    
+
     toast({
       title: "Audio Not Available",
       description: `Unable to load audio for ${recitationTypeText}. This might be due to network issues or the audio file not being available.${additionalHelp}`,
@@ -310,11 +329,11 @@ export const QuranReciting = ({ isOpen, onClose }: QuranRecitingProps) => {
 
   const tryReciter = async (reciter: Reciter): Promise<void> => {
     let audioSources: string[] = [];
-    
+
     if (recitationType === "surah") {
       const surahNum = String(selectedSurah).padStart(3, "0");
       const surahNumInt = parseInt(selectedSurah);
-      
+
       // Use multiple reliable audio sources with different URL patterns for complete Surah recitations
       audioSources = [
         // Quran.com API - Very reliable and high quality
@@ -400,7 +419,7 @@ export const QuranReciting = ({ isOpen, onClose }: QuranRecitingProps) => {
           audioRef.current = audio;
           setIsLoading(false);
           setIsPlaying(true);
-          
+
           // Show success message only for fallback sources
           if (sourceIndex > 0) {
             toast({
@@ -409,7 +428,7 @@ export const QuranReciting = ({ isOpen, onClose }: QuranRecitingProps) => {
               variant: "default",
             });
           }
-          
+
           audio.play().catch(console.error);
           resolve();
         };
@@ -426,9 +445,9 @@ export const QuranReciting = ({ isOpen, onClose }: QuranRecitingProps) => {
         audio.onloadeddata = () => {
           if (audio.duration > 0) resolveOnce();
         };
-        
+
         audio.oncanplaythrough = resolveOnce;
-        
+
         audio.onloadedmetadata = () => {
           if (audio.duration > 0) resolveOnce();
         };
@@ -674,7 +693,7 @@ export const QuranReciting = ({ isOpen, onClose }: QuranRecitingProps) => {
             </Button>
 
             <Button
-              onClick={() => {/* Skip forward functionality can be added later */}}
+              onClick={() => {/* Skip forward functionality can be added later */ }}
               disabled={true}
               variant="outline"
               size="icon"
@@ -725,7 +744,7 @@ export const QuranReciting = ({ isOpen, onClose }: QuranRecitingProps) => {
                 <span>{formatTime(currentTime)}</span>
                 <span>{formatTime(duration)}</span>
               </div>
-              <div 
+              <div
                 className="w-full bg-muted rounded-full h-2 cursor-pointer"
                 onClick={(e) => {
                   if (audioRef.current && duration > 0) {

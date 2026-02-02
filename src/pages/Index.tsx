@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useConversations } from "@/hooks/useConversations";
 import { useOpenRouterChat } from "@/hooks/useOpenRouterChat";
 import { supabase } from "@/integrations/supabase/client";
-import { loadUserSettings } from "@/utils/settingsUtils";
 
 // Extend Window interface for Speech Recognition
 declare global {
@@ -52,7 +51,6 @@ const Index = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [guestContinued, setGuestContinued] = useState(false);
   const [isListening, setIsListening] = useState(false);
-  const [searchMode, setSearchMode] = useState(false); // Boolean for search mode
   const recognitionRef = useRef<any>(null);
 
   // Test Supabase connection on mount
@@ -66,23 +64,6 @@ const Index = () => {
     };
     testConnection();
   }, []);
-
-  // Load user settings when user is available
-  useEffect(() => {
-    const loadSettings = async () => {
-      if (user) {
-        try {
-          const settings = await loadUserSettings(user.id);
-          if (settings) {
-            setSearchMode(settings.search_mode || false);
-          }
-        } catch (error) {
-          console.error("Failed to load user settings:", error);
-        }
-      }
-    };
-    loadSettings();
-  }, [user]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -101,8 +82,7 @@ const Index = () => {
     }
     
     // Send message using OpenRouter - AI will auto-detect language
-    // Pass searchMode to enable web search if needed
-    sendMessage(content, attachments, searchMode);
+    sendMessage(content, attachments);
   };
 
   const handleContinueAsGuest = () => {
@@ -394,7 +374,7 @@ const Index = () => {
                           {/* AI thinking text with typewriter effect */}
                           <div className="flex items-center gap-2 mb-2">
                             <span className="text-sm text-emerald-600 font-medium animate-pulse">
-                              {searchMode ? "Searching" : "AI Islam is thinking"}
+                              AI Islam is thinking
                             </span>
                             <div className="flex gap-1">
                               <span className="text-emerald-500 animate-typing-cursor">.</span>
@@ -433,7 +413,6 @@ const Index = () => {
               onMicrophoneClick={handleMicrophoneClick}
               onStopGeneration={stopGeneration}
               isListening={isListening}
-              searchMode={searchMode}
             />
           </div>
 
