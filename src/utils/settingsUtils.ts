@@ -22,10 +22,10 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
       };
     }
     
-    // Try to load from database first
+    // Try to load from database first - only select columns that exist
     let { data, error } = await supabase
       .from("user_settings")
-      .select("ai_model, ai_response_style, search_mode, is_pro_enabled")
+      .select("ai_model, ai_response_style")
       .eq("user_id", userId)
       .single();
 
@@ -73,8 +73,8 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
     return data ? {
       ai_model: data.ai_model || "google/gemini-2.5-flash",
       ai_response_style: data.ai_response_style || "balanced",
-      is_pro_enabled: data.is_pro_enabled || false,
-      search_mode: data.search_mode || false, // Load search mode
+      is_pro_enabled: false,
+      search_mode: false, // Default search mode (column doesn't exist in DB)
       response_speed: "fastest" // Default to fastest for speed
     } : {
       ai_model: "google/gemini-2.5-flash",

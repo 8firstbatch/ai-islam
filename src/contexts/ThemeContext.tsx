@@ -71,12 +71,14 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
   // Load theme from user settings when authenticated
   useEffect(() => {
     if (user) {
-      supabase
-        .from("user_settings")
-        .select("theme")
-        .eq("user_id", user.id)
-        .single()
-        .then(({ data, error }) => {
+      const loadTheme = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("user_settings")
+            .select("theme")
+            .eq("user_id", user.id)
+            .single();
+          
           if (error) {
             if (error.code === 'PGRST116') {
               console.log('User settings not found for theme, using default');
@@ -89,10 +91,11 @@ export const ThemeProvider = ({ children }: { children: ReactNode }) => {
           if (data?.theme) {
             setThemeState(data.theme as Theme);
           }
-        })
-        .catch((error) => {
+        } catch (error) {
           console.error('Unexpected error loading theme:', error);
-        });
+        }
+      };
+      loadTheme();
     }
   }, [user]);
 

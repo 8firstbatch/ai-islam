@@ -88,6 +88,26 @@ const juzList: Juz[] = [
   { number: 30, name: "Amma Yatasa'aloon", startSurah: 78, startVerse: 1, endSurah: 114, endVerse: 6 },
 ];
 
+// Helper function to get Quran.com reciter ID from our reciter ID
+const getQuranComReciterId = (reciterId: string): string => {
+  const reciterMap: Record<string, string> = {
+    alafasy: "7",
+    husary: "4",
+    sudais: "2",
+    shuraim: "3",
+    maher: "9",
+    minshawi: "5",
+    ajmi: "8",
+    ghamdi: "10",
+    basfar: "11",
+    rifai: "12",
+    abdulbasit: "1",
+    hudhaify: "6",
+    bukhatir: "13"
+  };
+  return reciterMap[reciterId] || "7"; // Default to Alafasy
+};
+
 // List of all 114 Surahs
 const surahs: Surah[] = [
   { number: 1, name: "الفاتحة", englishName: "Al-Fatihah", numberOfAyahs: 7, revelationType: "Meccan" },
