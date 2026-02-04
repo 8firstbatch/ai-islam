@@ -42,12 +42,14 @@ export const useConversations = () => {
   }, [abortController, toast]);
   useEffect(() => {
     if (user) {
-      supabase
-        .from("user_settings")
-        .select("ai_model, ai_response_style")
-        .eq("user_id", user.id)
-        .single()
-        .then(({ data, error }) => {
+      const loadSettings = async () => {
+        try {
+          const { data, error } = await supabase
+            .from("user_settings")
+            .select("ai_model, ai_response_style")
+            .eq("user_id", user.id)
+            .single();
+          
           if (error) {
             if (error.code === 'PGRST116') {
               console.log('User settings not found for conversations, using defaults');
@@ -58,10 +60,11 @@ export const useConversations = () => {
           }
           
           if (data) setUserSettings(data);
-        })
-        .catch((error) => {
+        } catch (error) {
           console.error('Unexpected error loading user settings:', error);
-        });
+        }
+      };
+      loadSettings();
     }
   }, [user]);
 

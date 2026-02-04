@@ -88,6 +88,26 @@ const juzList: Juz[] = [
   { number: 30, name: "Amma Yatasa'aloon", startSurah: 78, startVerse: 1, endSurah: 114, endVerse: 6 },
 ];
 
+// Helper function to get Quran.com reciter ID from our reciter ID
+const getQuranComReciterId = (reciterId: string): string => {
+  const reciterMap: Record<string, string> = {
+    alafasy: "7",
+    husary: "4",
+    sudais: "2",
+    shuraim: "3",
+    maher: "9",
+    minshawi: "5",
+    ajmi: "8",
+    ghamdi: "10",
+    basfar: "11",
+    rifai: "12",
+    abdulbasit: "1",
+    hudhaify: "6",
+    bukhatir: "13"
+  };
+  return reciterMap[reciterId] || "7"; // Default to Alafasy
+};
+
 // List of all 114 Surahs
 const surahs: Surah[] = [
   { number: 1, name: "الفاتحة", englishName: "Al-Fatihah", numberOfAyahs: 7, revelationType: "Meccan" },
@@ -333,48 +353,95 @@ export const QuranReciting = ({ isOpen, onClose }: QuranRecitingProps) => {
     if (recitationType === "surah") {
       const surahNum = String(selectedSurah).padStart(3, "0");
       const surahNumInt = parseInt(selectedSurah);
+<<<<<<< HEAD
 
       // Use multiple reliable audio sources with different URL patterns for complete Surah recitations
+=======
+      
+      // Reciter-specific folder mappings for everyayah.com
+      const everyayahFolders: Record<string, string> = {
+        alafasy: "Alafasy_128kbps",
+        husary: "Husary_128kbps",
+        sudais: "Abdurrahmaan_As-Sudais_192kbps",
+        shuraim: "Saood_ash-Shuraym_128kbps",
+        maher: "MasharALAfacy_128kbps",
+        minshawi: "Minshawy_Murattal_128kbps",
+        ajmi: "ahmed_ibn_ali_al_ajamy_128kbps",
+        ghamdi: "Ghamadi_40kbps",
+        basfar: "Abdullah_Basfar_192kbps",
+        rifai: "Hani_Rifai_192kbps",
+        abdulbasit: "Abdul_Basit_Murattal_192kbps",
+        hudhaify: "Hudhaify_128kbps",
+        bukhatir: "Salaah_AbdulRahman_Bukhatir_128kbps"
+      };
+      
+      const everyayahFolder = everyayahFolders[reciter.id] || "Alafasy_128kbps";
+      
+      // Use multiple reliable audio sources - prioritizing most reliable ones first
+>>>>>>> 591f5f53f4811dc28d9d4f92a2db6b5b9c50a87d
       audioSources = [
-        // Quran.com API - Very reliable and high quality
-        `https://verses.quran.com/${getQuranComReciterId(reciter.id)}/${surahNumInt}.mp3`,
-        `https://download.quran.com/downloads/audio/full/${getQuranComReciterId(reciter.id)}/${surahNum}.mp3`,
-        // Most reliable sources
+        // EveryAyah.com - MOST RELIABLE, has complete surah files
+        `https://everyayah.com/data/${everyayahFolder}/${surahNum}001.mp3`,
+        
+        // Islamic.network CDN - Very reliable for ayah-by-ayah (using first ayah as test)
         `https://cdn.islamic.network/quran/audio/128/ar.alafasy/${surahNumInt}.mp3`,
         `https://cdn.islamic.network/quran/audio/64/ar.alafasy/${surahNumInt}.mp3`,
+        
+        // QuranicAudio.com - Reliable for full surah
+        `https://download.quranicaudio.com/quran/${reciter.folder}/${surahNum}.mp3`,
         `https://download.quranicaudio.com/quran/mishary_rashid_alafasy/${surahNum}.mp3`,
+        
+        // MP3Quran.net servers - Multiple server fallbacks
+        `https://server8.mp3quran.net/afs/${surahNum}.mp3`,
+        `https://server6.mp3quran.net/qtm/${surahNum}.mp3`,
+        `https://server11.mp3quran.net/a_huth/${surahNum}.mp3`,
+        `https://server12.mp3quran.net/maher/${surahNum}.mp3`,
+        
+        // Al-Afasy specific servers (most popular reciter)
         `https://server8.mp3quran.net/afs/mishary_rashid_alafasy/${surahNum}.mp3`,
-        `https://server6.mp3quran.net/qtm/mishary_rashid_alafasy/${surahNum}.mp3`,
-        // Try with actual reciter folder
+        
+        // Podcasts and other sources
+        `https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/${surahNum}.mp3`,
+        
+        // Additional Islamic.network patterns
         `https://cdn.islamic.network/quran/audio/128/${reciter.folder}/${surahNumInt}.mp3`,
         `https://cdn.islamic.network/quran/audio/64/${reciter.folder}/${surahNumInt}.mp3`,
-        `https://download.quranicaudio.com/quran/${reciter.folder}/${surahNum}.mp3`,
-        `https://server8.mp3quran.net/afs/${reciter.folder}/${surahNum}.mp3`,
-        `https://server6.mp3quran.net/qtm/${reciter.folder}/${surahNum}.mp3`,
-        // Additional fallbacks
+        
+        // QuranCentral
         `https://audio.qurancentral.com/download/${reciter.folder}/${surahNum}.mp3`,
-        `https://cdn.alquran.cloud/media/audio/surah/${reciter.folder}/${surahNumInt}`,
+        
+        // AlQuran.cloud API
+        `https://cdn.alquran.cloud/media/audio/surah/ar.alafasy/${surahNumInt}`,
       ];
     } else {
       // Juz recitation sources - these are less commonly available
       const juzNum = String(selectedJuz).padStart(2, "0");
       const juzNum3 = String(selectedJuz).padStart(3, "0");
+      const juzNumInt = parseInt(selectedJuz);
+      
       audioSources = [
-        // Quran.com API for Juz (if available)
-        `https://download.quran.com/downloads/audio/juz/${getQuranComReciterId(reciter.id)}/juz_${juzNum}.mp3`,
-        // Most reliable Juz sources
+        // QuranicAudio Juz files - Most reliable for Juz
+        `https://download.quranicaudio.com/quran/mishary_rashid_alafasy/juz${juzNum}.mp3`,
         `https://download.quranicaudio.com/quran/mishary_rashid_alafasy/Juz${juzNum}.mp3`,
-        `https://download.quranicaudio.com/quran/mishary_rashid_alafasy/Para${juzNum3}.mp3`,
-        `https://server8.mp3quran.net/afs/mishary_rashid_alafasy/Para${juzNum3}.mp3`,
+        `https://download.quranicaudio.com/quran/mishary_rashid_alafasy/para${juzNum}.mp3`,
+        `https://download.quranicaudio.com/quran/mishary_rashid_alafasy/Para${juzNum}.mp3`,
+        
         // Try with selected reciter
+        `https://download.quranicaudio.com/quran/${reciter.folder}/juz${juzNum}.mp3`,
         `https://download.quranicaudio.com/quran/${reciter.folder}/Juz${juzNum}.mp3`,
-        `https://download.quranicaudio.com/quran/${reciter.folder}/Para${juzNum3}.mp3`,
+        `https://download.quranicaudio.com/quran/${reciter.folder}/para${juzNum}.mp3`,
         `https://download.quranicaudio.com/quran/${reciter.folder}/Para${juzNum}.mp3`,
-        `https://server8.mp3quran.net/afs/${reciter.folder}/Para${juzNum3}.mp3`,
-        `https://server6.mp3quran.net/qtm/${reciter.folder}/Para${juzNum3}.mp3`,
-        `https://server8.mp3quran.net/afs/${reciter.folder}/Juz${juzNum}.mp3`,
+        `https://download.quranicaudio.com/quran/${reciter.folder}/Para${juzNum3}.mp3`,
+        
+        // MP3Quran.net Juz files
+        `https://server8.mp3quran.net/afs/juz${juzNum}.mp3`,
+        `https://server8.mp3quran.net/afs/para${juzNum}.mp3`,
+        `https://server6.mp3quran.net/qtm/juz${juzNum}.mp3`,
+        
+        // QuranCentral
         `https://audio.qurancentral.com/download/${reciter.folder}/Juz${juzNum}.mp3`,
         `https://audio.qurancentral.com/download/${reciter.folder}/Para${juzNum}.mp3`,
+        `https://audio.qurancentral.com/download/mishary_rashid_alafasy/Juz${juzNum}.mp3`,
       ];
     }
 

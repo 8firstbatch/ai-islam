@@ -4,24 +4,26 @@ export interface UserSettings {
   ai_model: string;
   ai_response_style: string;
   is_pro_enabled?: boolean;
+  search_mode?: boolean;
   response_speed?: 'fastest' | 'balanced' | 'detailed'; // New speed setting
 }
 
 export const loadUserSettings = async (userId: string): Promise<UserSettings | null> => {
   try {
     console.log('Loading settings for user:', userId);
-    
+
     // Return defaults immediately if no userId
     if (!userId) {
       console.log('No userId provided, returning defaults');
       return {
         ai_model: "google/gemini-2.5-flash",
         ai_response_style: "balanced",
-        is_pro_enabled: false
+        is_pro_enabled: false,
+        search_mode: false
       };
     }
-    
-    // Try to load from database first
+
+    // Try to load from database first - only select columns that exist
     let { data, error } = await supabase
       .from("user_settings")
       .select("ai_model, ai_response_style")
@@ -30,7 +32,7 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
 
     if (error) {
       console.log('Database load error:', error);
-      
+
       // If it's a "not found" error, that's okay - user hasn't saved settings yet
       if (error.code === 'PGRST116') {
         console.log('User settings not found in database, returning defaults');
@@ -38,10 +40,11 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
           ai_model: "google/gemini-2.5-flash",
           ai_response_style: "balanced",
           is_pro_enabled: false,
+          search_mode: false,
           response_speed: "fastest" // Default to fastest
         };
       }
-      
+
       // For other database errors, try localStorage as fallback
       console.log('Falling back to localStorage');
       const localSettings = localStorage.getItem(`user_settings_${userId}`);
@@ -51,18 +54,20 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
           return {
             ai_model: parsed.ai_model || "google/gemini-2.5-flash",
             ai_response_style: parsed.ai_response_style || "balanced",
-            is_pro_enabled: parsed.is_pro_enabled || false
+            is_pro_enabled: parsed.is_pro_enabled || false,
+            search_mode: parsed.search_mode || false
           };
         } catch (parseError) {
           console.error('Error parsing localStorage settings:', parseError);
         }
       }
-      
+
       // Return defaults if everything fails
       return {
         ai_model: "google/gemini-2.5-flash",
         ai_response_style: "balanced",
-        is_pro_enabled: false
+        is_pro_enabled: false,
+        search_mode: false
       };
     }
 
@@ -70,11 +75,13 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
       ai_model: data.ai_model || "google/gemini-2.5-flash",
       ai_response_style: data.ai_response_style || "balanced",
       is_pro_enabled: false, // Default to false since column doesn't exist
+      search_mode: false, // Default search mode (column doesn't exist in DB)
       response_speed: "fastest" // Default to fastest for speed
     } : {
       ai_model: "google/gemini-2.5-flash",
       ai_response_style: "balanced",
       is_pro_enabled: false,
+      search_mode: false,
       response_speed: "fastest"
     };
   } catch (error) {
@@ -83,18 +90,19 @@ export const loadUserSettings = async (userId: string): Promise<UserSettings | n
     return {
       ai_model: "google/gemini-2.5-flash",
       ai_response_style: "balanced",
-      is_pro_enabled: false
+      is_pro_enabled: false,
+      search_mode: false
     };
   }
 };
 
 export const saveUserSettings = async (
-  userId: string, 
+  userId: string,
   settings: UserSettings
 ): Promise<{ success: boolean; message?: string }> => {
   try {
     console.log('Attempting to save settings:', { userId, settings });
-    
+
     // First, try to save with is_pro_enabled column
     let { error } = await supabase
       .from("user_settings")
@@ -124,20 +132,20 @@ export const saveUserSettings = async (
 
     if (error) {
       console.error('Database save error:', error);
-      
+
       // Fallback to localStorage
       console.log('Falling back to localStorage');
       try {
         localStorage.setItem(`user_settings_${userId}`, JSON.stringify(settings));
-        return { 
-          success: true, 
-          message: "Settings saved locally (database unavailable)" 
+        return {
+          success: true,
+          message: "Settings saved locally (database unavailable)"
         };
       } catch (localError) {
         console.error('localStorage save error:', localError);
-        return { 
-          success: false, 
-          message: "Failed to save settings both to database and locally" 
+        return {
+          success: false,
+          message: "Failed to save settings both to database and locally"
         };
       }
     }
@@ -146,18 +154,18 @@ export const saveUserSettings = async (
     return { success: true, message: "AI settings saved successfully!" };
   } catch (error) {
     console.error('Unexpected error:', error);
-    
+
     // Try localStorage as final fallback
     try {
       localStorage.setItem(`user_settings_${userId}`, JSON.stringify(settings));
-      return { 
-        success: true, 
-        message: "Settings saved locally (database error)" 
+      return {
+        success: true,
+        message: "Settings saved locally (database error)"
       };
     } catch (localError) {
-      return { 
-        success: false, 
-        message: error instanceof Error ? error.message : "Unexpected error occurred" 
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "Unexpected error occurred"
       };
     }
   }
